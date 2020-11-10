@@ -18,7 +18,7 @@ RUN rpm -ivh /tmp/MySQL-shared-compat-5.0.95-1.rhel5.x86_64.rpm && \
     rpm -ivh /tmp/MySQL-devel-community-5.0.95-1.rhel5.x86_64.rpm && \
     rpm -ivh /tmp/MySQL-client-community-5.0.95-1.rhel5.x86_64.rpm && \
     rpm -ivh /tmp/MySQL-server-community-5.0.95-1.rhel5.x86_64.rpm && service mysql stop && \
-    rm -rf /tmp/*
+    rm -rf /tmp/* && mv /var/lib/mysql /var/lib/mysql_bak
 WORKDIR /home/GeoIP-1.4.8/
 RUN chmod 777 configure
 RUN ./configure && make && make install
