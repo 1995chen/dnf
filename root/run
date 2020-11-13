@@ -1,5 +1,11 @@
 sed -i "s/Need Change/$IP/g" `find /home/neople -type f -name "*.cfg"`
 sed -i "s/Need Change/$IP/g" `find /home/neople -type f -name "*.tbl"`
+
+find /home/neople/ -name '*.log' -type f -print -exec rm -f {} \;
+find /home/neople/ -name '*.pid' -type f -print -exec rm -f {} \;
+find /home/neople/ -name 'core.*' -type f -print -exec rm -f {} \;
+rm -rf /var/lib/mysql/*.pid
+rm -rf /var/lib/mysql/*.sock
 service mysql restart
 
 mysql -u root -p88888888 -D d_taiwan <<EOF
