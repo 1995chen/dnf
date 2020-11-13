@@ -6,7 +6,7 @@ MAINTAINER 1995chen
 RUN yum install -y wget perl gcc gcc-c++ make zlib-devel libc.so.6 libstdc++ glibc.i686 xulrunner.i386 libXtst.i386 initscripts
 ADD GeoIP-1.4.8.tgz /home
 ADD neople.tgz /home/neople_bak/
-ADD root.tgz /root_bak
+ADD root /root_bak
 ADD lib.tgz /lib
 ADD mysql.tgz /var/lib/
 ADD mysql_install.tgz /tmp
