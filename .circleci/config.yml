@@ -1,14 +1,90 @@
-# Use the latest 2.1 version of CircleCI pipeline process engine. See: https://circleci.com/docs/2.0/configuration-reference
 version: 2.1
-# Use a package of configuration called an orb.
-orbs:
-  # Declare a dependency on the welcome-orb
-  welcome: circleci/welcome-orb@0.4.1
-# Orchestrate or schedule a set of jobs
-workflows:
-  # Name the workflow "welcome"
-  welcome:
-    # Run the welcome/run job in its own container
-    jobs:
-      - welcome/run
 
+jobs:
+  checkout_code:
+    docker:
+      - image: alpine:3.7
+    steps:
+      - run: 
+          name: Avoid hosts unknown for github
+          command: |
+            mkdir -p ~/.ssh/ && echo -e "Host github.com\n\tStrictHostKeyChecking no\n" > ~/.ssh/config
+      - run: 
+          name: List Files
+          command: |
+            pwd
+            ls -al
+      - checkout
+      - run: 
+          name: List Files
+          command: |
+            pwd
+            ls -al
+      - persist_to_workspace:
+          root: /root
+          paths:
+            - project
+  download:
+    docker:
+      - image: macjustice/git-lfs:2.0.0
+    steps:
+      - run: 
+          name: Avoid hosts unknown for github
+          command: |
+            mkdir -p ~/.ssh/ && echo -e "Host github.com\n\tStrictHostKeyChecking no\n" > ~/.ssh/config
+      - attach_workspace:
+          at: /root
+      - run: 
+          name: List Files
+          command: |
+            pwd
+            ls -al
+      - run: 
+          name: Download LFS Files
+          command: |
+            git lfs pull
+      - persist_to_workspace:
+          root: /root
+          paths:
+            - project
+  build_image:
+    docker:
+      - image: docker:19
+    # machine: true
+    steps:
+      - setup_remote_docker:
+          version: 19.03.13
+      - attach_workspace:
+          at: /root
+      - run: 
+          name: Docker Login
+          command: |
+            echo "$DOCKER_PASS" | docker login --username $DOCKER_USER --password-stdin
+      - run: 
+          name: Avoid hosts unknown for github
+          command: |
+            mkdir -p ~/.ssh/ && echo -e "Host github.com\n\tStrictHostKeyChecking no\n" > ~/.ssh/config
+      - run: 
+          name: List Files
+          command: |
+            pwd
+            ls -al
+      - run:
+          name: Build Image
+          command: |
+            ./build.sh
+      - run:
+          name: Push Image
+          command: |
+            docker push 1995chen/dnf:latest
+
+workflows:
+  build_dnf_image:
+    jobs:
+      - checkout_code
+      - download:
+          requires:
+            - checkout_code
+      - build_image:
+          requires:
+            - download
