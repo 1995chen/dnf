@@ -50,7 +50,6 @@ jobs:
   build_image:
     docker:
       - image: docker:19
-    # machine: true
     steps:
       - setup_remote_docker:
           version: 19.03.13
