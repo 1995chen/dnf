@@ -26,6 +26,8 @@ RUN mkdir /home/neople
 WORKDIR /root
 CMD ["/bin/bash", "/docker-entrypoint.sh"]
 
+# mysql 下载地址
+# http://ftp.iij.ad.jp/pub/db/mysql/Downloads/MySQL-5.0/
 # 关闭宿主机防火墙
 # Centos5-6
 # service iptables stop
