@@ -1,7 +1,7 @@
 # 地下城与勇士容器版本
 
 ##  注意事项
-不支持Windows
+不支持Windows!!!
 
 ## 关闭防火墙
 ```shell
@@ -32,20 +32,8 @@ swapon /var/swap.1
 sed -i '$a /var/swap.1 swap swap default 0 0' /etc/fstab
 ```
 
-## 镜像拉取
-
-```shell
-docker pull 1995chen/dnf:85.1
-```
-
-## 启动
-```shell
-docker run -d -e IP=你的外网IP -v /data/root:/root -v /data/neople:/home/neople --net=host --privileged=true --memory=8g --oom-kill-disable --shm-size=8g 1995chen/dnf:85.1
-```
-
 ## 接下来的操作
-按照容器内readme操作进行，里面有修改IP的脚本，把IP改为服务器公网IP就可以了。然后启动数据库服务，在数据库中把那个db_ip也改成公网IP。
-接下来就是启动游戏服务了，亲测可用，不喜勿喷。
+在deploy目录下有部署脚本,具体请参考[详细部署流程请](deploy/dnf/deploy.md)
 
 ## 申明
 虽然支持外网，但是千万别拿来开服。只能拿来学习使用

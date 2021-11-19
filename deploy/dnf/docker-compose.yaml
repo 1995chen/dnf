@@ -1,0 +1,93 @@
+version: "2.3"
+
+networks:
+  local:
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+services:
+
+  dnf-mysql:
+    hostname: dnf-mysql
+    image: mysql:5.7
+    container_name: dnf-mysql
+    environment:
+      - MYSQL_DATABASE=test
+      # 数据库初始化时自动创建账号
+      - MYSQL_USER=game
+      # 自动创建的账号密码
+      - MYSQL_PASSWORD=uu5!^%jg
+      # root密码
+      - MYSQL_ROOT_PASSWORD=88888888
+      - TZ=Asia/Shanghai
+    ports:
+      - 3000:3306
+    networks:
+      - local
+    command: [
+        "--character-set-server=utf8mb4",
+        "--collation-server=utf8mb4_unicode_ci",
+        "--max-allowed-packet=33554432",
+        "--max_connections=1000",
+    ]
+    restart: always
+    volumes:
+      - ./mysql:/var/lib/mysql
+
+  dnf:
+    hostname: dnf
+    image: 1995chen/dnf:latest
+    environment:
+      - TZ=Asia/Shanghai
+      # 这里填写你的IP地址
+      - PUBLIC_IP=127.0.0.1
+      - DNF_DB_IP=dnf-mysql
+      - DNF_DB_PORT=3306
+      - DNF_DB_ROOT_PASSWORD=88888888
+      # 数据库game账户只允许DNF_DB_ALLOW_HOST网段的用户访问
+      - DNF_DB_ALLOW_HOST=172.20.0.%
+      - GM_ACCOUNT=gm_user
+      - GM_PASSWORD=gm_pass
+    oom_kill_disable: true
+    privileged: true
+    shm_size: 8g
+    networks:
+      - local
+    restart: always
+    ports:
+      - 2311-2313:2311-2313/tcp
+      - 2311-2313:2311-2313/udp
+      - 7000-7001:7000-7001/udp
+      - 7000-7001:7000-7001/tcp
+      - 7200:7200/tcp
+      - 7200:7200/udp
+      - 8000:8000/tcp
+      - 8000:8000/udp
+      - 8100:8100/tcp
+      - 8100:8100/udp
+      - 9006:9006/tcp
+      - 9006:9006/udp
+      - 10015:10015/tcp
+      - 11015:11015/udp
+      - 10056:10056/tcp
+      - 11056:11056/udp
+      - 20203:20203/tcp
+      - 20203:20203/udp
+      - 20303:20303/tcp
+      - 20303:20303/udp
+      - 20403:20403/tcp
+      - 20403:20403/udp
+      - 30403:30403/tcp
+      - 30403:30403/udp
+      - 30803:30803/tcp
+      - 30803:30803/udp
+      - 31003:31003/tcp
+      - 31003:31003/udp
+      - 31100:31100/tcp
+      - 31100:31100/udp
+      # DNF网关端口
+      - 881:881/tcp
+      - 7600:7600/tcp
+    volumes:
+      - ./data:/data
