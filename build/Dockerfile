@@ -43,13 +43,13 @@ ADD lib.tgz /lib
 ADD neople /home/template/neople
 ADD root /home/template/root
 # 初始化sql脚本
-ADD init_sql.tgz /home/template/init
+ADD init_sql.tgz /home/template/init/
 # 初始化版本文件
-ADD Script.tgz /home/template/init
+ADD Script.tgz /home/template/init/
 # 初始化等级补丁
-ADD df_game_r /home/template/init
+ADD df_game_r /home/template/init/
 # 初始化脚本
-ADD reset.sh /home/template/init
+ADD reset.sh /home/template/init/
 
 # 启动脚本
 ADD docker-entrypoint.sh /
