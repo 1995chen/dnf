@@ -7,62 +7,43 @@ networks:
         - subnet: 172.20.0.0/16
 
 services:
-
-  dnf-mysql:
-    hostname: dnf-mysql
-    image: mysql:5.7
-    container_name: dnf-mysql
-    environment:
-      - MYSQL_DATABASE=test
-      # 数据库初始化时自动创建账号
-      - MYSQL_USER=game
-      # 自动创建的账号密码
-      - MYSQL_PASSWORD=uu5!^%jg
-      # root密码
-      - MYSQL_ROOT_PASSWORD=88888888
-      - TZ=Asia/Shanghai
-    ports:
-      - 3000:3306
-    networks:
-      local:
-        ipv4_address: 172.20.0.2
-    command: [
-        "--character-set-server=utf8mb4",
-        "--collation-server=utf8mb4_unicode_ci",
-        "--max-allowed-packet=33554432",
-        "--max_connections=1000",
-    ]
-    restart: always
-    volumes:
-      - ./mysql:/var/lib/mysql
-
-  dnf:
-    hostname: dnf
-    depends_on:
-      - dnf-mysql
+  init:
     image: 1995chen/dnf:latest
     environment:
       - TZ=Asia/Shanghai
       # 这里填写你的IP地址
       - PUBLIC_IP=127.0.0.1
-      # 使用的是容器ip,最好不要动
-      - DNF_DB_IP=172.20.0.2
-      # 使用的是容器内端口,最好不要动
-      - DNF_DB_PORT=3306
       # 数据库root密码
       - DNF_DB_ROOT_PASSWORD=88888888
-      # 数据库game账户只允许DNF_DB_ALLOW_HOST网段的用户访问,最好不要动
-      - DNF_DB_ALLOW_HOST=172.20.0.%
       - GM_ACCOUNT=gm_user
       - GM_PASSWORD=gm_pass
     oom_kill_disable: true
-    oom_score_adj: -1000
+    command: ['/bin/bash', '/home/template/init/reset.sh']
+    privileged: true
+    networks:
+      - local
+    restart: no
+    volumes:
+      - ./data:/data
+      - ./mysql:/var/lib/mysql
+  dnf:
+    image: 1995chen/dnf:latest
+    environment:
+      - TZ=Asia/Shanghai
+      # 这里填写你的IP地址
+      - PUBLIC_IP=127.0.0.1
+      # 数据库root密码
+      - DNF_DB_ROOT_PASSWORD=88888888
+      - GM_ACCOUNT=gm_user
+      - GM_PASSWORD=gm_pass
+    oom_kill_disable: true
     privileged: true
     shm_size: 8g
     networks:
       - local
     restart: always
     ports:
+      - 3000:3306
       - 2311-2313:2311-2313/tcp
       - 2311-2313:2311-2313/udp
       - 7000-7001:7000-7001/udp
@@ -98,3 +79,4 @@ services:
       - 7600:7600/tcp
     volumes:
       - ./data:/data
+      - ./mysql:/var/lib/mysql

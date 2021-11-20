@@ -5,12 +5,9 @@ MAINTAINER 1995chen
 
 # 定义默认环境变量
 ENV PUBLIC_IP=127.0.0.1
-ENV DNF_DB_IP=172.20.0.2
-ENV DNF_DB_PORT=3306
 ENV GM_ACCOUNT=gm_user
 ENV GM_PASSWORD=gm_pass
 ENV DNF_DB_ROOT_PASSWORD=88888888
-ENV DNF_DB_ALLOW_HOST=172.20.0.%
 
 # 删除旧源
 RUN cd /etc/yum.repos.d/ && \
@@ -28,9 +25,12 @@ RUN ln -sf /usr/lib64/libcrypto.so.10 /usr/lib64/libcrypto.so.6
 ADD MySQL-shared-compat-5.0.95-1.rhel5.x86_64.rpm /tmp
 ADD MySQL-devel-community-5.0.95-1.rhel5.x86_64.rpm /tmp
 ADD MySQL-client-community-5.0.95-1.rhel5.x86_64.rpm /tmp
+ADD MySQL-server-community-5.0.95-1.rhel5.x86_64.rpm /tmp
 RUN rpm -ivh /tmp/MySQL-shared-compat-5.0.95-1.rhel5.x86_64.rpm && \
     rpm -ivh /tmp/MySQL-devel-community-5.0.95-1.rhel5.x86_64.rpm && \
-    rpm -ivh /tmp/MySQL-client-community-5.0.95-1.rhel5.x86_64.rpm
+    rpm -ivh /tmp/MySQL-client-community-5.0.95-1.rhel5.x86_64.rpm && \
+    rpm -ivh /tmp/MySQL-server-community-5.0.95-1.rhel5.x86_64.rpm && service mysql stop && \
+    rm -rf /var/lib/mysql/*
 # 编译GeoIP
 ADD GeoIP-1.4.8.tgz /home
 WORKDIR /home/GeoIP-1.4.8/
@@ -42,6 +42,14 @@ ADD lib.tgz /lib
 # 将模板添加到模版目录下[后续容器启动需要先将环境变量替换,再将文件移动到正确位置]
 ADD neople /home/template/neople
 ADD root /home/template/root
+# 初始化sql脚本
+ADD init_sql.tgz /home/template/init
+# 初始化版本文件
+ADD Script.tgz /home/template/init
+# 初始化等级补丁
+ADD df_game_r /home/template/init
+# 初始化脚本
+ADD reset.sh /home/template/init
 
 # 启动脚本
 ADD docker-entrypoint.sh /

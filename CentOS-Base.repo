@@ -17,9 +17,3 @@ name=CentOS-$releasever - Extras
 baseurl=https://vault.centos.org/6.9/extras/$basearch/
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-6
-
-[mysql57-community]
-name=MySQL 5.7 Community Server
-baseurl=http://repo.mysql.com/yum/mysql-5.7-community/el/6/$basearch/
-enabled=1
-gpgcheck=0
