@@ -21,9 +21,18 @@ ADD CentOS-Base.repo /etc/yum.repos.d/
 # 更新Repo
 RUN yum clean all && yum update -y
 # 安装基础依赖
-RUN yum install -y mysql-community-client.x86_64 zlib.i686 wget perl gcc gcc-c++ make zlib-devel libc.so.6 libstdc++.i686 glibc.i686 xulrunner.i386 libXtst.i386 initscripts
+RUN yum install -y openssl curl wget vim wget perl gcc gcc-c++ make zlib-devel libc.so.6 libstdc++ libstdc++.so.6 glibc.i686 libssl.so.6 xulrunner.x86_64 libXtst.x86_64 initscripts
+RUN ln -sf /usr/lib64/libssl.so.10 /usr/lib64/libssl.so.6
+RUN ln -sf /usr/lib64/libcrypto.so.10 /usr/lib64/libcrypto.so.6
+# 安装mysql依赖
+ADD MySQL-shared-compat-5.0.95-1.rhel5.x86_64.rpm /tmp
+ADD MySQL-devel-community-5.0.95-1.rhel5.x86_64.rpm /tmp
+ADD MySQL-client-community-5.0.95-1.rhel5.x86_64.rpm /tmp
+RUN rpm -ivh /tmp/MySQL-shared-compat-5.0.95-1.rhel5.x86_64.rpm && \
+    rpm -ivh /tmp/MySQL-devel-community-5.0.95-1.rhel5.x86_64.rpm && \
+    rpm -ivh /tmp/MySQL-client-community-5.0.95-1.rhel5.x86_64.rpm
+# 编译GeoIP
 ADD GeoIP-1.4.8.tgz /home
-# 编译
 WORKDIR /home/GeoIP-1.4.8/
 RUN chmod 777 configure
 RUN ./configure && make && make install

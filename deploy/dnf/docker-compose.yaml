@@ -56,6 +56,7 @@ services:
       - GM_ACCOUNT=gm_user
       - GM_PASSWORD=gm_pass
     oom_kill_disable: true
+    oom_score_adj: -1000
     privileged: true
     shm_size: 8g
     networks:
