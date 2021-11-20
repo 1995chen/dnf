@@ -37,6 +37,8 @@ services:
 
   dnf:
     hostname: dnf
+    depends_on:
+      - dnf-mysql
     image: 1995chen/dnf:latest
     environment:
       - TZ=Asia/Shanghai

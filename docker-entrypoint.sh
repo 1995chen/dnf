@@ -2,7 +2,7 @@
 rm -rf /home/template/neople-tmp
 rm -rf /home/template/root-tmp
 rm -rf /home/neople
-rm -rf /home/root
+rm -rf /root
 # 复制待使用文件
 cp -r /home/template/neople /home/template/neople-tmp
 cp -r /home/template/root /home/template/root-tmp
@@ -21,7 +21,7 @@ sed -i "s/GM_ACCOUNT/$GM_ACCOUNT/g" `find /home/template/root-tmp -type f -name 
 sed -i "s/GM_PASSWORD/$GM_PASSWORD/g" `find /home/template/root-tmp -type f -name "*.ini"`
 # 将结果文件拷贝到对应目录
 mv /home/template/neople-tmp /home/neople
-mv /home/template/root-tmp /home/root
+mv /home/template/root-tmp /root
 # 增加软链接[链接版本文件]
 ln -s /data/Script.pvf /home/neople/game/Script.pvf
 
