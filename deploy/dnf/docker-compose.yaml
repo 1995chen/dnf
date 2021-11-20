@@ -22,7 +22,7 @@ services:
     privileged: true
     networks:
       - local
-    restart: no
+    restart: "no"
     volumes:
       - ./data:/data
       - ./mysql:/var/lib/mysql

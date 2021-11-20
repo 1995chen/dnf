@@ -99,3 +99,4 @@ EOF
 # 拷贝版本文件到持久化目录
 cp /home/template/init/Script.pvf /data/
 cp /home/template/init/df_game_r /data/
+service mysql stop

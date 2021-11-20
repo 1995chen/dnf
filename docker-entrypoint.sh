@@ -21,12 +21,13 @@ cp /data/df_game_r /home/neople/game/df_game_r
 chmod 777 /home/neople/game/Script.pvf
 chmod 777 /home/neople/game/df_game_r
 
+service mysql start
 # 修改数据库IP和端口 & 刷新game账户权限只允许本地登录
 mysql -u root -p$DNF_DB_ROOT_PASSWORD -P 3306 -h 127.0.0.1 <<EOF
 UPDATE mysql.user SET Host='127.0.0.1' WHERE User='game';
 grant all privileges on *.* to 'game'@'127.0.0.1';
 flush privileges;
-update d_taiwan.db_connect set db_ip="$DNF_DB_IP", db_port="$DNF_DB_PORT";
+update d_taiwan.db_connect set db_ip="127.0.0.1", db_port="3306";
 select * from d_taiwan.db_connect;
 EOF
 
