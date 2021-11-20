@@ -22,8 +22,9 @@ sed -i "s/GM_PASSWORD/$GM_PASSWORD/g" `find /home/template/root-tmp -type f -nam
 # 将结果文件拷贝到对应目录
 mv /home/template/neople-tmp /home/neople
 mv /home/template/root-tmp /root
-# 增加软链接[链接版本文件]
-ln -s /data/Script.pvf /home/neople/game/Script.pvf
+# 复制版本文件
+cp /data/Script.pvf /home/neople/game/Script.pvf
+chmod 777 /home/neople/game/Script.pvf
 
 # 修改数据库IP和端口 & 刷新game账户权限只允许本地登录
 mysql -u root -p$DNF_DB_ROOT_PASSWORD -P $DNF_DB_PORT -h $DNF_DB_IP <<EOF

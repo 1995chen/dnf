@@ -25,7 +25,7 @@ services:
       - 3000:3306
     networks:
       local:
-        - ipv4_address: 172.20.0.2
+        ipv4_address: 172.20.0.2
     command: [
         "--character-set-server=utf8mb4",
         "--collation-server=utf8mb4_unicode_ci",
