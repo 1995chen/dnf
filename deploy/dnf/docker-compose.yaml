@@ -24,7 +24,8 @@ services:
     ports:
       - 3000:3306
     networks:
-      - local
+      local:
+        - ipv4_address: 172.20.0.2
     command: [
         "--character-set-server=utf8mb4",
         "--collation-server=utf8mb4_unicode_ci",
@@ -44,10 +45,13 @@ services:
       - TZ=Asia/Shanghai
       # 这里填写你的IP地址
       - PUBLIC_IP=127.0.0.1
-      - DNF_DB_IP=dnf-mysql
+      # 使用的是容器ip,最好不要动
+      - DNF_DB_IP=172.20.0.2
+      # 使用的是容器内端口,最好不要动
       - DNF_DB_PORT=3306
+      # 数据库root密码
       - DNF_DB_ROOT_PASSWORD=88888888
-      # 数据库game账户只允许DNF_DB_ALLOW_HOST网段的用户访问
+      # 数据库game账户只允许DNF_DB_ALLOW_HOST网段的用户访问,最好不要动
       - DNF_DB_ALLOW_HOST=172.20.0.%
       - GM_ACCOUNT=gm_user
       - GM_PASSWORD=gm_pass

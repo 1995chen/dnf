@@ -5,10 +5,12 @@ MAINTAINER 1995chen
 
 # 定义默认环境变量
 ENV PUBLIC_IP=127.0.0.1
-ENV DNF_DB_IP=dnf-mysql
+ENV DNF_DB_IP=172.20.0.2
 ENV DNF_DB_PORT=3306
 ENV GM_ACCOUNT=gm_user
 ENV GM_PASSWORD=gm_pass
+ENV DNF_DB_ROOT_PASSWORD=88888888
+ENV DNF_DB_ALLOW_HOST=172.20.0.%
 
 # 删除旧源
 RUN cd /etc/yum.repos.d/ && \
@@ -19,7 +21,7 @@ ADD CentOS-Base.repo /etc/yum.repos.d/
 # 更新Repo
 RUN yum clean all && yum update -y
 # 安装基础依赖
-RUN yum install -y mysql-community-client.x86_64 wget perl gcc gcc-c++ make zlib-devel libc.so.6 libstdc++ glibc.i686 xulrunner.i386 libXtst.i386 initscripts
+RUN yum install -y mysql-community-client.x86_64 zlib.i686 wget perl gcc gcc-c++ make zlib-devel libc.so.6 libstdc++.i686 glibc.i686 xulrunner.i386 libXtst.i386 initscripts
 ADD GeoIP-1.4.8.tgz /home
 # 编译
 WORKDIR /home/GeoIP-1.4.8/

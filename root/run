@@ -2,8 +2,7 @@ find /home/neople/ -name '*.log' -type f -print -exec rm -f {} \;
 find /home/neople/ -name '*.pid' -type f -print -exec rm -f {} \;
 find /home/neople/ -name 'core.*' -type f -print -exec rm -f {} \;
 
-service iptables stop
-cd
+cd /root
 ./GateRestart
 
 cd /home/neople/stun
