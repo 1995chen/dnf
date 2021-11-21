@@ -1,3 +1,3 @@
 #! /bin/bash
 
-docker-compose up -d dnf
+docker-compose up -d

@@ -7,18 +7,20 @@ networks:
         - subnet: 172.20.0.0/16
 
 services:
-  init:
+  init-dnf:
     image: 1995chen/dnf:latest
     environment:
       - TZ=Asia/Shanghai
       # 这里填写你的IP地址
       - PUBLIC_IP=127.0.0.1
-      # 数据库root密码
+      # 数据库root密码[首次初始化会修改root密码]
       - DNF_DB_ROOT_PASSWORD=88888888
+      # GM 管理员账户
       - GM_ACCOUNT=gm_user
+      # GM 管理员密码
       - GM_PASSWORD=gm_pass
     oom_kill_disable: true
-    command: ['/bin/bash', '/home/template/init/reset.sh']
+    command: ['/bin/bash', '/home/template/init/init.sh']
     privileged: true
     networks:
       - local
@@ -28,6 +30,8 @@ services:
       - ./mysql:/var/lib/mysql
   dnf:
     image: 1995chen/dnf:latest
+    depends_on:
+      - init-dnf
     environment:
       - TZ=Asia/Shanghai
       # 这里填写你的IP地址

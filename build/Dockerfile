@@ -49,7 +49,7 @@ ADD Script.tgz /home/template/init/
 # 初始化等级补丁
 ADD df_game_r /home/template/init/
 # 初始化脚本
-ADD reset.sh /home/template/init/
+ADD init.sh /home/template/init/
 
 # 启动脚本
 ADD docker-entrypoint.sh /

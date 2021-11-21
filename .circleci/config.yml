@@ -71,10 +71,12 @@ jobs:
       - run:
           name: Build Image
           command: |
-            ./build.sh
+            docker build -f $(pwd)/build/Dockerfile -t 1995chen/dnf:${CIRCLE_SHA1: 0: 7} $(pwd)
+            docker tag 1995chen/dnf:${CIRCLE_SHA1: 0: 7} 1995chen/dnf:latest
       - run:
           name: Push Image
           command: |
+            docker push 1995chen/dnf:${CIRCLE_SHA1: 0: 7}
             docker push 1995chen/dnf:latest
 
 workflows:

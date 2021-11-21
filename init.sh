@@ -1,21 +1,15 @@
 #! /bin/bash
 
-# 重置DNF环境到初始状态
+# 定义方法
+initMysql(){
+  # 清理数据
+  rm -rf /var/lib/mysql/*
+  # 启动mysql
+  mysql_install_db --user=mysql
+  service mysql start
 
-# 清理数据
-rm -rf /var/lib/mysql/*
-rm -rf /data/*
-
-# 赋予权限
-chmod 777 -R /var/lib/mysql
-chmod 777 -R /tmp
-
-# 启动mysql
-mysql_install_db --user=mysql
-service mysql start
-
-# 导入数据
-mysql -u root <<EOF
+  # 导入数据
+  mysql -u root <<EOF
 CREATE SCHEMA d_channel DEFAULT CHARACTER SET utf8 ;
 use d_channel;
 source /home/template/init/d_channel.sql;
@@ -85,8 +79,8 @@ source /home/template/init/tw.sql;
 flush PRIVILEGES;
 EOF
 
-# 禁止匿名用户登录, 修改root密码, 创建game用户并赋予用户权限
-mysql -u root <<EOF
+  # 禁止匿名用户登录, 修改root密码, 创建game用户并赋予用户权限
+  mysql -u root <<EOF
 delete from mysql.user where user='';
 update mysql.user set password=password("$DNF_DB_ROOT_PASSWORD") where user="root";
 grant all privileges on *.* to 'root'@'%';
@@ -95,8 +89,28 @@ flush privileges;
 update d_taiwan.db_connect set db_ip="127.0.0.1", db_port="3306";
 select * from d_taiwan.db_connect;
 EOF
+  service mysql stop
+  echo "init mysql success"
+}
+# 赋予权限
+chmod 777 -R /var/lib/mysql
+chmod 777 -R /tmp
 
-# 拷贝版本文件到持久化目录
-cp /home/template/init/Script.pvf /data/
-cp /home/template/init/df_game_r /data/
-service mysql stop
+# 判断数据库是否初始化过
+if [ ! -d "/var/lib/mysql/d_taiwan" ];then
+  initMysql
+  else
+  echo "mysql have already inited, no nothing!"
+fi
+
+# 判断版本文件是否初始化过
+if [ ! -f "/data/Script.pvf" ];then
+  rm -rf /data/*
+  # 拷贝版本文件到持久化目录
+  cp /home/template/init/Script.pvf /data/
+  cp /home/template/init/df_game_r /data/
+  echo "init data success"
+  else
+  echo "dnf data have already inited, no nothing!"
+fi
+
