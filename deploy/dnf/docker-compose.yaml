@@ -80,7 +80,9 @@ services:
       - 31100:31100/udp
       # DNF网关端口
       - 881:881/tcp
+      - 881:881/udp
       - 7600:7600/tcp
+      - 7600:7600/udp
     volumes:
       - ./data:/data
       - ./mysql:/var/lib/mysql
