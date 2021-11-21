@@ -18,7 +18,7 @@ ADD CentOS-Base.repo /etc/yum.repos.d/
 # 更新Repo
 RUN yum clean all && yum update -y
 # 安装基础依赖
-RUN yum install -y openssl curl wget vim wget perl gcc gcc-c++ make zlib-devel libc.so.6 libstdc++ libstdc++.so.6 glibc.i686 libssl.so.6 xulrunner.x86_64 libXtst.x86_64 initscripts
+RUN yum install -y openssl openssl-devel curl wget vim wget perl gcc gcc-c++ make zlib-devel libc.so.6 libstdc++ libstdc++.so.6 glibc.i686 libssl.so.6 xulrunner.x86_64 libXtst.x86_64 initscripts
 RUN ln -sf /usr/lib64/libssl.so.10 /usr/lib64/libssl.so.6
 RUN ln -sf /usr/lib64/libcrypto.so.10 /usr/lib64/libcrypto.so.6
 # 编译Python2.7[安装supervisor]
