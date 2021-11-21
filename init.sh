@@ -82,7 +82,7 @@ EOF
   mysql -u root <<EOF
 delete from mysql.user where user='';
 update mysql.user set password=password("$DNF_DB_ROOT_PASSWORD") where user="root";
-grant all privileges on *.* to 'root'@'%';
+grant all privileges on *.* to 'root'@'%' identified by '$DNF_DB_ROOT_PASSWORD';
 grant all privileges on *.* to 'game'@'127.0.0.1' identified by 'uu5!^%jg';
 flush privileges;
 update d_taiwan.db_connect set db_ip="127.0.0.1", db_port="3306";
