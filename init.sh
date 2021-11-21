@@ -78,7 +78,6 @@ use tw;
 source /home/template/init/tw.sql;
 flush PRIVILEGES;
 EOF
-
   # 禁止匿名用户登录, 修改root密码, 创建game用户并赋予用户权限
   mysql -u root <<EOF
 delete from mysql.user where user='';
@@ -99,8 +98,8 @@ chmod 777 -R /tmp
 # 判断数据库是否初始化过
 if [ ! -d "/var/lib/mysql/d_taiwan" ];then
   initMysql
-  else
-  echo "mysql have already inited, no nothing!"
+else
+  echo "mysql have already inited, do nothing!"
 fi
 
 # 判断版本文件是否初始化过
@@ -110,7 +109,6 @@ if [ ! -f "/data/Script.pvf" ];then
   cp /home/template/init/Script.pvf /data/
   cp /home/template/init/df_game_r /data/
   echo "init data success"
-  else
-  echo "dnf data have already inited, no nothing!"
+else
+  echo "pvf data have already inited, do nothing!"
 fi
-
