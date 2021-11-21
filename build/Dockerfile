@@ -21,6 +21,16 @@ RUN yum clean all && yum update -y
 RUN yum install -y openssl curl wget vim wget perl gcc gcc-c++ make zlib-devel libc.so.6 libstdc++ libstdc++.so.6 glibc.i686 libssl.so.6 xulrunner.x86_64 libXtst.x86_64 initscripts
 RUN ln -sf /usr/lib64/libssl.so.10 /usr/lib64/libssl.so.6
 RUN ln -sf /usr/lib64/libcrypto.so.10 /usr/lib64/libcrypto.so.6
+# 编译Python2.7[安装supervisor]
+ADD Python-2.7.13.tgz /tmp/
+ADD pip-7.1.0.tar.gz /tmp/
+ADD setuptools-18.0.1.tgz /tmp/
+RUN cd /tmp/Python-2.7.13 && ./configure && make install && \
+    cd /tmp/setuptools-18.0.1 && python2.7 setup.py install && \
+    cd /tmp/pip-7.1.0 && python2.7 setup.py install && \
+    pip2.7 install supervisor==3.1.3 && mkdir -p /etc/supervisor/conf.d/
+ADD supervisord.conf /etc/supervisor/
+ADD dnf.conf /etc/supervisor/conf.d/
 # 安装mysql依赖
 ADD MySQL-shared-compat-5.0.95-1.rhel5.x86_64.rpm /tmp
 ADD MySQL-devel-community-5.0.95-1.rhel5.x86_64.rpm /tmp
