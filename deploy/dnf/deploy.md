@@ -44,7 +44,7 @@ cd到deploy/dnf下, 运行[stop.sh](stop.sh)
 ## 更新版本
 
 替换PVF文件(deploy/dnf/data/Script.pvf)后，重启服务
-注意PVF要配套相应的[等级补丁](../../df_game_r)
+注意PVF要配套相应的[等级补丁](../../build/DNF/df_game_r)
 ```shell
 ./stop.sh 
 ./start.sh
