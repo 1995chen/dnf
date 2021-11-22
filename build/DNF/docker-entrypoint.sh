@@ -106,4 +106,4 @@ chmod 777 *
 rm -rf /home/neople/game/log/*
 cd /root
 # 启动服务
-/usr/local/bin/supervisord -c /etc/supervisor/supervisord.conf
+/usr/local/bin/supervisord -c /etc/supervisord.conf
