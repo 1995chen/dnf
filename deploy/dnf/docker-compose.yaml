@@ -51,56 +51,32 @@ services:
       - 7600:7600/tcp       # DnfGateServe 网关
       - 881:881/tcp         # DnfGateServe 网关
       - 20303:20303/tcp     # df_dbmw_r
+      - 20303:20303/udp     # df_dbmw_r
       - 20403:20403/tcp     # df_dbmw_r
+      - 20403:20403/udp     # df_dbmw_r
       - 40403:40403/tcp     # df_manager_r
+      - 40403:40403/udp     # df_manager_r
       - 7000:7000/tcp       # df_bridge_r
+      - 7000:7000/udp       # df_bridge_r
       - 7001:7001/tcp       # df_channel_r
+      - 7001:7001/udp       # df_channel_r
+      - 7200:7200/tcp       # df_relay_r
+      - 7200:7200/udp       # df_relay_r
       - 10011:10011/tcp     # df_game_r
       - 31100:31100/tcp     # df_community
       - 30303:30303/tcp     # df_monitor_r
-      - 7200:7200/tcp       # df_relay_r
+      - 30303:30303/udp     # df_monitor_r
       - 30403:30403/tcp     # df_guild_r
+      - 30403:30403/udp     # df_guild_r
       - 10052:10052/tcp     # df_game_r
       - 20011:20011/tcp     # df_game_r
       - 20203:20203/tcp     # df_dbmw_r
-      - 20403:20403/udp     # df_dbmw_r
-      - 33717:33717/udp     # df_monitor_r
-      - 40894:40894/udp     # df_monitor_r
-      - 59582:59582/udp     # df_dbmw_r
-      - 30403:30403/udp     # df_guild_r
-      - 37958:37958/udp     # df_game_r
-      - 44237:44237/udp     # df_game_r
-      - 51789:51789/udp     # df_dbmw_r
-      - 43471:43471/udp     # df_game_r
-      - 20303:20303/udp     # df_dbmw_r
-      - 40403:40403/udp     # df_manager_r
-      - 7000:7000/udp       # df_bridge_r
-      - 7001:7001/udp       # df_channel_r
-      - 52444:52444/udp     # df_game_r
-      - 30303:30303/udp     # df_monitor_r
-      - 53096:53096/udp     # df_game_r
       - 20203:20203/udp     # df_dbmw_r
-      - 55278:55278/udp     # df_game_r
-      - 30703:30703/udp     # df_coserver_
-      - 51699:51699/udp     # df_monitor_r
-      - 57208:57208/udp     # df_game_r
-      - 53242:53242/udp     # df_guild_r
-      - 42495:42495/udp     # df_game_r
+      - 30703:30703/udp     # df_coserver_r
       - 11011:11011/udp     # df_game_r
-      - 2311:2311/udp       # df_stun_r
-      - 2312:2312/udp       # df_stun_r
-      - 2313:2313/udp       # df_stun_r
-      - 58891:58891/udp     # df_game_r
-      - 59278:59278/udp     # df_guild_r
-      - 50574:50574/udp     # df_dbmw_r
-      - 48655:48655/udp     # df_guild_r
-      - 60818:60818/udp     # df_statics_r
-      - 33436:33436/udp     # df_monitor_r
-      - 7200:7200/udp       # df_relay_r
+      - 2311-2313:2311-2313/udp   # df_stun_r
       - 30503:30503/udp     # df_statics_r
-      - 51372:51372/udp     # df_game_r
       - 11052:11052/udp     # df_game_r
-      - 54316:54316/udp     # df_monitor_r
     volumes:
       - ./data:/data
       - ./mysql:/var/lib/mysql

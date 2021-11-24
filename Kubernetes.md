@@ -84,8 +84,8 @@ spec:
             secretKeyRef:
               key: gm_password
               name: dnf
-        image: 1995chen/dnf:latest
-        imagePullPolicy: Always
+        image: 1995chen/dnf:2882e1a
+        imagePullPolicy: IfNotPresent
         command: ["/bin/bash"]
         args: ["/home/template/init/init.sh"]
         volumeMounts:
@@ -97,8 +97,8 @@ spec:
           subPath: mysql
       containers:
       - name: dnf
-        imagePullPolicy: Always
-        image: 1995chen/dnf:latest
+        imagePullPolicy: IfNotPresent
+        image: 1995chen/dnf:2882e1a
         ports:
         - name: mysql
           containerPort: 3306
@@ -129,25 +129,13 @@ spec:
           protocol: UDP
           hostPort: 20403
         - name: dbmw-udp2
-          containerPort: 59582
-          protocol: UDP
-          hostPort: 59582
-        - name: dbmw-udp3
-          containerPort: 51789
-          protocol: UDP
-          hostPort: 51789
-        - name: dbmw-udp4
           containerPort: 20303
           protocol: UDP
           hostPort: 20303
-        - name: dbmw-udp5
+        - name: dbmw-udp3
           containerPort: 20203
           protocol: UDP
           hostPort: 20203
-        - name: dbmw-udp6
-          containerPort: 50574
-          protocol: UDP
-          hostPort: 50574
         - name: manager-tcp1
           containerPort: 40403
           protocol: TCP
@@ -185,53 +173,13 @@ spec:
           protocol: TCP
           hostPort: 20011
         - name: game-udp1
-          containerPort: 37958
-          protocol: UDP
-          hostPort: 37958
-        - name: game-udp2
-          containerPort: 44237
-          protocol: UDP
-          hostPort: 44237
-        - name: game-udp3
-          containerPort: 43471
-          protocol: UDP
-          hostPort: 43471
-        - name: game-udp4
-          containerPort: 53096
-          protocol: UDP
-          hostPort: 53096
-        - name: game-udp5
-          containerPort: 55278
-          protocol: UDP
-          hostPort: 55278
-        - name: game-udp6
-          containerPort: 52444
-          protocol: UDP
-          hostPort: 52444
-        - name: game-udp7
-          containerPort: 42495
-          protocol: UDP
-          hostPort: 42495
-        - name: game-udp8
           containerPort: 11011
           protocol: UDP
           hostPort: 11011
-        - name: game-udp9
-          containerPort: 57208
-          protocol: UDP
-          hostPort: 57208
-        - name: game-udp10
-          containerPort: 51372
-          protocol: UDP
-          hostPort: 51372
-        - name: game-udp11
+        - name: game-udp2
           containerPort: 11052
           protocol: UDP
           hostPort: 11052
-        - name: game-udp12
-          containerPort: 58891
-          protocol: UDP
-          hostPort: 58891
         - name: community-tcp1
           containerPort: 31100
           protocol: TCP
@@ -241,29 +189,9 @@ spec:
           protocol: TCP
           hostPort: 30303
         - name: monitor-udp1
-          containerPort: 33717
-          protocol: UDP
-          hostPort: 33717
-        - name: monitor-udp2
-          containerPort: 40894
-          protocol: UDP
-          hostPort: 40894
-        - name: monitor-udp3
           containerPort: 30303
           protocol: UDP
           hostPort: 30303
-        - name: monitor-udp4
-          containerPort: 51699
-          protocol: UDP
-          hostPort: 51699
-        - name: monitor-udp5
-          containerPort: 33436
-          protocol: UDP
-          hostPort: 33436
-        - name: monitor-udp6
-          containerPort: 54316
-          protocol: UDP
-          hostPort: 54316
         - name: relay-tcp1
           containerPort: 7200
           protocol: TCP
@@ -280,18 +208,6 @@ spec:
           containerPort: 30403
           protocol: UDP
           hostPort: 30403
-        - name: guild-udp2
-          containerPort: 53242
-          protocol: UDP
-          hostPort: 53242
-        - name: guild-udp3
-          containerPort: 59278
-          protocol: UDP
-          hostPort: 59278
-        - name: guild-udp4
-          containerPort: 48655
-          protocol: UDP
-          hostPort: 48655
         - name: coserver-udp1
           containerPort: 30703
           protocol: UDP
@@ -309,10 +225,6 @@ spec:
           protocol: UDP
           hostPort: 2313
         - name: statics-udp1
-          containerPort: 60818
-          protocol: UDP
-          hostPort: 60818
-        - name: statics-udp2
           containerPort: 30503
           protocol: UDP
           hostPort: 30503
