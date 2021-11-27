@@ -9,9 +9,9 @@ ADD build/Centos6-DNF-Base/MySQL-devel-community-5.0.95-1.rhel5.x86_64.rpm /tmp
 ADD build/Centos6-DNF-Base/MySQL-client-community-5.0.95-1.rhel5.x86_64.rpm /tmp
 ADD build/Centos6-DNF-Base/MySQL-server-community-5.0.95-1.rhel5.x86_64.rpm /tmp
 # 编译GeoIP
-ADD build/Centos6/GeoIP-1.4.8.tgz /home
+ADD build/Centos6-DNF-Base/GeoIP-1.4.8.tgz /home
 # 添加依赖库
-ADD build/Centos6/lib.tgz /lib
+ADD build/Centos6-DNF-Base/lib.tgz /lib
 
 # 更新Repo
 RUN yum update -y && yum install -y gcc gcc-c++ make zlib-devel libc.so.6 libstdc++ libstdc++.so.6 glibc.i686 libssl.so.6 xulrunner.x86_64 libXtst.x86_64 initscripts && \
