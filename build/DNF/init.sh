@@ -94,9 +94,11 @@ EOF
 # 赋予权限
 chmod 777 -R /var/lib/mysql
 chmod 777 -R /tmp
+cd /home/template/init/
 
 # 判断数据库是否初始化过
 if [ ! -d "/var/lib/mysql/d_taiwan" ];then
+  tar -zxvf /home/template/init/init_sql.tgz
   initMysql
 else
   echo "mysql have already inited, do nothing!"
@@ -105,9 +107,12 @@ fi
 # 判断版本文件是否初始化过
 if [ ! -f "/data/Script.pvf" ];then
   rm -rf /data/*
+  tar -zxvf /home/template/init/Script.tgz
   # 拷贝版本文件到持久化目录
   cp /home/template/init/Script.pvf /data/
   cp /home/template/init/df_game_r /data/
+  cp /home/template/init/privatekey.pem /data/
+  cp /home/template/init/publickey.pem /data/
   echo "init data success"
 else
   echo "pvf data have already inited, do nothing!"

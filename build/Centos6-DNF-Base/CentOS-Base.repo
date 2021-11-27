@@ -1,0 +1,19 @@
+[base]
+name=CentOS-$releasever - Base
+baseurl=https://vault.centos.org/6.9/os/$basearch/
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-6
+
+# released updates
+[updates]
+name=CentOS-$releasever - Updates
+baseurl=https://vault.centos.org/6.9/updates/$basearch/
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-6
+
+# additional packages that may be useful
+[extras]
+name=CentOS-$releasever - Extras
+baseurl=https://vault.centos.org/6.9/extras/$basearch/
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-6

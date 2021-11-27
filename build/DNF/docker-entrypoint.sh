@@ -18,6 +18,8 @@ mv /home/template/root-tmp /root
 # 复制版本文件
 cp /data/Script.pvf /home/neople/game/Script.pvf
 cp /data/df_game_r /home/neople/game/df_game_r
+cp /data/privatekey.pem /root/
+cp /data/publickey.pem /home/neople/game/
 chmod 777 /home/neople/game/Script.pvf
 chmod 777 /home/neople/game/df_game_r
 
