@@ -98,6 +98,9 @@ docker restart dnf
 GM账户: gm_user  
 GM密码: gm_pass
 
+## 客户端地址下载
+链接: https://pan.baidu.com/s/10RgXFtpEhvRUm-hA98Am4A 提取码: fybn
+
 ## docker-compose启动
 
 [部署文档](deploy/dnf/deploy.md)
