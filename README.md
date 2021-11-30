@@ -66,7 +66,8 @@ sed -i '$a /var/swap.1 swap swap default 0 0' /etc/fstab
 
 ```shell
 docker pull registry.cn-hangzhou.aliyuncs.com/1995chen/dnf:stable  
-或
+docker tag registry.cn-hangzhou.aliyuncs.com/1995chen/dnf:stable 1995chen/dnf:stable
+或直接从官方仓库拉取
 docker pull 1995chen/dnf:stable
 ```
 
@@ -80,11 +81,11 @@ mkdir -p /data
 # DNF_DB_ROOT_PASSWORD为DNF数据库root密码，建议替换
 # GM_ACCOUNT为登录器用户名，建议替换
 # GM_PASSWORD为登录器密码，建议替换
-docker run --rm -e PUBLIC_IP=x.x.x.x -e DNF_DB_ROOT_PASSWORD=88888888 -e GM_ACCOUNT=gm_user -e GM_PASSWORD=gm_pass -v /data/mysql:/var/lib/mysql -v /data/data:/data --privileged=true --memory=8g --oom-kill-disable --shm-size=8g dnf:stable /bin/bash /home/template/init/init.sh
+docker run --rm -e PUBLIC_IP=x.x.x.x -e DNF_DB_ROOT_PASSWORD=88888888 -e GM_ACCOUNT=gm_user -e GM_PASSWORD=gm_pass -v /data/mysql:/var/lib/mysql -v /data/data:/data --privileged=true --memory=8g --oom-kill-disable --shm-size=8g 1995chen/dnf:stable /bin/bash /home/template/init/init.sh
 
 # 启动服务
 # PUBLIC_IP、DNF_DB_ROOT_PASSWORD、GM_ACCOUNT、GM_PASSWORD与上面实际运行的配置保持一致即可
-docker run --name dnf -d -e PUBLIC_IP=x.x.x.x -e DNF_DB_ROOT_PASSWORD=88888888 -e GM_ACCOUNT=gm_user -e GM_PASSWORD=gm_pass -v /data/mysql:/var/lib/mysql -v /data/data:/data -p 3000:3306/tcp -p 7600:7600/tcp -p 881:881/tcp -p 20303:20303/tcp -p 20303:20303/udp -p 20403:20403/tcp -p 20403:20403/udp -p 40403:40403/tcp -p 40403:40403/udp -p 7000:7000/tcp -p 7000:7000/udp -p 7001:7001/tcp -p 7001:7001/udp -p 7200:7200/tcp -p 7200:7200/udp -p 10011:10011/tcp -p 31100:31100/tcp -p 30303:30303/tcp -p 30303:30303/udp -p 30403:30403/tcp -p 30403:30403/udp -p 10052:10052/tcp -p 20011:20011/tcp -p 20203:20203/tcp -p 20203:20203/udp -p 30703:30703/udp -p 11011:11011/udp -p 2311-2313:2311-2313/udp -p 30503:30503/udp -p 11052:11052/udp --privileged=true --memory=8g --oom-kill-disable --shm-size=8g dnf:stable
+docker run --name dnf -d -e PUBLIC_IP=x.x.x.x -e DNF_DB_ROOT_PASSWORD=88888888 -e GM_ACCOUNT=gm_user -e GM_PASSWORD=gm_pass -v /data/mysql:/var/lib/mysql -v /data/data:/data -p 3000:3306/tcp -p 7600:7600/tcp -p 881:881/tcp -p 20303:20303/tcp -p 20303:20303/udp -p 20403:20403/tcp -p 20403:20403/udp -p 40403:40403/tcp -p 40403:40403/udp -p 7000:7000/tcp -p 7000:7000/udp -p 7001:7001/tcp -p 7001:7001/udp -p 7200:7200/tcp -p 7200:7200/udp -p 10011:10011/tcp -p 31100:31100/tcp -p 30303:30303/tcp -p 30303:30303/udp -p 30403:30403/tcp -p 30403:30403/udp -p 10052:10052/tcp -p 20011:20011/tcp -p 20203:20203/tcp -p 20203:20203/udp -p 30703:30703/udp -p 11011:11011/udp -p 2311-2313:2311-2313/udp -p 30503:30503/udp -p 11052:11052/udp --privileged=true --memory=8g --oom-kill-disable --shm-size=8g 1995chen/dnf:stable
 # 该服务占有内存较大，极有可能被系统杀死,当进程被杀死时则需要重启服务
 # 重启服务命令
 docker restart dnf
