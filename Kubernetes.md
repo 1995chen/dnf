@@ -84,7 +84,7 @@ spec:
             secretKeyRef:
               key: gm_password
               name: dnf
-        image: 1995chen/dnf:2882e1a
+        image: 1995chen/dnf:stable
         imagePullPolicy: IfNotPresent
         command: ["/bin/bash"]
         args: ["/home/template/init/init.sh"]
@@ -98,7 +98,7 @@ spec:
       containers:
       - name: dnf
         imagePullPolicy: IfNotPresent
-        image: 1995chen/dnf:2882e1a
+        image: 1995chen/dnf:stable
         ports:
         - name: mysql
           containerPort: 3306
@@ -258,6 +258,9 @@ spec:
         - mountPath: /var/lib/mysql
           name: dnf
           subPath: mysql
+        - mountPath: /home/neople/game/log
+          name: dnf
+          subPath: log
         - mountPath: /dev/shm
           name: memory
 ```

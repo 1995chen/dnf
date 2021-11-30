@@ -1,7 +1,7 @@
 # 删除无用文件
 rm -rf /home/template/neople-tmp
 rm -rf /home/template/root-tmp
-rm -rf /home/neople
+mkdir -p /home/neople
 rm -rf /root
 # 复制待使用文件
 cp -r /home/template/neople /home/template/neople-tmp
@@ -12,8 +12,9 @@ sed -i "s/PUBLIC_IP/$PUBLIC_IP/g" `find /home/template/neople-tmp -type f -name 
 # 替换Config.ini中的数据库地址
 sed -i "s/GM_ACCOUNT/$GM_ACCOUNT/g" `find /home/template/root-tmp -type f -name "*.ini"`
 sed -i "s/GM_PASSWORD/$GM_PASSWORD/g" `find /home/template/root-tmp -type f -name "*.ini"`
-# 将结果文件拷贝到对应目录
-mv /home/template/neople-tmp /home/neople
+# 将结果文件拷贝到对应目录[这里是为了保住日志文件目录,将日志文件挂载到宿主机外,因此采用覆盖而不是mv]
+cp -rf /home/template/neople-tmp/* /home/neople
+rm -rf /home/template/neople-tmp
 mv /home/template/root-tmp /root
 # 复制版本文件
 cp /data/Script.pvf /home/neople/game/Script.pvf

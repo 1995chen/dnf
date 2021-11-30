@@ -8,7 +8,7 @@ networks:
 
 services:
   init-dnf:
-    image: 1995chen/dnf:latest
+    image: 1995chen/dnf:stable
     environment:
       - TZ=Asia/Shanghai
       # 这里填写你的IP地址
@@ -29,7 +29,7 @@ services:
       - ./data:/data
       - ./mysql:/var/lib/mysql
   dnf:
-    image: 1995chen/dnf:latest
+    image: 1995chen/dnf:stable
     depends_on:
       - init-dnf
     environment:
@@ -80,3 +80,4 @@ services:
     volumes:
       - ./data:/data
       - ./mysql:/var/lib/mysql
+      - ./log:/home/neople/game/log
