@@ -64,25 +64,10 @@ spec:
         env:
         - name: TZ
           value: "Asia/Shanghai"
-        - name: PUBLIC_IP
-          valueFrom:
-            configMapKeyRef:
-              key: dnf_public_ip
-              name: dnf
         - name: DNF_DB_ROOT_PASSWORD
           valueFrom:
             secretKeyRef:
               key: mysql_root_password
-              name: dnf
-        - name: GM_ACCOUNT
-          valueFrom:
-            secretKeyRef:
-              key: gm_account
-              name: dnf
-        - name: GM_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              key: gm_password
               name: dnf
         image: 1995chen/dnf:stable
         imagePullPolicy: IfNotPresent
