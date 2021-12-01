@@ -1,4 +1,0 @@
-#! /bin/bash
-pid=$(pgrep -f DnfGateServer)
-echo $pid
-kill 2 $pid

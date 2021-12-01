@@ -1,0 +1,88 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- & : &amp; -->
+<!-- < : &lt; -->
+<!-- > : &gt; -->
+
+<xml>
+
+<option>
+    <charset type="twn"/> <!-- Korea : kor, China : chn, Japan : jpn USA : usa -->
+</option>
+
+<auction>
+	<string id="0"> <!--AUCTION_MESSAGE_RETURN_MONEY_UPPER_BUYER-->
+		<twn text="[退還競價委托金]拍賣場內的競拍物品 &#10; 你的出價被超越了。退還競標時使用的金幣。&#0;" />
+		<chn text="- 返还竞拍金额 -&#10;您在拍卖行竞拍的[%s%s]出现了新的竞拍者， 系统将返还您的竞拍金额。&#0;" />
+		<jpn text="[入札金の払い戻し]&#10;競売場で入札した%s%sアイテ?に、より高額の入札者が登場しました。入札に使用した。ゴ?ルドが払い戻されます。&#0;" />
+	</string>
+
+	<string id="1"> <!--AUCTION_MESSAGE_SUCCESSFUL_BIDDING_TO_OWNER-->
+		<twn text="[%s%s已經販售]&#10; 競標價格 ： + %d 金幣&#10; 押金 ： + %d 金幣&#10; 手續價 ： - %d 販售金幣&#10; %s%s獲得 %d 金幣。&#0;" />
+		<chn text="- 已成功拍卖[%s%s] -&#10;  成交价 : + %d 金币&#10;  押金 : + %d 金币&#10;  手续费 : - %d 金币&#10;拍卖[%s%s]后， 您获得了%d金币。&#0;" />
+		<jpn text="[%s%sが落札されました。]&#10;落札額 ： + %dゴ?ルド&#10;?金 : + %dゴ?ルド&#10;手数料 : - %dゴ?ルド&#10;%s%sの落札で%dゴ?ルドを入手しました。&#0;" />
+	</string>
+
+	<string id="2"> <!--AUCTION_MESSAGE_SUCCESSFUL_BIDDING_TO_BUYER-->
+		<twn text="[%s%s競標成功]&#0;" />
+		<chn text="- 恭喜您成功竞拍到[%s%s]。&#0;" />
+		<jpn text="[%s%sの入札に成功しました。]&#0;" />
+	</string>
+	
+	<string id="3"> <!--AUCTION_MESSAGE_FAILURE_BIDDING_TO_OWNER-->
+		<twn text="[拍賣已到期]&#10;%s%s的拍賣期已經結束。&#0;" />
+		<chn text="- 上架期限已过 -&#10;您上架的[%s%s]已过上架期限。&#0;" />
+		<jpn text="[競売期間終了]&#10;%s%sの競売期間が終了しました。&#0;" />
+	</string>
+	
+	<string id="4"> <!--AUCTION_MESSAGE_CANCEL_BIDDING_TO_BUYER-->
+		<twn text="[販賣人已經取消登錄物品]&#10;%s%s的拍賣已經取消。將退還競標金.&#0;" />
+		<chn text="- 拍卖者已取消上架 -&#10;[%s%s]已被取消上架， 系统将返还您的竞拍金额。&#0;" />
+		<jpn text="[出品者がアイテ?登?をキャンセルしました。]&#10;%s%sの競売がキャンセルされました。入札金が払い戻されます。&#0;" />
+	</string>
+	
+	<string id="5"> <!--AUCTION_MESSAGE_CANCEL_BIDDING_TO_OWNER-->
+		<twn text="[物品已經取消登錄] &#10;%s%s的拍賣已經取消。將退還物品. &#0;" />
+		<chn text="- 取消物品上架 -&#10;您已取消[%s%s]的上架， 系统将返还您的上架物品。&#0;" />
+		<jpn text="[アイテ?登?をキャンセルしました。]&#10;%s%sの競売をキャンセルしました。アイテ?が戻ってきます。&#0;" />
+	</string>
+
+	<string id="6"> <!--AUCTION_MESSAGE_SUCCESSFUL_UNIT_BIDDING_TO_OWNER-->
+		<twn text="[%s%s成功販售出%d個]&#10; 競標價 ： + %d 金幣&#10; 押金 : + %d 金幣&#10; 手續費 ： - %d 販售金幣&#10; %s%s獲得 %d 金幣。&#0;" />
+		<chn text="您在拍卖行上架的[%s%s] %d个已被拍下。&#10; 成交价: + %d 金币&#10; 押金: + %d 金币&#10; 手续费: - %d 金币&#10;拍卖[%s%s]共获得 %d 金币。&#0;" />
+		<jpn text="[%s%sが%d個落札されました。]&#10;落札額 ： + %dゴ?ルド&#10;?金 : + %dゴ?ルド&#10;手数料 : - %dゴ?ルド&#10;%s%sの落札で%dゴ?ルドを入手しました。&#0;" />
+	</string>
+
+	<string id="7"> <!--AUCTION_MESSAGE_NULL-->
+		<twn text="" />
+		<chn text="" />
+		<jpn text="" />
+	</string>
+	
+	<string id="8">	<!--AUCTION_MESSAGE_SUCCESSFUL_BIDDING_GOLD_TO_OWNER-->
+		<twn text="[%s%s成功販售出]&#10; 競標價 ： + %d 金幣&#10; 手續費 ： -%d 販售金幣&#10; %s%s獲得 %d 金幣。&#0;" />
+		<chn text="- 已成功拍卖[%s%s] -&#10;  成交价 : + %d 代币券&#10;  手续费 : - %d 代币券&#10;拍卖[%s%s]后， 您获得了%d代币券。&#0;" />
+		<jpn text="[%s%sが落札されました。]&#10;落札額 ： + %d?イント&#10;手数料 : - %d?イント&#10;%s%s落札で%d?イントを入手しました。&#0;" />
+	</string>
+	
+	<string id="100">
+		<twn text="拍賣場" />
+		<chn text="拍卖行" />
+		<jpn text="競売場" />
+	</string>
+
+        <string id="101">
+                <twn text="로저레빈" />
+                <chn text="로저레빈" />
+                <jpn text="로저레빈" />
+        </string>
+	
+	<string id="102">
+		<twn text="金幣拍賣場" />
+		<chn text="金币寄售" />
+		<jpn text="取引所" />
+	</string>
+</auction>
+
+</xml>
+

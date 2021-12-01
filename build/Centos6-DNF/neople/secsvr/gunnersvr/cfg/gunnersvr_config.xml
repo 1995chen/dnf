@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="GBK" standalone="yes" ?>
+
+<config __version="1">
+
+    <!--log_priority_: 日志级别: trace=1 debug=2 info=3 error=4 alert=5 fatal=6-->
+    <!--DEFAULT VALUE: '3'-->
+    <log_priority_>0x3</log_priority_>
+
+    <!--monitor_addr_: 监控服务器地址-->
+    <monitor_addr_>
+
+        <!--DEFAULT VALUE: '0.0.0.0'-->
+        <ip_>127.0.0.1</ip_>
+
+        <!--DEFAULT VALUE: '0'-->
+        <port_>9000</port_>
+
+    </monitor_addr_>
+
+    <default_monitor_addr_>
+         <app_id_>0</app_id_>
+         <net_addr_>
+              <ip_>127.0.0.1</ip_>
+              <port_>9000</port_>
+         </net_addr_>
+    </default_monitor_addr_>
+
+    <monitor_info_count_>0</monitor_info_count_>
+    <monitor_info_>
+         <app_id_>5</app_id_>
+         <net_addr_>
+              <ip_>127.0.0.1</ip_>
+              <port_>9000</port_>
+         </net_addr_>
+    </monitor_info_>
+     <monitor_info_>
+         <app_id_>3</app_id_>
+         <net_addr_>
+              <ip_>127.0.0.1</ip_>
+              <port_>9000</port_>
+         </net_addr_>
+    </monitor_info_>
+
+</config>
