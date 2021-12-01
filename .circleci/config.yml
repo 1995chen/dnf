@@ -24,29 +24,6 @@ jobs:
           root: /root
           paths:
             - project
-  download:
-    docker:
-      - image: macjustice/git-lfs:2.0.0
-    steps:
-      - run: 
-          name: Avoid hosts unknown for github
-          command: |
-            mkdir -p ~/.ssh/ && echo -e "Host github.com\n\tStrictHostKeyChecking no\n" > ~/.ssh/config
-      - attach_workspace:
-          at: /root
-      - run: 
-          name: List Files
-          command: |
-            pwd
-            ls -al
-      - run: 
-          name: Download LFS Files
-          command: |
-            git lfs pull
-      - persist_to_workspace:
-          root: /root
-          paths:
-            - project
   build_image:
     docker:
       - image: docker:19
@@ -71,8 +48,6 @@ jobs:
       - run:
           name: Build Image
           command: |
-            docker build -f $(pwd)/build/Centos7/Dockerfile -t 1995chen/centos:7.9 $(pwd)
-            docker build -f $(pwd)/build/Centos7-DNF-Base/Dockerfile -t 1995chen/centos:7.9-DNF-Base $(pwd)
             docker build -f $(pwd)/build/Centos7-DNF/Dockerfile -t 1995chen/dnf:centos7-${CIRCLE_SHA1: 0: 7} $(pwd)
             docker build -f $(pwd)/build/Centos6-DNF/Dockerfile -t 1995chen/dnf:centos6-${CIRCLE_SHA1: 0: 7} $(pwd)
             docker tag 1995chen/dnf:centos7-${CIRCLE_SHA1: 0: 7} 1995chen/dnf:centos7-latest
@@ -80,8 +55,6 @@ jobs:
       - run:
           name: Push Image
           command: |
-            docker push 1995chen/centos:7.9
-            docker push 1995chen/centos:7.9-DNF-Base
             docker push 1995chen/dnf:centos6-${CIRCLE_SHA1: 0: 7}
             docker push 1995chen/dnf:centos7-${CIRCLE_SHA1: 0: 7}
             docker push 1995chen/dnf:centos6-latest
@@ -91,9 +64,6 @@ workflows:
   build_dnf_image:
     jobs:
       - checkout_code
-      - download:
-          requires:
-            - checkout_code
       - build_image:
           requires:
-            - download
+            - checkout_code
