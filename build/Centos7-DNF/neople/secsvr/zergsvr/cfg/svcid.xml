@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="GBK" standalone="yes" ?>
+<svcid_config>
+	<service_num_> 6 </service_num_>
+	<service_info_>
+		<svr_type_> 31 </svr_type_>
+		<svr_id_> 570001 </svr_id_>
+		<svr_ip_> 127.0.0.1 </svr_ip_>
+		<svr_port_> 9000 </svr_port_>
+		<svr_idc_> 1 </svr_idc_>
+		<svr_info_>  </svr_info_>
+	</service_info_>
+	<service_info_>
+		<svr_type_> 2 </svr_type_>
+		<svr_id_> 1 </svr_id_>
+		<svr_ip_> 127.0.0.1 </svr_ip_>
+		<svr_port_> 9001 </svr_port_>
+		<svr_idc_> 1 </svr_idc_>
+		<svr_info_>  </svr_info_>
+	</service_info_>
+	<service_info_>
+		<svr_type_> 30 </svr_type_>
+		<svr_id_> 570011 </svr_id_>
+		<svr_ip_> 127.0.0.1 </svr_ip_>
+		<svr_port_> 9000 </svr_port_>
+		<svr_idc_> 1 </svr_idc_>
+		<svr_info_>  </svr_info_>
+	</service_info_>
+	<service_info_>
+		<svr_type_> 31 </svr_type_>
+		<svr_id_> 570001 </svr_id_>
+		<svr_ip_> 127.0.0.1 </svr_ip_>
+		<svr_port_> 9000 </svr_port_>
+		<svr_idc_> 1 </svr_idc_>
+		<svr_info_>  </svr_info_>
+	</service_info_>
+	<service_info_>
+		<svr_type_> 2 </svr_type_>
+		<svr_id_> 1 </svr_id_>
+		<svr_ip_> 127.0.0.1 </svr_ip_>
+		<svr_port_> 9001 </svr_port_>
+		<svr_idc_> 1 </svr_idc_>
+		<svr_info_>  </svr_info_>
+	</service_info_>
+	<service_info_>
+		<svr_type_> 30 </svr_type_>
+		<svr_id_> 570011 </svr_id_>
+		<svr_ip_> 127.0.0.1 </svr_ip_>
+		<svr_port_> 9000 </svr_port_>
+		<svr_idc_> 1 </svr_idc_>
+		<svr_info_>  </svr_info_>
+	</service_info_>
+</svcid_config>
