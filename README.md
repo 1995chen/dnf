@@ -81,7 +81,7 @@ mkdir -p /data
 # DNF_DB_ROOT_PASSWORD为DNF数据库root密码，建议替换
 # GM_ACCOUNT为登录器用户名，建议替换
 # GM_PASSWORD为登录器密码，建议替换
-docker run -e DNF_DB_ROOT_PASSWORD=88888888 -v /data/log:/home/neople/game/log -v /data/mysql:/var/lib/mysql -v /data/data:/data 1995chen/dnf:stable /bin/bash /home/template/init/init.sh
+docker run --rm -e DNF_DB_ROOT_PASSWORD=88888888 -v /data/log:/home/neople/game/log -v /data/mysql:/var/lib/mysql -v /data/data:/data 1995chen/dnf:stable /bin/bash /home/template/init/init.sh
 
 # 启动服务
 # PUBLIC_IP、DNF_DB_ROOT_PASSWORD、GM_ACCOUNT、GM_PASSWORD与上面实际运行的配置保持一致即可
