@@ -27,9 +27,7 @@ chmod 777 /home/neople/game/Script.pvf
 chmod 777 /home/neople/game/df_game_r
 
 # 重建root, game用户,并限制game只能容器内服务访问
-/usr/bin/mysqld_safe --datadir=/var/lib/mysql --skip-grant-tables &
-# 等待mysql启动
-sleep 10
+service mysql start --skip-grant-tables
 mysql -u root <<EOF
 delete from mysql.user;
 flush privileges;
