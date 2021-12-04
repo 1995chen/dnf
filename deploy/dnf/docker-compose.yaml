@@ -11,8 +11,6 @@ services:
     image: 1995chen/dnf:stable
     environment:
       - TZ=Asia/Shanghai
-      # 数据库root密码[首次初始化会修改root密码]
-      - DNF_DB_ROOT_PASSWORD=88888888
     command: ['/bin/bash', '/home/template/init/init.sh']
     networks:
       - local
@@ -32,6 +30,8 @@ services:
       - DNF_DB_ROOT_PASSWORD=88888888
       - GM_ACCOUNT=gm_user
       - GM_PASSWORD=gm_pass
+      - GM_CONNECT_KEY=763WXRBW3PFTC3IXPFWH
+      - GM_LANDER_VERSION=20180307
     shm_size: 8g
     memswap_limit: -1
     mem_limit: 1g

@@ -21,6 +21,7 @@ metadata:
   name: dnf
 data:
   dnf_public_ip: 192.168.0.203
+  gm_lander_version: "20180307"
 
 ---
 apiVersion: v1
@@ -30,8 +31,9 @@ metadata:
   name: dnf
 data:
   mysql_root_password: ODg4ODg4ODg=
-  gm_account: Y2hlbmxpYW5n
-  gm_password: RGFuZGFuMjY5MTMy
+  gm_account: Z21fdXNlcg==
+  gm_password: Z21fcGFzcw==
+  gm_connect_key: NzYzV1hSQlczUEZUQzNJWFBGV0g=
 
 ---
 apiVersion: apps/v1
@@ -64,12 +66,7 @@ spec:
         env:
         - name: TZ
           value: "Asia/Shanghai"
-        - name: DNF_DB_ROOT_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              key: mysql_root_password
-              name: dnf
-        image: 1995chen/dnf:stable
+        image: 1995chen/dnf:centos7-latest
         imagePullPolicy: IfNotPresent
         command: ["/bin/bash"]
         args: ["/home/template/init/init.sh"]
@@ -83,7 +80,7 @@ spec:
       containers:
       - name: dnf
         imagePullPolicy: IfNotPresent
-        image: 1995chen/dnf:stable
+        image: 1995chen/dnf:centos7-latest
         ports:
         - name: mysql
           containerPort: 3306
@@ -235,6 +232,16 @@ spec:
           valueFrom:
             secretKeyRef:
               key: gm_password
+              name: dnf
+        - name: GM_LANDER_VERSION
+          valueFrom:
+            configMapKeyRef:
+              key: gm_lander_version
+              name: dnf
+        - name: GM_CONNECT_KEY
+          valueFrom:
+            secretKeyRef:
+              key: gm_connect_key
               name: dnf
         volumeMounts:
         - mountPath: /data

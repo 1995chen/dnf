@@ -78,16 +78,6 @@ use tw;
 source /home/template/init/tw.sql;
 flush PRIVILEGES;
 EOF
-  # 禁止匿名用户登录, 修改root密码, 创建game用户并赋予用户权限
-  mysql -u root <<EOF
-delete from mysql.user where user='';
-update mysql.user set password=password("$DNF_DB_ROOT_PASSWORD") where user="root";
-grant all privileges on *.* to 'root'@'%' identified by '$DNF_DB_ROOT_PASSWORD';
-grant all privileges on *.* to 'game'@'127.0.0.1' identified by 'uu5!^%jg';
-flush privileges;
-update d_taiwan.db_connect set db_ip="127.0.0.1", db_port="3306";
-select * from d_taiwan.db_connect;
-EOF
   service mysql stop
   echo "init mysql success"
 }

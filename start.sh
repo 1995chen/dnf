@@ -3,8 +3,7 @@
 # 创建目录，用于存放数据
 mkdir -p /data
 # 初始化[改脚本运行时间较长,可能要10多分钟,主要是将sql导入数据库]
-# 将root密码重置为DNF_DB_ROOT_PASSWORD
-docker run --rm -e DNF_DB_ROOT_PASSWORD=88888888 -v /data/log:/home/neople/game/log -v /data/mysql:/var/lib/mysql -v /data/data:/data 1995chen/dnf:stable /bin/bash /home/template/init/init.sh
+docker run --rm -v /data/log:/home/neople/game/log -v /data/mysql:/var/lib/mysql -v /data/data:/data 1995chen/dnf:stable /bin/bash /home/template/init/init.sh
 
 # 遇到CoreDump就多跑几次,机器内存不足容易OOM建议上8G的交换空间
 # 使用该DNF_DB_ROOT_PASSWORD密码给game账户赋予权限,设置其只允许本地访问增加安全性

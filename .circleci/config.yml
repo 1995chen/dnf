@@ -48,8 +48,6 @@ jobs:
       - run:
           name: Build Image
           command: |
-            docker build -f $(pwd)/build/Centos7/Dockerfile -t 1995chen/centos:7.9 $(pwd)
-            docker build -f $(pwd)/build/Centos7-DNF-Base/Dockerfile -t 1995chen/centos:7.9-DNF-Base $(pwd)
             docker build -f $(pwd)/build/Centos7-DNF/Dockerfile -t 1995chen/dnf:centos7-${CIRCLE_SHA1: 0: 7} $(pwd)
             docker build -f $(pwd)/build/Centos6-DNF/Dockerfile -t 1995chen/dnf:centos6-${CIRCLE_SHA1: 0: 7} $(pwd)
             docker tag 1995chen/dnf:centos7-${CIRCLE_SHA1: 0: 7} 1995chen/dnf:centos7-latest
@@ -57,8 +55,6 @@ jobs:
       - run:
           name: Push Image
           command: |
-            docker push 1995chen/centos:7.9
-            docker push 1995chen/centos:7.9-DNF-Base
             docker push 1995chen/dnf:centos6-${CIRCLE_SHA1: 0: 7}
             docker push 1995chen/dnf:centos7-${CIRCLE_SHA1: 0: 7}
             docker push 1995chen/dnf:centos6-latest

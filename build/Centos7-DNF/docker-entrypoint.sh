@@ -26,12 +26,21 @@ cp /data/publickey.pem /home/neople/game/
 chmod 777 /home/neople/game/Script.pvf
 chmod 777 /home/neople/game/df_game_r
 
+# 重建root, game用户,并限制game只能容器内服务访问
+/usr/bin/mysqld_safe --datadir=/var/lib/mysql --skip-grant-tables &
+mysql -u root <<EOF
+delete from mysql.user;
+flush privileges;
+grant all privileges on *.* to 'root'@'%' identified by '$DNF_DB_ROOT_PASSWORD';
+grant all privileges on *.* to 'game'@'127.0.0.1' identified by 'uu5!^%jg';
+flush privileges;
+select user,host,password from mysql.user;
+EOF
+# 关闭服务
+service mysql stop
 service mysql start
 # 修改数据库IP和端口 & 刷新game账户权限只允许本地登录
 mysql -u root -p$DNF_DB_ROOT_PASSWORD -P 3306 -h 127.0.0.1 <<EOF
-UPDATE mysql.user SET Host='127.0.0.1' WHERE User='game';
-grant all privileges on *.* to 'game'@'127.0.0.1';
-flush privileges;
 update d_taiwan.db_connect set db_ip="127.0.0.1", db_port="3306";
 select * from d_taiwan.db_connect;
 EOF
