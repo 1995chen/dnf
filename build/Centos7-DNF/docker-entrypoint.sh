@@ -9,9 +9,11 @@ cp -r /home/template/root /home/template/root-tmp
 # 替换环境变量
 sed -i "s/PUBLIC_IP/$PUBLIC_IP/g" `find /home/template/neople-tmp -type f -name "*.cfg"`
 sed -i "s/PUBLIC_IP/$PUBLIC_IP/g" `find /home/template/neople-tmp -type f -name "*.tbl"`
-# 替换Config.ini中的数据库地址
+# 替换Config.ini中的GM用户名、密码、连接KEY、登录器版本
 sed -i "s/GM_ACCOUNT/$GM_ACCOUNT/g" `find /home/template/root-tmp -type f -name "*.ini"`
 sed -i "s/GM_PASSWORD/$GM_PASSWORD/g" `find /home/template/root-tmp -type f -name "*.ini"`
+sed -i "s/GM_CONNECT_KEY/$GM_CONNECT_KEY/g" `find /home/template/root-tmp -type f -name "*.ini"`
+sed -i "s/GM_LANDER_VERSION/$GM_LANDER_VERSION/g" `find /home/template/root-tmp -type f -name "*.ini"`
 # 将结果文件拷贝到对应目录[这里是为了保住日志文件目录,将日志文件挂载到宿主机外,因此采用覆盖而不是mv]
 cp -rf /home/template/neople-tmp/* /home/neople
 rm -rf /home/template/neople-tmp

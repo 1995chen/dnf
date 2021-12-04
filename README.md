@@ -95,32 +95,32 @@ docker run -d -e PUBLIC_IP=x.x.x.x -e DNF_DB_ROOT_PASSWORD=88888888 -e GM_ACCOUN
 ```
 
 ## 如何确认已经成功启动
-1.查看日志
-log  
+
+1.查看日志 log  
 ├── siroco11  
-│   ├── Log20211203-09.history  
-│   ├── Log20211203.cri  
-│   ├── Log20211203.debug  
-│   ├── Log20211203.error  
-│   ├── Log20211203.init  
-│   ├── Log20211203.log  
-│   ├── Log20211203.money  
-│   └── Log20211203.snap  
+│ ├── Log20211203-09.history  
+│ ├── Log20211203.cri  
+│ ├── Log20211203.debug  
+│ ├── Log20211203.error  
+│ ├── Log20211203.init  
+│ ├── Log20211203.log  
+│ ├── Log20211203.money  
+│ └── Log20211203.snap  
 └── siroco52  
-    ├── Log20211203-09.history  
-    ├── Log20211203.cri  
-    ├── Log20211203.debug  
-    ├── Log20211203.error  
-    ├── Log20211203.init  
-    ├── Log20211203.log  
-    ├── Log20211203.money  
-    └── Log20211203.snap  
+├── Log20211203-09.history  
+├── Log20211203.cri  
+├── Log20211203.debug  
+├── Log20211203.error  
+├── Log20211203.init  
+├── Log20211203.log  
+├── Log20211203.money  
+└── Log20211203.snap  
 查看Logxxxx.init文件,五国的初始化日志都在这里  
 成功出现五国后,日志文件大概如下,五国初始化时间大概1分钟左右,请耐心等待  
 [root@centos-02 siroco11]# tail -f Log20211203.init  
-[09:40:23] 	- RestrictBegin : 1  
-[09:40:23] 	- DropRate : 0  
-[09:40:23] 	Security Restrict End  
+[09:40:23]    - RestrictBegin : 1  
+[09:40:23]    - DropRate : 0  
+[09:40:23]    Security Restrict End  
 [09:40:23] GeoIP Allow Country Code : CN  
 [09:40:23] GeoIP Allow Country Code : HK  
 [09:40:23] GeoIP Allow Country Code : KR  
@@ -131,14 +131,16 @@ log
 2.查看进程  
 在确保日志都正常的情况下,需要查看进程进一步确定程序正常启动  
 [root@centos-02 siroco11]# ps -ef |grep df_game  
-root     16500 16039  9 20:39 ?        00:01:20 ./df_game_r siroco11 start  
-root     16502 16039  9 20:39 ?        00:01:22 ./df_game_r siroco52 start  
-root     22514 13398  0 20:53 pts/0    00:00:00 grep --color=auto df_game  
+root 16500 16039 9 20:39 ? 00:01:20 ./df_game_r siroco11 start  
+root 16502 16039 9 20:39 ? 00:01:22 ./df_game_r siroco52 start  
+root 22514 13398 0 20:53 pts/0 00:00:00 grep --color=auto df_game  
 如上结果df_game_r进程是存在的,代表成功.如果不成功可以重启服务
 
 ## 重启服务
+
 该服务占有内存较大，极有可能被系统杀死,当进程被杀死时则需要重启服务  
 重启服务命令
+
 ```shell
 docker restart dnf
 ```
@@ -146,12 +148,29 @@ docker restart dnf
 ## 默认的网关信息
 
 网关端口: 881  
-通讯密钥: 763WXRBW3PFTC3IXPFWH  
-登录器端口: 7600  
+通讯密钥: 763WXRBW3PFTC3IXPFWH 登录器版本: 20180307 登录器端口: 7600  
 GM账户: gm_user  
 GM密码: gm_pass
 
+## 可选的环境变量
+
+```shell
+# 公网或局域网IP地址
+PUBLIC_IP
+# GM管理员账号
+GM_ACCOUNT
+# GM管理员密码
+GM_PASSWORD
+# GM连接KEY
+GM_CONNECT_KEY
+# GM登录器版本
+GM_LANDER_VERSION
+# DNF数据库root密码
+DNF_DB_ROOT_PASSWORD
+```
+
 ## 客户端地址下载
+
 链接: https://pan.baidu.com/s/10RgXFtpEhvRUm-hA98Am4A 提取码: fybn
 
 ## docker-compose启动
