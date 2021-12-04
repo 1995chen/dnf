@@ -168,7 +168,7 @@ PUBLIC_IP
 GM_ACCOUNT
 # GM管理员密码
 GM_PASSWORD
-# GM连接KEY
+# GM连接KEY(自定以密钥请使用网关生成的密钥，因为密钥有格式限制，不符合格式的密钥会导致登录器一致卡在网关连接那里)
 GM_CONNECT_KEY
 # GM登录器版本
 GM_LANDER_VERSION
