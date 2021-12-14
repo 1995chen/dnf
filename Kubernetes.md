@@ -256,3 +256,7 @@ spec:
         - mountPath: /dev/shm
           name: memory
 ```
+
+## 一些说明
+yaml中"nodeName: centos-02"是为了固定在一个节点上运行，实际运行时，这块按照实际需要修改。  
+ConfigMap中的dnf_public_ip为实际运行节点的内网/公网IP
