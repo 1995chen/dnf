@@ -175,6 +175,8 @@ GM_LANDER_VERSION
 # DNF数据库root密码
 DNF_DB_ROOT_PASSWORD
 ```
+Windows高版本用户无法进入频道，需要添加hosts  
+PUBLIC_IP(你的服务器IP)  start.dnf.tw
 
 ## 客户端地址下载
 
