@@ -55,7 +55,7 @@ systemctl stop firewalld
 sudo sed -i 's/SELINUX=enforcing/SELINUX=disabled/' /etc/selinux/config
 ```
 
-创建swap
+创建swap(如果内存足够可以直接忽略)
 
 ```shell
 /bin/dd if=/dev/zero of=/var/swap.1 bs=1M count=8000
@@ -63,6 +63,14 @@ mkswap /var/swap.1
 swapon /var/swap.1
 sed -i '$a /var/swap.1 swap swap default 0 0' /etc/fstab
 ```
+
+查看操作系统是否打开swap的使用(如果内存足够可以直接忽略)
+sudo vim /etc/sysctl.conf
+将vm.swappiness的值修改为100(优先使用swap),没有该配置就加上
+```shell
+vm.swappiness = 100
+```
+https://www.cnblogs.com/EasonJim/p/7777904.html
 
 ## 拉取镜像
 
@@ -87,14 +95,14 @@ mkdir -p /data
 # 初始化数据库以及基础数据文件(该过程耗时较长,可能会超过10分钟请耐心等待)
 # 该初始化容器是个一次性任务,跑完会在data, mysql目录下创建初始化文件，程序运行完成后自动退出,不会留下任务容器残留
 # 如果要重新初始化数据,则需要删除mysql, log, data目录重新运行该初始化命令，注意:如果目录没有清空是不会执行任何操作的
-docker run --rm -v /data/log:/home/neople/game/log -v /data/mysql:/var/lib/mysql -v /data/data:/data 1995chen/dnf:stable /bin/bash /home/template/init/init.sh
+docker run --rm -v /data/log:/home/neople/game/log -v /data/mysql:/var/lib/mysql -v /data/data:/data 1995chen/dnf:centos6-latest /bin/bash /home/template/init/init.sh
 
 # 启动服务
 # PUBLIC_IP为公网IP地址，如果在局域网部署则用局域网IP地址，按实际需要替换
 # GM_ACCOUNT为登录器用户名，建议替换
 # GM_PASSWORD为登录器密码，建议替换
 # DNF_DB_ROOT_PASSWORD为mysql root密码,容器启动是root密码会跟随该环境变量的变化自动更新
-docker run -d -e PUBLIC_IP=x.x.x.x -e DNF_DB_ROOT_PASSWORD=88888888 -e GM_ACCOUNT=gm_user -e GM_PASSWORD=gm_pass -v /data/log:/home/neople/game/log -v /data/mysql:/var/lib/mysql -v /data/data:/data -p 3000:3306/tcp -p 7600:7600/tcp -p 881:881/tcp -p 20303:20303/tcp -p 20303:20303/udp -p 20403:20403/tcp -p 20403:20403/udp -p 40403:40403/tcp -p 40403:40403/udp -p 7000:7000/tcp -p 7000:7000/udp -p 7001:7001/tcp -p 7001:7001/udp -p 7200:7200/tcp -p 7200:7200/udp -p 10011:10011/tcp -p 31100:31100/tcp -p 30303:30303/tcp -p 30303:30303/udp -p 30403:30403/tcp -p 30403:30403/udp -p 10052:10052/tcp -p 20011:20011/tcp -p 20203:20203/tcp -p 20203:20203/udp -p 30703:30703/udp -p 11011:11011/udp -p 2311-2313:2311-2313/udp -p 30503:30503/udp -p 11052:11052/udp --cpus=1 --memory=1g --memory-swap=-1 --shm-size=8g 1995chen/dnf:stable
+docker run -d -e PUBLIC_IP=x.x.x.x -e DNF_DB_ROOT_PASSWORD=88888888 -e GM_ACCOUNT=gm_user -e GM_PASSWORD=gm_pass -v /data/log:/home/neople/game/log -v /data/mysql:/var/lib/mysql -v /data/data:/data -p 3000:3306/tcp -p 7600:7600/tcp -p 881:881/tcp -p 20303:20303/tcp -p 20303:20303/udp -p 20403:20403/tcp -p 20403:20403/udp -p 40403:40403/tcp -p 40403:40403/udp -p 7000:7000/tcp -p 7000:7000/udp -p 7001:7001/tcp -p 7001:7001/udp -p 7200:7200/tcp -p 7200:7200/udp -p 10011:10011/tcp -p 31100:31100/tcp -p 30303:30303/tcp -p 30303:30303/udp -p 30403:30403/tcp -p 30403:30403/udp -p 10052:10052/tcp -p 20011:20011/tcp -p 20203:20203/tcp -p 20203:20203/udp -p 30703:30703/udp -p 11011:11011/udp -p 2311-2313:2311-2313/udp -p 30503:30503/udp -p 11052:11052/udp --cpus=1 --memory=1g --memory-swap=-1 --shm-size=8g --name=dnf 1995chen/dnf:centos6-latest
 ```
 
 ## 如何确认已经成功启动
