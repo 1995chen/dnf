@@ -8,7 +8,7 @@ networks:
 
 services:
   init-dnf:
-    image: 1995chen/dnf:stable
+    image: 1995chen/dnf:centos6-1.0.1
     environment:
       - TZ=Asia/Shanghai
     command: ['/bin/bash', '/home/template/init/init.sh']
@@ -19,7 +19,7 @@ services:
       - ./data:/data
       - ./mysql:/var/lib/mysql
   dnf:
-    image: 1995chen/dnf:stable
+    image: 1995chen/dnf:centos6-1.0.1
     depends_on:
       - init-dnf
     environment:
