@@ -24,6 +24,8 @@ COPY build/Centos7-DNF/Script.tgz /home/template/init/
 ADD build/Centos7-DNF/df_game_r /home/template/init/
 # 初始化脚本
 ADD build/Centos7-DNF/init.sh /home/template/init/
+# 网关配置文件
+ADD build/Centos7-DNF/Config.ini /home/template/init/
 # 启动脚本
 ADD build/Centos7-DNF/docker-entrypoint.sh /
 # 放开tmp目录权限
