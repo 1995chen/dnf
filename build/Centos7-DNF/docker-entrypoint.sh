@@ -2,7 +2,14 @@
 rm -rf /home/template/neople-tmp
 rm -rf /home/template/root-tmp
 mkdir -p /home/neople
-rm -rf /root
+# 清理root下文件
+rm -rf /root/DnfGateServer
+rm -rf /root/GateRestart
+rm -rf /root/GateStop
+rm -rf /root/run
+rm -rf /root/stop
+rm -rf /root/Config.ini
+rm -rf /root/privatekey.pem
 
 # 复制待使用文件
 cp -r /home/template/neople /home/template/neople-tmp
@@ -21,7 +28,8 @@ cp /data/df_game_r /home/neople/game/df_game_r
 chmod 777 /home/neople/game/df_game_r
 cp /data/publickey.pem /home/neople/game/
 
-mv /home/template/root-tmp /root
+mv /home/template/root-tmp/* /root/
+rm -rf /home/template/root-tmp
 # 拷贝证书key
 cp /data/privatekey.pem /root/
 # 构建配置文件软链[不能使用硬链接, 硬链接不可跨设备]
