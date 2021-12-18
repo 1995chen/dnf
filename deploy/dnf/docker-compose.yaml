@@ -35,7 +35,11 @@ services:
     shm_size: 8g
     memswap_limit: -1
     mem_limit: 1g
-    cpu_count: 1
+    # cpu_count: 1 // 没有生效 使用deploy参数限制cpu
+    deploy:
+      resources:
+        limits:
+          cpus: "1.00"
     networks:
       - local
     restart: always
