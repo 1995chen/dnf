@@ -35,7 +35,10 @@ services:
     shm_size: 8g
     memswap_limit: -1
     mem_limit: 1g
+    # windows下生效
     cpu_count: 1
+    # 占用1个cpu
+    cpus: 1.0
     networks:
       - local
     restart: always
