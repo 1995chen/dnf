@@ -171,6 +171,8 @@ docker rm dnf
 ```
 然后用最新的环境变量设置启动服务即可
 ```shell
+# 自动获取公网地址
+AUTO_PUBLIC_IP
 # 公网或局域网IP地址
 PUBLIC_IP
 # GM管理员账号
@@ -183,6 +185,8 @@ GM_CONNECT_KEY
 GM_LANDER_VERSION
 # DNF数据库root密码
 DNF_DB_ROOT_PASSWORD
+# DNF数据库game密码（<=8位）
+DNF_DB_GAME_PASSWORD
 ```
 Windows高版本用户无法进入频道，需要添加hosts  
 PUBLIC_IP(你的服务器IP)  start.dnf.tw
