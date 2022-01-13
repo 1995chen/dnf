@@ -9,6 +9,7 @@
 该项目是将地下城与勇士(毒奶粉、DNF、DOF)整合成一个Docker镜像的项目 如何想实际部署，则只需要拷贝其中的[部署文件夹](deploy)即可,即deploy目录。 本项目使用官方Centos:
 6.9为基础镜像，通过增加环境变量以及初始化脚本实现 应用的快速部署。 </br>
 感谢 xyz1001大佬提供`libhook.so`优化CPU占用 [源码](https://godbolt.org/z/EKsYGh5dv)
+站库分离详见 [XanderYe/dnf](https://github.com/XanderYe/dnf)
 
 ## 自动化构建
 
