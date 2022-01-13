@@ -73,9 +73,6 @@ source /home/template/init/taiwan_se_event.sql;
 CREATE SCHEMA taiwan_siroco DEFAULT CHARACTER SET utf8 ;
 use taiwan_siroco;
 source /home/template/init/taiwan_siroco.sql;
-CREATE SCHEMA tw DEFAULT CHARACTER SET utf8 ;
-use tw;
-source /home/template/init/tw.sql;
 flush PRIVILEGES;
 EOF
   service mysql stop

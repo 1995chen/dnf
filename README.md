@@ -7,7 +7,8 @@
 ## 说明
 
 该项目是将地下城与勇士(毒奶粉、DNF、DOF)整合成一个Docker镜像的项目 如何想实际部署，则只需要拷贝其中的[部署文件夹](deploy)即可,即deploy目录。 本项目使用官方Centos:
-6.9为基础镜像，通过增加环境变量以及初始化脚本实现 应用的快速部署。
+6.9为基础镜像，通过增加环境变量以及初始化脚本实现 应用的快速部署。 </br>
+感谢 xyz1001大佬提供`libhook.so`优化CPU占用 [源码](https://godbolt.org/z/EKsYGh5dv)
 
 ## 自动化构建
 
@@ -185,7 +186,7 @@ GM_CONNECT_KEY
 GM_LANDER_VERSION
 # DNF数据库root密码
 DNF_DB_ROOT_PASSWORD
-# DNF数据库game密码（<=8位）
+# DNF数据库game密码（必须8位）
 DNF_DB_GAME_PASSWORD
 ```
 Windows高版本用户无法进入频道，需要添加hosts  

@@ -32,6 +32,8 @@ ADD build/Centos7-DNF/Config.ini /home/template/init/
 ADD build/Centos7-DNF/docker-entrypoint.sh /
 # TEA算法
 ADD build/Centos7-DNF/TeaEncrypt /
+# 优化CPU
+ADD build/Centos7-DNF/libhook.so /lib/
 # 放开tmp目录权限
 WORKDIR /tmp
 RUN chmod -R 777 /tmp
