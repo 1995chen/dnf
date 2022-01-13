@@ -8,7 +8,9 @@
 
 该项目是将地下城与勇士(毒奶粉、DNF、DOF)整合成一个Docker镜像的项目 如何想实际部署，则只需要拷贝其中的[部署文件夹](deploy)即可,即deploy目录。 本项目使用官方Centos:
 6.9为基础镜像，通过增加环境变量以及初始化脚本实现 应用的快速部署。 </br>
-感谢 xyz1001大佬提供`libhook.so`优化CPU占用 [源码](https://godbolt.org/z/EKsYGh5dv)
+
+感谢 xyz1001大佬提供`libhook.so`优化CPU占用 [源码](https://godbolt.org/z/EKsYGh5dv) </br>
+
 站库分离详见 [XanderYe/dnf](https://github.com/XanderYe/dnf)
 
 ## 自动化构建
@@ -196,6 +198,14 @@ PUBLIC_IP(你的服务器IP)  start.dnf.tw
 ## 客户端地址下载
 
 链接: https://pan.baidu.com/s/10RgXFtpEhvRUm-hA98Am4A 提取码: fybn
+
+### 统一网关下载
+
+链接: https://pan.baidu.com/s/1w6_oGsOtNli11fNjug9f4Q 提取码: 5efm
+
+### Dof7补丁下载
+链接: https://pan.baidu.com/s/1rxlGfkfHTeGwzMKUNAbSlQ 提取码: ier2
+
 
 ## docker-compose启动
 
