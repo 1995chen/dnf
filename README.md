@@ -5,7 +5,7 @@
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/1995chen/dnf/master/LICENSE)
 
 ## Contact US
-For cooperation and suggestions please contact chenl2448365088@gmail.com
+For cooperation and suggestions please contact chenl2448365088@gmail.com or yzd315695355@gmail.com
 
 ## 说明
 
