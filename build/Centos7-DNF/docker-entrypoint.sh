@@ -20,7 +20,7 @@ if $AUTO_PUBLIC_IP;
 then
   PUBLIC_IP=`curl -s http://pv.sohu.com/cityjson?ie=utf-8|awk -F\" '{print $4}'`
   echo "public ip: $PUBLIC_IP"
-  sleep 1
+  sleep 5
 fi
 
 chmod +x /TeaEncrypt

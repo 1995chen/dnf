@@ -112,7 +112,16 @@ cd /home/neople/game
 chmod 777 *
 rm -rf /home/neople/game/log/*
 sleep 2
-LD_PRELOAD=/lib/libhook.so ./df_game_r siroco11 start &
-sleep 2
-LD_PRELOAD=/lib/libhook.so ./df_game_r siroco52 start &
+
+if $PRELOAD_LD;then
+  LD_PRELOAD=/lib/libhook.so ./df_game_r siroco11 start &
+  echo "start game use LD_PRELOAD mode"
+  sleep 2
+  LD_PRELOAD=/lib/libhook.so ./df_game_r siroco52 start &
+else
+  ./df_game_r siroco11 start &
+  echo "start game use normal mode"
+  sleep 2
+  ./df_game_r siroco52 start &
+fi
 tail -f /dev/null

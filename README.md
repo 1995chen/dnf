@@ -194,6 +194,8 @@ GM_LANDER_VERSION
 DNF_DB_ROOT_PASSWORD
 # DNF数据库game密码（必须8位）
 DNF_DB_GAME_PASSWORD
+# 采用LD_PRELOAD优化CPU使用[模式为false]
+PRELOAD_LD
 ```
 Windows高版本用户无法进入频道，需要添加hosts  
 PUBLIC_IP(你的服务器IP)  start.dnf.tw
