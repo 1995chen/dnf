@@ -87,7 +87,13 @@ cd /home/neople/coserver
 chmod 777 *
 rm -f  /home/neople/coserver/pid/*.pid
 rm -rf  /home/neople/coserver/log/*.*
-./df_coserver_r coserver start &
+if $PRELOAD_LD;then
+  echo "start game use LD_PRELOAD mode"
+  LD_PRELOAD=/lib/libhook.so ./df_coserver_r coserver start &
+else
+  echo "start game use normal mode"
+  ./df_coserver_r coserver start &
+fi
 
 cd /home/neople/community
 chmod 777 *
