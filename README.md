@@ -206,7 +206,7 @@ PUBLIC_IP(你的服务器IP)  start.dnf.tw
 
 ### 统一网关下载
 
-链接: https://pan.baidu.com/s/1w6_oGsOtNli11fNjug9f4Q 提取码: 5efm
+链接：https://pan.baidu.com/s/1Ea80rBlPQ4tY5P18ikucfw 提取码：bbd0
 
 ### Dof7补丁下载
 链接: https://pan.baidu.com/s/1rxlGfkfHTeGwzMKUNAbSlQ 提取码: ier2
