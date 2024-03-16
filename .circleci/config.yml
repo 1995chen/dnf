@@ -24,7 +24,7 @@ jobs:
             pwd
             ls -al
       - persist_to_workspace:
-          root: /root
+          root: /home/circleci
           paths:
             - project
 
