@@ -1,11 +1,10 @@
 # Base Image
-FROM 1995chen/centos:6.9-DNF-Base
+FROM 1995chen/centos:6.9-DNF-Base.v2
 
 MAINTAINER 1995chen
 
 # 定义默认环境变量
 ENV AUTO_PUBLIC_IP=false
-ENV PRELOAD_LD=true
 ENV PUBLIC_IP=127.0.0.1
 ENV GM_ACCOUNT=gm_user
 ENV GM_PASSWORD=gm_pass
@@ -14,6 +13,8 @@ ENV GM_LANDER_VERSION=20180307
 ENV DNF_DB_ROOT_PASSWORD=88888888
 ENV DNF_DB_GAME_PASSWORD=uu5!^%jg
 
+# 添加supervisor配置文件
+ADD build/Centos6-DNF/dnf.conf /etc/supervisor/conf.d/
 # 将模板添加到模版目录下[后续容器启动需要先将环境变量替换,再将文件移动到正确位置]
 ADD build/Centos6-DNF/neople /home/template/neople
 ADD build/Centos6-DNF/root /home/template/root

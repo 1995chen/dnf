@@ -1,6 +1,7 @@
 find /home/neople/ -name '*.log' -type f -print -exec rm -f {} \;
 find /home/neople/ -name '*.pid' -type f -print -exec rm -f {} \;
 find /home/neople/ -name 'core.*' -type f -print -exec rm -f {} \;
+supervisorctl stop all
 killall -9 df_stun_r
 killall -9 df_monitor_r
 killall -9 df_manager_r
@@ -19,5 +20,5 @@ killall -9 zergsvr
 killall -9 df_game_r
 killall -9 secagent
 
-cd
+cd /root/
 ./GateStop

@@ -1,5 +1,5 @@
 # Base Image
-FROM 1995chen/centos:6.9
+FROM 1995chen/centos:6.9-with-py2.7
 
 MAINTAINER 1995chen
 
