@@ -96,7 +96,7 @@ https://hub.docker.com/repository/docker/1995chen/dnf
 ```shell
 # 创建一个目录,这里以/data为例,后续会将该目录下的mysql以及data目录挂载到容器内部
 mkdir -p /data
-
+# 2.1.0版本镜像启动时会自动初始化mysql数据
 # 启动服务
 # PUBLIC_IP为公网IP地址，如果在局域网部署则用局域网IP地址，按实际需要替换
 # GM_ACCOUNT为登录器用户名，建议替换
