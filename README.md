@@ -194,7 +194,7 @@ GM_LANDER_VERSION
 DNF_DB_ROOT_PASSWORD
 # DNF数据库game密码（必须8位）
 DNF_DB_GAME_PASSWORD
-# 采用LD_PRELOAD优化CPU使用[默认为true]
+# 采用LD_PRELOAD优化CPU使用[默认为true], 后续该环境变量将强制使用
 PRELOAD_LD
 ```
 Windows高版本用户无法进入频道，需要添加hosts  
