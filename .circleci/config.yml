@@ -11,7 +11,7 @@ executors:
 jobs:
   checkout_code:
     docker:
-      - image: alpine:3.7
+      - image: cimg/base:2023.03
     steps:
       - run: 
           name: Avoid hosts unknown for github
