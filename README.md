@@ -1,6 +1,6 @@
 # 地下城与勇士容器版本
 
-[![CircleCI Build Status](https://circleci.com/gh/1995chen/dnf.svg?style=shield)](https://circleci.com/gh/1995chen/dnf)
+[![CircleCI](https://dl.circleci.com/status-badge/img/circleci/5hFbZLArT4z93ByaTYNZ2x/RreRQeCp7yaWKmcyWrNDEs/tree/main.svg?style=svg&circle-token=CCIPRJ_Sg2B4EQQ3NGhtpCzrE5BgJ_cf6d6666bb4468d097db9ad01858ed43608eea82)](https://dl.circleci.com/status-badge/redirect/circleci/5hFbZLArT4z93ByaTYNZ2x/RreRQeCp7yaWKmcyWrNDEs/tree/main)
 [![Docker Image](https://img.shields.io/docker/pulls/1995chen/dnf.svg?maxAge=3600)](https://hub.docker.com/r/1995chen/dnf/)
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/1995chen/dnf/master/LICENSE)
 
