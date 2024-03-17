@@ -15,6 +15,7 @@ For cooperation and suggestions please contact chenl2448365088@gmail.com or yzd3
 感谢 xyz1001大佬提供`libhook.so`优化CPU占用 [源码](https://godbolt.org/z/EKsYGh5dv) </br>
 
 站库分离详见 [XanderYe/dnf](https://github.com/XanderYe/dnf)
+如果觉得本项目和[XanderYe/dnf](https://github.com/XanderYe/dnf)对你有帮助，可以点一下Star支持下我们，谢谢。
 
 ## 自动化构建
 
@@ -219,6 +220,7 @@ PUBLIC_IP(你的服务器IP)  start.dnf.tw
 QQ 1群:852685848(已满)  
 QQ 2群:418505204
 欢迎各路大神加入,一起完善项目，成就当年梦,800万勇士冲！
+(群内没有任何的收费项目)
 
 ## 申明
 
