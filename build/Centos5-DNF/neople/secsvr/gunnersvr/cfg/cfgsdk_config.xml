@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="GBK" standalone="yes" ?>
+<cfgsdk_config>
+	<slave_cfgsvr_type_> 1 </slave_cfgsvr_type_>
+	<slave_cfgsvr_id_> 2 </slave_cfgsvr_id_>
+	<slave_cfgsvr_ip_> 127.0.0.1 </slave_cfgsvr_ip_>
+	<slave_cfgsvr_port_> 9001 </slave_cfgsvr_port_>
+	<game_id_> 57 </game_id_>
+	<idc_no_> 1 </idc_no_>
+	<world_> 1 </world_>
+	<deploy_info_num_> 1 </deploy_info_num_>
+	<deploy_info_>
+		<game_id_> 57 </game_id_>
+		<idc_no_> 1 </idc_no_>
+		<world_> 1 </world_>
+	</deploy_info_>
+</cfgsdk_config>

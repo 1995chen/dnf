@@ -44,18 +44,23 @@ jobs:
           command: |
             docker build -f $(pwd)/build/Centos7-DNF/Dockerfile -t 1995chen/dnf:centos7-${CIRCLE_SHA1: 0: 7} $(pwd)
             docker build -f $(pwd)/build/Centos6-DNF/Dockerfile -t 1995chen/dnf:centos6-${CIRCLE_SHA1: 0: 7} $(pwd)
+            docker build -f $(pwd)/build/Centos5-DNF/Dockerfile -t 1995chen/dnf:centos5-${CIRCLE_SHA1: 0: 7} $(pwd)
             docker tag 1995chen/dnf:centos7-${CIRCLE_SHA1: 0: 7} 1995chen/dnf:centos7-latest
             docker tag 1995chen/dnf:centos6-${CIRCLE_SHA1: 0: 7} 1995chen/dnf:centos6-latest
+            docker tag 1995chen/dnf:centos5-${CIRCLE_SHA1: 0: 7} 1995chen/dnf:centos5-latest
       - run:
           name: Archive Docker image
           command: |
+            docker save -o base-centos5.tar 1995chen/dnf:centos5-${CIRCLE_SHA1: 0: 7}
             docker save -o base-centos6.tar 1995chen/dnf:centos6-${CIRCLE_SHA1: 0: 7}
             docker save -o base-centos7.tar 1995chen/dnf:centos7-${CIRCLE_SHA1: 0: 7}
       - run:
           name: Push Image
           command: |
+            docker push 1995chen/dnf:centos5-${CIRCLE_SHA1: 0: 7}
             docker push 1995chen/dnf:centos6-${CIRCLE_SHA1: 0: 7}
             docker push 1995chen/dnf:centos7-${CIRCLE_SHA1: 0: 7}
+            docker push 1995chen/dnf:centos5-latest
             docker push 1995chen/dnf:centos6-latest
             docker push 1995chen/dnf:centos7-latest
       # 持久化root目录
@@ -74,12 +79,15 @@ jobs:
       - run:
           name: Load archived Docker image
           command: |
+            docker load -i base-centos5.tar
             docker load -i base-centos6.tar
             docker load -i base-centos7.tar
       - run:
           name: Tag & Push Image
           command: |
             echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+            docker tag 1995chen/dnf:centos5-${CIRCLE_SHA1: 0: 7} 1995chen/dnf:centos5-$CIRCLE_TAG
+            docker push 1995chen/dnf:centos5-$CIRCLE_TAG
             docker tag 1995chen/dnf:centos6-${CIRCLE_SHA1: 0: 7} 1995chen/dnf:centos6-$CIRCLE_TAG
             docker push 1995chen/dnf:centos6-$CIRCLE_TAG
             docker tag 1995chen/dnf:centos7-${CIRCLE_SHA1: 0: 7} 1995chen/dnf:centos7-$CIRCLE_TAG

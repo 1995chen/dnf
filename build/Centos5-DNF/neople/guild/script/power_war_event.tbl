@@ -1,0 +1,16 @@
+# 공란은 반드시 tab으로 구분할것, 라인의 끝에 space나 tab가 있으면 안됨
+# 시작 요일 : 0 ~ 6( 0 : 일 ~ 6 : 토 )
+# 시간      : 0 ~ 23
+1.power_war_event_start_week_day        0
+2.power_war_event_start_time    16
+3.power_war_event_end_time      18
+4.power_war_ranking_update_time 1
+# 5 ~ 11번까지는 각 요일별(5:일, 6:월, 7:화, 8:수, 9:목, 10:금, 11:토) 설정
+# 세력전 on/off(1/0), 시작시간(0~23), 종료시간(0~23)
+5.power_war_event_start_week_special_day        1       17      19
+6.power_war_event_start_week_special_day        1       17      19
+7.power_war_event_start_week_special_day        1       22      23
+8.power_war_event_start_week_special_day        1       17      19
+9.power_war_event_start_week_special_day        1       17      19
+10.power_war_event_start_week_special_day       1       17      19
+11.power_war_event_start_week_special_day       1       17      19
