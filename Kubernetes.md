@@ -61,26 +61,10 @@ spec:
           medium: Memory
           sizeLimit: 8Gi
 
-      initContainers:
-      - name: init-data
-        env:
-        - name: TZ
-          value: "Asia/Shanghai"
-        image: 1995chen/dnf:centos7-2.0.2
-        imagePullPolicy: IfNotPresent
-        command: ["/bin/bash"]
-        args: ["/home/template/init/init.sh"]
-        volumeMounts:
-        - mountPath: /data
-          name: dnf
-          subPath: data
-        - mountPath: /var/lib/mysql
-          name: dnf
-          subPath: mysql
       containers:
       - name: dnf
         imagePullPolicy: IfNotPresent
-        image: 1995chen/dnf:centos7-2.0.2
+        image: 1995chen/dnf:centos5-2.1.2
         ports:
         - name: mysql
           containerPort: 3306

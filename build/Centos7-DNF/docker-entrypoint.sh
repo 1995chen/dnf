@@ -1,3 +1,5 @@
+# 初始化数据
+./home/template/init/init.sh
 # 删除无用文件
 rm -rf /home/template/neople-tmp
 rm -rf /home/template/root-tmp
@@ -34,7 +36,7 @@ find /home/template/neople-tmp -type f -name "*.cfg" -print0 | xargs -0 sed -i "
 find /home/template/neople-tmp -type f -name "*.cfg" -print0 | xargs -0 sed -i "s/DEC_GAME_PWD/$DEC_GAME_PWD/g"
 find /home/template/neople-tmp -type f -name "*.cfg" -print0 | xargs -0 sed -i "s/PUBLIC_IP/$PUBLIC_IP/g"
 find /home/template/neople-tmp -type f -name "*.tbl" -print0 | xargs -0 sed -i "s/PUBLIC_IP/$PUBLIC_IP/g"
-# 将结果文件拷贝到对应目录[这里是为了保住日志文件目录,将日志文件挂载到宿主机外,因此采用覆盖而不是mv]
+# 将结果文件拷贝到对应目录[这里是为了保住日志文件目录,将日志文件挂载到宿主机外,因此采用复制而不是mv]
 cp -rf /home/template/neople-tmp/* /home/neople
 rm -rf /home/template/neople-tmp
 # 复制版本文件

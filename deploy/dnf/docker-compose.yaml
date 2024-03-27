@@ -1,27 +1,9 @@
 version: "2.3"
 
-networks:
-  local:
-    ipam:
-      config:
-        - subnet: 172.20.0.0/16
-
 services:
-  init-dnf:
-    image: 1995chen/dnf:centos6-2.0.2
-    environment:
-      - TZ=Asia/Shanghai
-    command: ['/bin/bash', '/home/template/init/init.sh']
-    networks:
-      - local
-    restart: "no"
-    volumes:
-      - ./data:/data
-      - ./mysql:/var/lib/mysql
+
   dnf:
-    image: 1995chen/dnf:centos6-2.0.2
-    depends_on:
-      - init-dnf
+    image: 1995chen/dnf:centos5-2.1.2
     environment:
       - TZ=Asia/Shanghai
       # 这里填写你的IP地址
@@ -35,12 +17,9 @@ services:
     shm_size: 8g
     memswap_limit: -1
     mem_limit: 1g
-    # windows下生效
     cpu_count: 1
     # 占用1个cpu
-    cpus: 1.0
-    networks:
-      - local
+    # cpus: 1.0
     restart: always
     ports:
       - 3000:3306/tcp       # mysql 数据库
