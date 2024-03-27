@@ -1,5 +1,5 @@
 # 初始化数据
-./home/template/init/init.sh
+bash /home/template/init/init.sh
 # 删除无用文件
 rm -rf /home/template/neople-tmp
 rm -rf /home/template/root-tmp
