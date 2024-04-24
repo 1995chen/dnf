@@ -202,8 +202,10 @@ Windows高版本用户无法进入频道，需要添加hosts
 PUBLIC_IP(你的服务器IP)  start.dnf.tw
 
 ## FAQ
-1.点击网关登录，没反应，不出游戏
+1.点击网关登录，没反应，不出游戏（请透过Garena+执行）
 * A: windows7需要用管理员权限运行网关，windows10请不要用管理员权限运行网关
+* A: 无法使用虚拟机Console、VNC等访问Windows。
+* A: WIN+R输入dxdiag检查显示-DirectX功能是否全部开启。
 
 2.服务端不出五国
 * A: 机器内存不够，swap未配置或配置后未生效，通过free -m查看swap占用内存
@@ -222,9 +224,13 @@ PUBLIC_IP(你的服务器IP)  start.dnf.tw
 * A: 检查Linux服务端防火墙是否关闭
 * A: 检查云服务器厂商相关端口是否放开
 * A: 客户端windows是否配置hosts
+* A: PUBLIC_IP是否填错，windows需要能够访问到这个配置的PUBLIC_IP
+* A: 使用统一补丁需要检查网关生成的登陆器的IP
+* A: 使用Dof7.6补丁需要检查DNF.toml中的IP
 
-6.点击登录后报错
+6.点击登录后报错（请重新安装Init）
 * A: PVF加密错误，需要重新加密PVF
+* A: 使用Dof7.6补丁，需要恢复成未加密PVF
 
 7.统一网关无法连接到数据库
 * A: 数据库默认端口3000，用户名使用root，密码默认88888888 ,请确保3000端口在云服务厂商配置里放开
@@ -246,6 +252,7 @@ PUBLIC_IP(你的服务器IP)  start.dnf.tw
 * A: 与客户端有关，部分客户端没优化好会出现这个问题
 * A: windows7下需要用管理员权限运行启用中文输入法程序（可以加群问群友），或使用系统自带英文输入法
 * A: windows10需要使用系统自带的英文输入法
+* A: 使用Dof7.6补丁
 
 12.如何挂载DP
 * A: 不需要挂载DP，默认已经使用DP
