@@ -1,3 +1,17 @@
+# 清理日志
+rm -rf /home/neople/game/log/siroco11/*
+rm -rf /home/neople/game/log/siroco52/*
+# 重设supervisor web网页密码
+sed -i "s/^username=.*/username=$WEB_USER/" /etc/supervisord.conf
+sed -i "s/^password=.*/password=$WEB_PASS/" /etc/supervisord.conf
+# 给supervisor扩展文件赋予权限[可用于扩展第三方网关]
+mkdir -p /data/conf.d
+if [ $(find /data/conf.d -name "*.conf" | wc -l) -gt 0 ]; then
+  echo "Add permissions to the extension configuration."
+  chmod 777 /data/conf.d/*.conf
+else
+  echo "Extension configuration not set up."
+fi
 # 初始化数据
 bash /home/template/init/init.sh
 # 删除无用文件

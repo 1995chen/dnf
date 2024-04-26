@@ -12,8 +12,11 @@ ENV GM_CONNECT_KEY=763WXRBW3PFTC3IXPFWH
 ENV GM_LANDER_VERSION=20180307
 ENV DNF_DB_ROOT_PASSWORD=88888888
 ENV DNF_DB_GAME_PASSWORD=uu5!^%jg
+ENV WEB_USER=root
+ENV WEB_PASS=123456
 
 # 添加supervisor配置文件
+ADD build/Centos7-DNF/supervisord.conf /etc/supervisord.conf
 ADD build/Centos7-DNF/dnf.conf /etc/supervisor/conf.d/
 # 将模板添加到模版目录下[后续容器启动需要先将环境变量替换,再将文件移动到正确位置]
 ADD build/Centos7-DNF/neople /home/template/neople
@@ -36,6 +39,7 @@ ADD build/Centos7-DNF/docker-entrypoint.sh /
 ADD build/Centos7-DNF/TeaEncrypt /
 # 优化CPU
 ADD build/Centos7-DNF/libhook.so /lib/
+RUN chmod 777 /lib/libhook.so
 # 放开tmp目录权限
 WORKDIR /tmp
 RUN chmod -R 777 /tmp

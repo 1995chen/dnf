@@ -22,6 +22,7 @@ services:
     # cpus: 1.0
     restart: always
     ports:
+      - 2000:180/tcp        # web管理页面
       - 3000:3306/tcp       # mysql 数据库
       - 7600:7600/tcp       # DnfGateServe 网关
       - 881:881/tcp         # DnfGateServe 网关
