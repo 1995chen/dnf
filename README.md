@@ -212,12 +212,14 @@ PUBLIC_IP(你的服务器IP)  start.dnf.tw
 * A: windows7需要用管理员权限运行网关，windows10请不要用管理员权限运行网关
 * A: 无法使用虚拟机Console、VNC等访问Windows。
 * A: WIN+R输入dxdiag检查显示-DirectX功能是否全部开启。
+* A: 没有覆盖客户端补丁。
 
 2.服务端不出五国
 * A: 机器内存不够，swap未配置或配置后未生效，通过free -m查看swap占用内存
 * A: 服务器磁盘空间是否足够
 * A: 如果更换过PVF,请确保PVF是未加密的，而且需要同步更换对应的等级补丁
 * A: 机器内存低于2G可以尝试修改--shm-size=2g或1g
+* A: swap占用为0，通过free -m查看swap使用率，通过sysctl -p查看设置是否正确，设置正确依旧swap占用为0，需要重启服务器。
 
 3.镜像运行报错
 * A: 尝试更换其他镜像
