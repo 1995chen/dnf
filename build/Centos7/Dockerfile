@@ -10,7 +10,7 @@ RUN cd /etc/yum.repos.d/ && \
 # 添加源
 ADD build/Centos7/CentOS-Base.repo /etc/yum.repos.d/
 # 更新Repo
-RUN yum clean all && yum update -y && yum install -y psmisc openssl openssl-devel curl wget perl vim && \
+RUN yum clean all && yum update -y && yum install -y psmisc openssl openssl-devel curl wget perl vim iptables && \
     yum clean all
 # 切换工作目录
 WORKDIR /root

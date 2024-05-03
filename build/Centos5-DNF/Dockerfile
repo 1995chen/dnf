@@ -1,5 +1,5 @@
 # Base Image
-FROM 1995chen/centos:5.11.1-DNF-Base
+FROM 1995chen/centos:5.11.2-DNF-Base
 
 MAINTAINER 1995chen
 
@@ -40,6 +40,9 @@ ADD build/Centos5-DNF/TeaEncrypt /
 # 优化CPU
 ADD build/Centos5-DNF/libhook.so /lib/
 RUN chmod 777 /lib/libhook.so
+# 添加netbird
+COPY netbird_0.27.3_linux_amd64.tar.gz /tmp/
+RUN cd /tmp/ && tar -zxvf netbird_0.27.3_linux_amd64.tar.gz && mv netbird /usr/bin/ && rm -rf /tmp/*
 # 放开tmp目录权限
 WORKDIR /tmp
 RUN chmod -R 777 /tmp

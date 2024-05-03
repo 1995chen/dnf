@@ -26,7 +26,7 @@ COPY build/Centos5/vim-9.1.0380.tar.gz /tmp/
 # 更新repo
 RUN yum clean all && yum makecache && yum update -y && \
     yum install -y gcc gcc-c++ make zlib-devel libc.so.6 autoconf gettext ncurses-devel libstdc++ libstdc++.so.6 \
-    glibc.i686 libssl.so.6 xulrunner.x86_64 libXtst.x86_64 initscripts && \ 
+    glibc.i686 libssl.so.6 xulrunner.x86_64 libXtst.x86_64 initscripts iptables && \ 
     yum clean all && ln -sf /lib/libssl.so.6 /usr/lib64/libssl.so.6 && ln -sf /usr/lib64/libcrypto.so.10 /usr/lib64/libcrypto.so.6
 WORKDIR /tmp
 # 编译perl

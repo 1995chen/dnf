@@ -10,7 +10,8 @@ RUN cd /etc/yum.repos.d/ && \
 # 添加源
 ADD build/Centos6/CentOS-Base.repo /etc/yum.repos.d/
 # 更新Repo
-RUN yum clean all && yum update -y && yum install -y openssl openssl-devel curl wget perl vim && \
+RUN yum clean all && yum update -y && yum install -y openssl openssl-devel curl wget perl vim gcc gcc-c++ make zlib-devel libc.so.6 libstdc++ libstdc++.so.6 glibc.i686 libssl.so.6 xulrunner.x86_64 libXtst.x86_64 initscripts iptables && \
+    ln -sf /usr/lib64/libssl.so.10 /usr/lib64/libssl.so.6 && ln -sf /usr/lib64/libcrypto.so.10 /usr/lib64/libcrypto.so.6 && \
     yum clean all
 # 切换工作目录
 WORKDIR /root
