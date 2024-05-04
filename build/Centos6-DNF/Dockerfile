@@ -41,7 +41,7 @@ ADD build/Centos6-DNF/TeaEncrypt /
 ADD build/Centos6-DNF/libhook.so /lib/
 RUN chmod 777 /lib/libhook.so
 # 添加netbird
-COPY netbird_0.27.3_linux_amd64.tar.gz /tmp/
+COPY build/Centos6-DNF/netbird_0.27.3_linux_amd64.tar.gz /tmp/
 RUN cd /tmp/ && tar -zxvf netbird_0.27.3_linux_amd64.tar.gz && mv netbird /usr/bin/ && rm -rf /tmp/*
 # 放开tmp目录权限
 WORKDIR /tmp
