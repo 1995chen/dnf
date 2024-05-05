@@ -38,8 +38,8 @@ ADD build/Centos6-DNF/docker-entrypoint.sh /
 # TEA算法
 ADD build/Centos6-DNF/TeaEncrypt /
 # 优化CPU
-ADD build/Centos6-DNF/libhook.so /lib/
-RUN chmod 777 /lib/libhook.so
+ADD build/Centos6-DNF/libhook.so /home/template/init/
+RUN chmod 777 /home/template/init/libhook.so
 # 添加netbird
 COPY build/Centos6-DNF/netbird_0.27.3_linux_amd64.tar.gz /tmp/
 RUN cd /tmp/ && tar -zxvf netbird_0.27.3_linux_amd64.tar.gz && mv netbird /usr/bin/ && rm -rf /tmp/*

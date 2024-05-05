@@ -56,10 +56,15 @@ rm -rf /home/template/neople-tmp
 # 复制版本文件
 cp /data/Script.pvf /home/neople/game/Script.pvf
 chmod 777 /home/neople/game/Script.pvf
+# 复制等级文件
 cp /data/df_game_r /home/neople/game/df_game_r
 chmod 777 /home/neople/game/df_game_r
+# 复制通讯私钥文件
 cp /data/publickey.pem /home/neople/game/
-
+# 复制DP文件
+chmod 777 /data/libhook.so
+cp /data/libhook.so /lib/
+# 重置root目录
 mv /home/template/root-tmp/* /root/
 rm -rf /home/template/root-tmp
 chmod 777 /root/*

@@ -136,3 +136,11 @@ if [ ! -f "/data/Config.ini" ];then
 else
   echo "Config.ini have already inited, do nothing!"
 fi
+# 判断DP文件是否初始化过
+if [ ! -f "/data/libhook.so" ];then
+  # 拷贝DP文件到持久化目录
+  cp /home/template/init/libhook.so /data/
+  echo "init libhook.so success"
+else
+  echo "libhook.so have already inited, do nothing!"
+fi
