@@ -34,7 +34,7 @@ cp -r /home/template/neople /home/template/neople-tmp
 cp -r /home/template/root /home/template/root-tmp
 
 # 自动获取公网ip
-if [ -z "$PUBLIC_IP" ] && $AUTO_PUBLIC_IP;
+if [ -z "$PUBLIC_IP" ] && [ "$AUTO_PUBLIC_IP" = true ];
 then
   # 等待60秒,如果无法成功获得ip直接退出
   counter=0
@@ -65,9 +65,10 @@ fi
 # 检查Netbird IP
 if [ -z "$PUBLIC_IP" ] && [ -n "$NB_SETUP_KEY" ] && [ -n "$NB_MANAGEMENT_URL" ]; then
   # 重新安装netbird service
-  if [ ! -f "/etc/init.d/netbird" ];then
+  if [ -f "/etc/init.d/netbird" ];then
     echo "uninstall old netbird service"
     netbird service uninstall
+  fi
   echo "install new netbird service"
   netbird service install --config /data/netbird/config.json
   echo "starting netbird service[$NB_MANAGEMENT_URL] use setup_key: $NB_SETUP_KEY"
@@ -106,7 +107,7 @@ else
 fi
 
 # 检查DDNS
-if [ -z "$PUBLIC_IP" ] && [ -n "$DDNS_ENABLE" ] && [ -n "$DDNS_DOMAIN" ]; then
+if [ -z "$PUBLIC_IP" ] && [ "$DDNS_ENABLE" = true ] && [ -n "$DDNS_DOMAIN" ]; then
   # 等待60秒,如果无法成功获得ip直接退出
   counter=0
   while [ $counter -lt 60 ]
