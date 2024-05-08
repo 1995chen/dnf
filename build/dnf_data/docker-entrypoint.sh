@@ -8,6 +8,8 @@ sed -i "s/^password=.*/password=$WEB_PASS/" /etc/supervisord.conf
 mkdir -p /data/conf.d
 # 创建DP目录
 mkdir -p /data/dp
+# 创建ddns目录
+mkdir -p /data/ddns/
 if [ $(find /data/conf.d -name "*.conf" | wc -l) -gt 0 ]; then
   echo "Add permissions to the extension configuration."
   chmod 777 /data/conf.d/*.conf
@@ -134,7 +136,6 @@ if [ -z "$PUBLIC_IP" ] && [ "$DDNS_ENABLE" = true ] && [ -n "$DDNS_DOMAIN" ]; th
   fi
   echo "use ddns, get public_ip: $PUBLIC_IP"
   # 记录当前PUBLIC_IP到文件
-  mkdir -p /data/ddns/
   echo "$PUBLIC_IP" >> /data/ddns/DDNS_IP_RECORD
 fi
 
