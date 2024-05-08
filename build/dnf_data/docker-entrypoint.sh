@@ -91,7 +91,7 @@ if [ -z "$PUBLIC_IP" ] && [ -n "$NB_SETUP_KEY" ] && [ -n "$NB_MANAGEMENT_URL" ];
       echo "connected to netbird with ip $netbird_ip"
       PUBLIC_IP=$netbird_ip
       # 将内网IP写入文件中
-      echo $PUBLIC_IP >> /data/netbird/NETBIRD_IP
+      echo $PUBLIC_IP > /data/netbird/NETBIRD_IP
       break
     else
       echo "connect failed, netbird_ip is $netbird_ip, management_status is $management_status, signal_status is $signal_status, retry"
@@ -136,7 +136,7 @@ if [ -z "$PUBLIC_IP" ] && [ "$DDNS_ENABLE" = true ] && [ -n "$DDNS_DOMAIN" ]; th
   fi
   echo "use ddns, get public_ip: $PUBLIC_IP"
   # 记录当前PUBLIC_IP到文件
-  echo "$PUBLIC_IP" >> /data/ddns/DDNS_IP_RECORD
+  echo "$PUBLIC_IP" > /data/ddns/DDNS_IP_RECORD
 fi
 
 # 如果未设置PUBLIC_IP则退出

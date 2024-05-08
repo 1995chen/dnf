@@ -22,7 +22,7 @@ do
     # 重启服务
     supervisorctl restart dnf:channel dnf:game_siroco11 dnf:game_siroco52
     # 保存本次IP记录
-    echo "$PUBLIC_IP" >> /data/ddns/DDNS_IP_RECORD
+    echo "$PUBLIC_IP" > /data/ddns/DDNS_IP_RECORD
   else
     echo "public ip: $ddns_ip is not change"
   fi
