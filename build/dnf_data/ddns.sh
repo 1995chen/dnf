@@ -30,4 +30,6 @@ do
   echo "wait $wait_time seconds, sleep..."
   sleep $wait_time
 done
+# 必须等待一定时间后才可以退出
+sleep 10
 echo "ddns disabled"
