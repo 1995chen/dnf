@@ -78,46 +78,6 @@ spec:
           containerPort: 881
           protocol: TCP
           hostPort: 881
-        - name: dbmw-tcp1
-          containerPort: 20303
-          protocol: TCP
-          hostPort: 20303
-        - name: dbmw-tcp2
-          containerPort: 20403
-          protocol: TCP
-          hostPort: 20403
-        - name: dbmw-tcp3
-          containerPort: 20203
-          protocol: TCP
-          hostPort: 20203
-        - name: dbmw-udp1
-          containerPort: 20403
-          protocol: UDP
-          hostPort: 20403
-        - name: dbmw-udp2
-          containerPort: 20303
-          protocol: UDP
-          hostPort: 20303
-        - name: dbmw-udp3
-          containerPort: 20203
-          protocol: UDP
-          hostPort: 20203
-        - name: manager-tcp1
-          containerPort: 40403
-          protocol: TCP
-          hostPort: 40403
-        - name: manager-udp1
-          containerPort: 40403
-          protocol: UDP
-          hostPort: 40403
-        - name: bridge-tcp1
-          containerPort: 7000
-          protocol: TCP
-          hostPort: 7000
-        - name: bridge-udp1
-          containerPort: 7000
-          protocol: UDP
-          hostPort: 7000
         - name: channel-tcp1
           containerPort: 7001
           protocol: TCP
@@ -134,10 +94,6 @@ spec:
           containerPort: 10052
           protocol: TCP
           hostPort: 10052
-        - name: game-tcp3
-          containerPort: 20011
-          protocol: TCP
-          hostPort: 20011
         - name: game-udp1
           containerPort: 11011
           protocol: UDP
@@ -146,18 +102,6 @@ spec:
           containerPort: 11052
           protocol: UDP
           hostPort: 11052
-        - name: community-tcp1
-          containerPort: 31100
-          protocol: TCP
-          hostPort: 31100
-        - name: monitor-tcp1
-          containerPort: 30303
-          protocol: TCP
-          hostPort: 30303
-        - name: monitor-udp1
-          containerPort: 30303
-          protocol: UDP
-          hostPort: 30303
         - name: relay-tcp1
           containerPort: 7200
           protocol: TCP
@@ -166,18 +110,6 @@ spec:
           containerPort: 7200
           protocol: UDP
           hostPort: 7200
-        - name: guild-tcp1
-          containerPort: 30403
-          protocol: TCP
-          hostPort: 30403
-        - name: guild-udp1
-          containerPort: 30403
-          protocol: UDP
-          hostPort: 30403
-        - name: coserver-udp1
-          containerPort: 30703
-          protocol: UDP
-          hostPort: 30703
         - name: stun-udp1
           containerPort: 2311
           protocol: UDP
@@ -190,10 +122,6 @@ spec:
           containerPort: 2313
           protocol: UDP
           hostPort: 2313
-        - name: statics-udp1
-          containerPort: 30503
-          protocol: UDP
-          hostPort: 30503
         env:
         - name: TZ
           value: "Asia/Shanghai"
@@ -242,5 +170,8 @@ spec:
 ```
 
 ## 一些说明
-yaml中"nodeName: centos-02"是为了固定在一个节点上运行，实际运行时，这块按照实际需要修改。  
+yaml中"nodeName: centos-02"是为了固定在一个节点上运行，实际运行时，这块按照实际需要修改。
+
 ConfigMap中的dnf_public_ip为实际运行节点的内网/公网IP
+
+如果使用Netbird则不需要固定在某个固定节点

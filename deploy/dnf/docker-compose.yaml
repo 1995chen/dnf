@@ -3,56 +3,46 @@ version: "2.3"
 services:
 
   dnf:
-    image: 1995chen/dnf:centos5-2.1.2
+    hostname: dnf
+    image: 1995chen/dnf:centos5-2.1.3
+    privileged: true
+    cap_add:
+      - NET_ADMIN
     environment:
       - TZ=Asia/Shanghai
-      # 这里填写你的IP地址
-      - PUBLIC_IP=127.0.0.1
       # 数据库root密码
       - DNF_DB_ROOT_PASSWORD=88888888
-      - GM_ACCOUNT=gm_user
-      - GM_PASSWORD=gm_pass
+      - GM_ACCOUNT=gmuser
+      - GM_PASSWORD=gmpass
       - GM_CONNECT_KEY=763WXRBW3PFTC3IXPFWH
       - GM_LANDER_VERSION=20180307
+      # 手动指定对外IP
+      - PUBLIC_IP=127.0.0.1
+      # Netbird[可选配置][没有公网IP的可选私有内网接入]
+      #- NB_SETUP_KEY=''
+      #- NB_MANAGEMENT_URL=''
+      # 开启DDNS[可选配置]
+      # - DDNS_ENABLE=true
+      # - DDNS_DOMAIN=''
     shm_size: 8g
     memswap_limit: -1
     mem_limit: 1g
     cpu_count: 1
-    # 占用1个cpu
-    # cpus: 1.0
     restart: always
     ports:
-      - 2000:180/tcp        # web管理页面
-      - 3000:3306/tcp       # mysql 数据库
-      - 7600:7600/tcp       # DnfGateServe 网关
-      - 881:881/tcp         # DnfGateServe 网关
-      - 20303:20303/tcp     # df_dbmw_r
-      - 20303:20303/udp     # df_dbmw_r
-      - 20403:20403/tcp     # df_dbmw_r
-      - 20403:20403/udp     # df_dbmw_r
-      - 40403:40403/tcp     # df_manager_r
-      - 40403:40403/udp     # df_manager_r
-      - 7000:7000/tcp       # df_bridge_r
-      - 7000:7000/udp       # df_bridge_r
-      - 7001:7001/tcp       # df_channel_r
-      - 7001:7001/udp       # df_channel_r
-      - 7200:7200/tcp       # df_relay_r
-      - 7200:7200/udp       # df_relay_r
-      - 10011:10011/tcp     # df_game_r
-      - 31100:31100/tcp     # df_community
-      - 30303:30303/tcp     # df_monitor_r
-      - 30303:30303/udp     # df_monitor_r
-      - 30403:30403/tcp     # df_guild_r
-      - 30403:30403/udp     # df_guild_r
-      - 10052:10052/tcp     # df_game_r
-      - 20011:20011/tcp     # df_game_r
-      - 20203:20203/tcp     # df_dbmw_r
-      - 20203:20203/udp     # df_dbmw_r
-      - 30703:30703/udp     # df_coserver_r
-      - 11011:11011/udp     # df_game_r
+      - 2000:180/tcp              # supervisor web
+      - 3000:3306/tcp             # mysql
+      - 7600:7600/tcp             # 统一登陆器
+      - 881:881/tcp               # 统一网关
+      - 7001:7001/tcp             # df_channel_r
+      - 7001:7001/udp             # df_channel_r
+      - 7200:7200/tcp             # df_relay_r
+      - 7200:7200/udp             # df_relay_r
+      - 10011:10011/tcp           # df_game_r[ch.11]
+      - 11011:11011/udp           # df_game_r[ch.11]
+      - 10052:10052/tcp           # df_game_r[ch.52]
+      - 11052:11052/udp           # df_game_r[ch.52]
       - 2311-2313:2311-2313/udp   # df_stun_r
-      - 30503:30503/udp     # df_statics_r
-      - 11052:11052/udp     # df_game_r
     volumes:
       - ./data:/data
       - ./mysql:/var/lib/mysql

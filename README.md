@@ -18,6 +18,13 @@ For cooperation and suggestions please contact chenl2448365088@gmail.com or yzd3
 
 如果觉得本项目和[XanderYe/dnf](https://github.com/XanderYe/dnf)对你有帮助，可以点一下Star支持下我们，谢谢。
 
+## 2.1.4 Release Plan 
+```shell
+1.支持假人
+2.支持一款流行的网页GM_Tool
+3.通过插件支持几款登陆器
+```
+
 ## 自动化构建
 
 该项目已经接入CircleCI,会自动化构建每一个版本
@@ -90,10 +97,10 @@ https://www.cnblogs.com/EasonJim/p/7777904.html
 以下命令三选一
 
 ```shell
-docker pull 1995chen/dnf:centos5-2.1.2
-docker pull 1995chen/dnf:centos6-2.1.2
+docker pull 1995chen/dnf:centos5-2.1.3
+docker pull 1995chen/dnf:centos6-2.1.3
 如何您需要使用centos7作为基础镜像的特殊需求,可以使用:
-docker pull 1995chen/dnf:centos7-2.1.2
+docker pull 1995chen/dnf:centos7-2.1.3
 所有镜像版本列表请参考[记得点赞三连,帮助更多的人了解该镜像]:
 https://hub.docker.com/repository/docker/1995chen/dnf
 ```
@@ -111,8 +118,16 @@ mkdir -p /data/log /data/mysql /data/data
 # DNF_DB_ROOT_PASSWORD为mysql root密码,容器启动是root密码会跟随该环境变量的变化自动更新
 # WEB_USER为supervisor web管理页面用户名
 # WEB_PASS为supervisor web管理页面密码(可以访问PUBLIC_IP:2000来访问进程管理页面)
-docker run -d -e PUBLIC_IP=x.x.x.x -e WEB_USER=root -e WEB_PASS=123456 -e DNF_DB_ROOT_PASSWORD=88888888 -e GM_ACCOUNT=gm_user -e GM_PASSWORD=gm_pass -v /data/log:/home/neople/game/log -v /data/mysql:/var/lib/mysql -v /data/data:/data -p 2000:180 -p 3000:3306/tcp -p 7600:7600/tcp -p 881:881/tcp -p 20303:20303/tcp -p 20303:20303/udp -p 20403:20403/tcp -p 20403:20403/udp -p 40403:40403/tcp -p 40403:40403/udp -p 7000:7000/tcp -p 7000:7000/udp -p 7001:7001/tcp -p 7001:7001/udp -p 7200:7200/tcp -p 7200:7200/udp -p 10011:10011/tcp -p 31100:31100/tcp -p 30303:30303/tcp -p 30303:30303/udp -p 30403:30403/tcp -p 30403:30403/udp -p 10052:10052/tcp -p 20011:20011/tcp -p 20203:20203/tcp -p 20203:20203/udp -p 30703:30703/udp -p 11011:11011/udp -p 2311-2313:2311-2313/udp -p 30503:30503/udp -p 11052:11052/udp --cpus=1 --memory=1g --memory-swap=-1 --shm-size=8g --name=dnf 1995chen/dnf:centos6-2.1.2
+docker run -d -e PUBLIC_IP=x.x.x.x -e WEB_USER=root -e WEB_PASS=123456 -e DNF_DB_ROOT_PASSWORD=88888888 -e GM_ACCOUNT=gmuser -e GM_PASSWORD=gmpass -v /data/log:/home/neople/game/log -v /data/mysql:/var/lib/mysql -v /data/data:/data -p 2000:180 -p 3000:3306/tcp -p 7600:7600/tcp -p 881:881/tcp -p 7001:7001/tcp -p 7001:7001/udp -p 10011:10011/tcp -p 11011:11011/udp -p 10052:10052/tcp -p 11052:11052/udp -p 7200:7200/tcp -p 7200:7200/udp -p 2311-2313:2311-2313/udp --privileged=true --cap-add=NET_ADMIN --hostname=dnf --cpus=1 --memory=1g --memory-swap=-1 --shm-size=8g --name=dnf 1995chen/dnf:centos5-2.1.3
 ```
+
+## docker-compose部署[群晖推荐]
+
+[Yaml文件](deploy/dnf/docker-compose.yaml)
+
+## k8s启动
+
+[部署文档](Kubernetes.md)
 
 ## 如何确认已经成功启动
 
@@ -135,8 +150,8 @@ docker run -d -e PUBLIC_IP=x.x.x.x -e WEB_USER=root -e WEB_PASS=123456 -e DNF_DB
 ├── Log20211203.log  
 ├── Log20211203.money  
 └── Log20211203.snap  
-查看Logxxxx.init文件,五国的初始化日志都在这里  
-成功出现五国后,日志文件大概如下,五国初始化时间大概1分钟左右,请耐心等待  
+查看Logxxxxxxxx.init文件(其中xxxxxxxx为当天时间,需要按实际情况替换),四国的初始化日志都在这里  
+成功出现四国后,日志文件大概如下,四国初始化时间大概1分钟左右,请耐心等待  
 [root@centos-02 siroco11]# tail -f Log20211203.init  
 [09:40:23]    - RestrictBegin : 1  
 [09:40:23]    - DropRate : 0  
@@ -145,16 +160,21 @@ docker run -d -e PUBLIC_IP=x.x.x.x -e WEB_USER=root -e WEB_PASS=123456 -e DNF_DB
 [09:40:23] GeoIP Allow Country Code : HK  
 [09:40:23] GeoIP Allow Country Code : KR  
 [09:40:23] GeoIP Allow Country Code : MO  
-[09:40:23] GeoIP Allow Country Code : TW  
+[09:40:23] GeoIP Allow Country Code : TW(CN)  
 [09:40:32] [!] Connect To Guild Server ...  
 [09:40:32] [!] Connect To Monitor Server ...  
+
 2.查看进程  
 在确保日志都正常的情况下,需要查看进程进一步确定程序正常启动  
 [root@centos-02 siroco11]# ps -ef |grep df_game  
 root 16500 16039 9 20:39 ? 00:01:20 ./df_game_r siroco11 start  
 root 16502 16039 9 20:39 ? 00:01:22 ./df_game_r siroco52 start  
 root 22514 13398 0 20:53 pts/0 00:00:00 grep --color=auto df_game  
-如上结果df_game_r进程是存在的,代表成功.如果不成功可以重启服务
+如上结果df_game_r进程是存在的,代表成功.如果不成功可以重启服务  
+
+3.查看进程管理页面
+可以通过访问http://PUBLIC_IP:2000端口来访问进程管理页面,可以在
+页面上点击dnf:game_siroco11或dnf:game_siroco52进程的Tail -f来查看日志。
 
 ## 重启服务
 
@@ -164,15 +184,18 @@ root 22514 13398 0 20:53 pts/0 00:00:00 grep --color=auto df_game
 ```shell
 docker restart dnf
 ```
+或在进程管理页面(http://PUBLIC_IP:2000页面手动重启相关进程)。
 
 ## 默认的网关信息
 
-网关端口: 881  
-通讯密钥: 763WXRBW3PFTC3IXPFWH   
-登录器版本: 20180307  
-登录器端口: 7600  
-GM账户: gm_user
-GM密码: gm_pass  
+```shell
+网关端口: 881
+通讯密钥: 763WXRBW3PFTC3IXPFWH
+登录器版本: 20180307
+登录器端口: 7600
+GM账户: gmuser
+GM密码: gmpass
+```
 
 ## 可选的环境变量
 当容器用最新的环境变量启动时，以下所有的环境变量，包括数据库root密码都会立即生效
@@ -203,9 +226,25 @@ DNF_DB_GAME_PASSWORD
 WEB_USER
 # supervisor web页面密码
 WEB_PASS
+# ddns开关,默认为false,打开配置为true
+DDNS_ENABLE
+# ddns域名
+DDNS_DOMAIN
+# Netbird服务器地址
+NB_MANAGEMENT_URL
+# Netbird初始化KEY
+NB_SETUP_KEY
 ```
-Windows高版本用户无法进入频道，需要添加hosts  
+统一登陆器5.x版本，需要添加hosts，否则无法进入频道
+```shell
 PUBLIC_IP(你的服务器IP)  start.dnf.tw
+```
+请注意PUBLIC_IP手动设置后AUTO_PUBLIC_IP、DDNS、Netbird都会默认禁用。
+
+如果需要使用AUTO_PUBLIC_IP、DDNS、Netbird需要设置PUBLIC_IP=''
+
+最后需要注意的是PUBLIC_IP、AUTO_PUBLIC_IP、DDNS和Netbird只会有一个生效。
+
 
 ## FAQ
 1.点击网关登录，没反应，不出游戏（请透过Garena+执行）
@@ -279,15 +318,6 @@ PUBLIC_IP(你的服务器IP)  start.dnf.tw
 
 ### Dof7补丁下载
 链接: https://pan.baidu.com/s/1rxlGfkfHTeGwzMKUNAbSlQ 提取码: ier2
-
-
-## docker-compose启动
-
-[部署文档](deploy/dnf/deploy.md)
-
-## k8s启动
-
-[Yaml地址](Kubernetes.md)
 
 ## 沟通交流
 
