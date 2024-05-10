@@ -14,8 +14,10 @@ do
     cp /home/template/neople/channel/cfg/channel.cfg /data/ddns/channel.cfg
     cp /home/template/neople/game/cfg/siroco11.cfg /data/ddns/siroco11.cfg
     cp /home/template/neople/game/cfg/siroco52.cfg /data/ddns/siroco52.cfg
-    # 重设PUBLIC_IP
+    # 重设PUBLIC_IP和game密码
     find /data/ddns -type f -name "*.cfg" -print0 | xargs -0 sed -i "s/PUBLIC_IP/$PUBLIC_IP/g"
+    find /data/ddns -type f -name "*.cfg" -print0 | xargs -0 sed -i "s/GAME_PASSWORD/$DNF_DB_GAME_PASSWORD/g"
+    find /data/ddns -type f -name "*.cfg" -print0 | xargs -0 sed -i "s/DEC_GAME_PWD/$DEC_GAME_PWD/g"
     mv /data/ddns/channel.cfg /home/neople/channel/cfg/channel.cfg
     mv /data/ddns/siroco11.cfg /home/neople/game/cfg/siroco11.cfg
     mv /data/ddns/siroco52.cfg /home/neople/game/cfg/siroco52.cfg
