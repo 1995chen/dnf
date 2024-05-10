@@ -150,8 +150,8 @@ find /home/template/neople-tmp -type f -name "*.cfg" -print0 | xargs -0 sed -i "
 
 # 加密GAME密码并修改配置文件
 chmod +x /TeaEncrypt
-DNF_DB_GAME_PASSWORD=${DNF_DB_GAME_PASSWORD:0:8}
-DEC_GAME_PWD=`/TeaEncrypt $DNF_DB_GAME_PASSWORD`
+export DNF_DB_GAME_PASSWORD=${DNF_DB_GAME_PASSWORD:0:8}
+export DEC_GAME_PWD=`/TeaEncrypt $DNF_DB_GAME_PASSWORD`
 echo "game password: $DNF_DB_GAME_PASSWORD"
 echo "game pwd key: $DEC_GAME_PWD"
 find /home/template/neople-tmp -type f -name "*.cfg" -print0 | xargs -0 sed -i "s/GAME_PASSWORD/$DNF_DB_GAME_PASSWORD/g"
