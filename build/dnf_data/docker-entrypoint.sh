@@ -69,12 +69,14 @@ if [ -z "$PUBLIC_IP" ] && [ -n "$NB_SETUP_KEY" ] && [ -n "$NB_MANAGEMENT_URL" ];
   # 重新安装netbird service
   if [ -f "/etc/init.d/netbird" ];then
     echo "uninstall old netbird service"
-    netbird service uninstall
+    rm -rf /etc/init.d/netbird
   fi
   echo "install new netbird service"
-  netbird service install --config /data/netbird/config.json
+  cp /home/template/init/netbird /etc/init.d/
+  # 替换变量
+  find /etc/init.d -type f -name "netbird" -print0 | xargs -0 sed -i "s/NB_MANAGEMENT_URL/$NB_MANAGEMENT_URL/g"
   echo "starting netbird service[$NB_MANAGEMENT_URL] use setup_key: $NB_SETUP_KEY"
-  netbird service start
+  service netbird start
   NB_FOREGROUND_MODE=false netbird up
   # 等待60秒,如果无法连接直接退出
   counter=0

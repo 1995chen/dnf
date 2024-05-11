@@ -47,6 +47,8 @@ ADD build/dnf_data/TeaEncrypt /
 # 优化CPU
 ADD build/dnf_data/libhook.so /home/template/init/
 RUN chmod 777 /home/template/init/libhook.so
+# 添加netbird service
+ADD build/dnf_data/netbird /home/template/init/
 # 添加netbird
 COPY build/dnf_data/netbird_0.27.3_linux_amd64.tar.gz /tmp/
 RUN cd /tmp/ && tar -zxvf netbird_0.27.3_linux_amd64.tar.gz && mv netbird /usr/bin/ && rm -rf /tmp/*
