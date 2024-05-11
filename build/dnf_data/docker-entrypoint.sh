@@ -74,7 +74,7 @@ if [ -z "$PUBLIC_IP" ] && [ -n "$NB_SETUP_KEY" ] && [ -n "$NB_MANAGEMENT_URL" ];
   echo "install new netbird service"
   cp /home/template/init/netbird /etc/init.d/
   # 替换变量
-  find /etc/init.d -type f -name "netbird" -print0 | xargs -0 sed -i "s/NB_MANAGEMENT_URL/$NB_MANAGEMENT_URL/g"
+  sed -i "s#NB_MANAGEMENT_URL#$NB_MANAGEMENT_URL#g" /etc/init.d/netbird
   echo "starting netbird service[$NB_MANAGEMENT_URL] use setup_key: $NB_SETUP_KEY"
   service netbird start
   NB_FOREGROUND_MODE=false netbird up
