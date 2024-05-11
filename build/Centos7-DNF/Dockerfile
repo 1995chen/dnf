@@ -1,5 +1,5 @@
 # Base Image
-FROM 1995chen/centos:7.9.1-DNF-Base
+FROM 1995chen/centos:7.9.2-DNF-Base
 
 MAINTAINER 1995chen
 
