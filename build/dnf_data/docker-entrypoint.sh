@@ -12,6 +12,7 @@ mkdir -p /data/conf.d
 mkdir -p /data/dp
 # 创建日志目录
 mkdir -p /data/log
+mkdir -p /data/log/netbird
 # 创建ip监控目录
 mkdir -p /data/monitor_ip
 # 创建频道目录
