@@ -1,5 +1,7 @@
 #! /bin/bash
 
+# 清除MONITOR_PUBLIC_IP文件
+rm -rf /data/monitor_ip/MONITOR_PUBLIC_IP
 # 清理日志
 rm -rf /home/neople/game/log/siroco11/*
 rm -rf /home/neople/game/log/siroco52/*
@@ -15,6 +17,8 @@ mkdir -p /data/log
 mkdir -p /data/log/netbird
 # 创建ip监控目录
 mkdir -p /data/monitor_ip
+# 创建netbird目录
+mkdir -p /data/netbird
 # 创建频道目录
 mkdir -p /data/channel
 if [ $(find /data/conf.d -name "*.conf" | wc -l) -gt 0 ]; then

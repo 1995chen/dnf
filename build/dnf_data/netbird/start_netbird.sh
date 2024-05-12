@@ -12,10 +12,11 @@ if [ -z "$PUBLIC_IP" ] && [ -n "$NB_SETUP_KEY" ] && [ -n "$NB_MANAGEMENT_URL" ];
   # 替换变量
   sed -i "s#NB_MANAGEMENT_URL#$NB_MANAGEMENT_URL#g" /etc/init.d/netbird
   echo "starting netbird service[$NB_MANAGEMENT_URL] use setup_key: $NB_SETUP_KEY"
+  # 启动netbird服务
   service netbird start
-  # 保持前台运行
-  netbird up --foreground-mode --config /data/netbird/config.json --log-level info --log-file /data/log/netbird/netbird.log
+  NB_FOREGROUND_MODE=false netbird up
 else
     echo "no need to start netbird"
-    sleep 5
 fi
+# 等待5秒后退出
+sleep 5
