@@ -1,5 +1,9 @@
 #! /bin/bash
 
+# 清楚mysql sock以及pid文件
+rm -rf /var/lib/mysql/mysql.sock
+rm -rf /var/lib/mysql/*.pid
+rm -rf /var/lib/mysql/*.err
 # 清除MONITOR_PUBLIC_IP文件
 rm -rf /data/monitor_ip/MONITOR_PUBLIC_IP
 # 清理日志

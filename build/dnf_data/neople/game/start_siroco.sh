@@ -5,6 +5,7 @@ channel_no=$1
 process_sequence=$2
 channel_name="siroco$channel_no"
 
+echo "channel_name is $channel_name"
 echo "prepare to start ch.$channel_no, process_sequence is $process_sequence"
 # 等待bridge启动,最多等待30秒
 counter=0
@@ -26,6 +27,7 @@ do
 done
 # 获取IP
 MONITOR_PUBLIC_IP=$(cat /data/monitor_ip/MONITOR_PUBLIC_IP 2>/dev/null || true)
+echo "MONITOR_PUBLIC_IP is $MONITOR_PUBLIC_IP"
 # 生成配置文件
 rm -rf /data/channel/$channel_name.cfg
 cp /home/template/neople/game/cfg/siroco.template /data/channel/$channel_name.cfg
@@ -35,8 +37,14 @@ sed -i "s/PROCESS_SEQUENCE/$process_sequence/g" /data/channel/$channel_name.cfg
 sed -i "s/PUBLIC_IP/$MONITOR_PUBLIC_IP/g" /data/channel/$channel_name.cfg
 sed -i "s/DEC_GAME_PWD/$DEC_GAME_PWD/g" /data/channel/$channel_name.cfg
 cp /data/channel/$channel_name.cfg /home/neople/game/cfg/$channel_name.cfg
+echo "generate $channel_name.cfg success"
 # 启动服务
-kill -9 $(pgrep -f "df_game_r $channel_name start")
+old_pid=$(pgrep -f "df_game_r $channel_name start")
+echo "ch.$channel_no old pid is $old_pid"
+if [ -n "$old_pid" ]; then
+  echo "old pid not empty, kill $old_pid"
+  kill -9 $old_pid
+fi
 rm -rf pid/$channel_name.pid
 LD_PRELOAD=/data/dp/libhook.so ./df_game_r $channel_name start
 sleep 2
