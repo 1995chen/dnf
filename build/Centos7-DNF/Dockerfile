@@ -22,12 +22,13 @@ ENV DDNS_INTERVAL=10
 ENV NB_SETUP_KEY=''
 ENV NB_MANAGEMENT_URL=''
 
+# 添加monitor_ip脚本
+ADD build/dnf_data/monitor_ip /home/template/init/monitor_ip
+# 添加netbird
+ADD build/dnf_data/netbird /home/template/init/netbird
 # 添加supervisor配置文件
-ADD build/dnf_data/supervisord.conf /etc/supervisord.conf
-ADD build/dnf_data/dnf.conf /etc/supervisor/conf.d/
-# 将模板添加到模版目录下[后续容器启动需要先将环境变量替换,再将文件移动到正确位置]
-ADD build/dnf_data/neople /home/template/neople
-ADD build/dnf_data/root /home/template/root
+ADD build/dnf_data/supervisor /home/template/init/supervisor
+# 添加证书
 ADD build/dnf_data/privatekey.pem /home/template/init/
 ADD build/dnf_data/publickey.pem /home/template/init/
 # 初始化sql脚本
@@ -40,20 +41,26 @@ ADD build/dnf_data/df_game_r /home/template/init/
 ADD build/dnf_data/init.sh /home/template/init/
 # 网关配置文件
 ADD build/dnf_data/Config.ini /home/template/init/
+# 添加默认DP文件
+ADD build/dnf_data/libhook.so /home/template/init/
+RUN cat /home/template/init/supervisor/dnf.conf
+# 链接supervisor配置文件
+RUN rm -rf /etc/supervisord.conf && mkdir -p /etc/supervisor/conf.d
+RUN ln -s /home/template/init/supervisor/supervisord.conf /etc/supervisord.conf
+RUN ln -s /home/template/init/supervisor/dnf.conf /etc/supervisor/conf.d/dnf.conf
+RUN ln -s /home/template/init/netbird/netbird.conf /etc/supervisor/conf.d/netbird.conf
+# 将模板添加到模版目录下[后续容器启动需要先将环境变量替换,再将文件移动到正确位置]
+ADD build/dnf_data/neople /home/template/neople
+ADD build/dnf_data/root /home/template/root
 # 启动脚本
 ADD build/dnf_data/docker-entrypoint.sh /
 # TEA算法
 ADD build/dnf_data/TeaEncrypt /
 # 优化CPU
-ADD build/dnf_data/libhook.so /home/template/init/
 RUN chmod 777 /home/template/init/libhook.so
-# 添加netbird service
-ADD build/dnf_data/netbird /home/template/init/
-# 添加netbird
+# 添加netbird可执行文件
 COPY build/dnf_data/netbird_0.27.3_linux_amd64.tar.gz /tmp/
 RUN cd /tmp/ && tar -zxvf netbird_0.27.3_linux_amd64.tar.gz && mv netbird /usr/bin/ && rm -rf /tmp/*
-# 添加ddns脚本
-ADD build/dnf_data/ddns.sh /home/template/init/
 # 放开tmp目录权限
 WORKDIR /tmp
 RUN chmod -R 777 /tmp

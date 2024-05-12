@@ -1,10 +1,10 @@
-gc_no = 3011
+gc_no = 30CHANNEL_NO
 server_type = 0
-channel_no = 11
-channel_name = ch.11
+channel_no = CHANNEL_NO
+channel_name = ch.CHANNEL_NO
 ip = PUBLIC_IP
-tcp_port = 10011
-udp_port = 11011
+tcp_port = 100CHANNEL_NO
+udp_port = 110CHANNEL_NO
 
 udp_ip_of_monitor = 127.0.0.1
 udp_port_of_monitor = 30303
@@ -25,7 +25,7 @@ udp_port_of_channel = 7000
 tcp_port_of_channel = 7000
 
 exchange_server_ip = 127.0.0.1
-exchange_server_port = 20011
+exchange_server_port = 200CHANNEL_NO
 
 udp_ip_of_hades = PUBLIC_IP
 udp_port_of_hades = 31003
@@ -94,4 +94,4 @@ libserverlib_config_name = ServerLab#22001
 script_dir = ./Script/
 //stand_alone = yes
 scriptpacks = yes
-process_sequence = 3
+process_sequence = PROCESS_SEQUENCE

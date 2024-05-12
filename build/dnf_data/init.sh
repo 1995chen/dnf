@@ -144,3 +144,31 @@ if [ ! -f "/data/dp/libhook.so" ];then
 else
   echo "libhook.so have already inited, do nothing!"
 fi
+# 判断supervisor channel 配置是否初始化
+if [ ! -f "/data/conf.d/channel.conf" ];then
+  cp /home/template/init/supervisor/channel.conf /data/conf.d/
+  echo "init channel.conf success"
+else
+  echo "channel.conf have already inited, do nothing!"
+fi
+# 判断supervisor gate 配置是否初始化
+if [ ! -f "/data/conf.d/gate.conf" ];then
+  cp /home/template/init/supervisor/gate.conf /data/conf.d/
+  echo "init gate.conf success"
+else
+  echo "gate.conf have already inited, do nothing!"
+fi
+# 判断monitor_ip脚本是否初始化[auto_public_ip.sh]
+if [ ! -f "/data/monitor_ip/auto_public_ip.sh" ];then
+  cp /home/template/init/monitor_ip/auto_public_ip.sh /data/monitor_ip/
+  echo "init auto_public_ip.sh success"
+else
+  echo "auto_public_ip.sh have already inited, do nothing!"
+fi
+# 判断monitor_ip脚本是否初始化[get_ddns_ip]
+if [ ! -f "/data/monitor_ip/get_ddns_ip.sh" ];then
+  cp /home/template/init/monitor_ip/get_ddns_ip.sh /data/monitor_ip/
+  echo "init get_ddns_ip.sh success"
+else
+  echo "get_ddns_ip.sh have already inited, do nothing!"
+fi

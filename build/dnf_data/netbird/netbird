@@ -14,17 +14,17 @@
 # Description:       A WireGuard-based mesh network that connects your devices into a single private network.
 ### END INIT INFO
 
-cmd="/usr/bin/netbird "service" "run" "--config" "/data/netbird/config.json" "--log-level" "info" "--management-url" "NB_MANAGEMENT_URL" "--log-file" "/var/log/netbird/client.log""
+cmd="/usr/bin/netbird "service" "run" "--config" "/data/netbird/config.json" "--log-level" "info" "--management-url" "NB_MANAGEMENT_URL" "--log-file" "/data/log/netbird/client.log""
 
 name=$(basename $(readlink -f $0))
 pid_file="/var/run/$name.pid"
-log_dir="/var/log/netbird"
+log_dir="/data/log/netbird"
 stdout_log="$log_dir/$name.log"
 stderr_log="$log_dir/$name.err"
 
 if [ ! -d "$log_dir" ]; then
     mkdir -p "$log_dir"
-    if grep $name $log_dir > /dev/null; then
+    if grep -r $name $log_dir > /dev/null; then
         chmod 750 $log_dir
     fi
 fi

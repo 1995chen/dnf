@@ -1,3 +1,5 @@
+#! /bin/bash
+
 # 清理日志
 rm -rf /home/neople/game/log/siroco11/*
 rm -rf /home/neople/game/log/siroco52/*
@@ -8,8 +10,12 @@ sed -i "s/^password=.*/password=$WEB_PASS/" /etc/supervisord.conf
 mkdir -p /data/conf.d
 # 创建DP目录
 mkdir -p /data/dp
-# 创建ddns目录
-mkdir -p /data/ddns/
+# 创建日志目录
+mkdir -p /data/log
+# 创建ip监控目录
+mkdir -p /data/monitor_ip
+# 创建频道目录
+mkdir -p /data/channel
 if [ $(find /data/conf.d -name "*.conf" | wc -l) -gt 0 ]; then
   echo "Add permissions to the extension configuration."
   chmod 777 /data/conf.d/*.conf
@@ -34,121 +40,6 @@ rm -rf /root/privatekey.pem
 # 复制待使用文件
 cp -r /home/template/neople /home/template/neople-tmp
 cp -r /home/template/root /home/template/root-tmp
-
-# 自动获取公网ip
-if [ -z "$PUBLIC_IP" ] && [ "$AUTO_PUBLIC_IP" = true ];
-then
-  # 等待60秒,如果无法成功获得ip直接退出
-  counter=0
-  while [ $counter -lt 60 ]
-  do
-    echo "try to get public ip from 3rd party api"
-    # 检查是否成功拿到ddns ip
-    auto_ip=$(curl -s https://v4.ident.me 2>/dev/null || true)
-    # 连接成功
-    if [ -n "$auto_ip" ]; then
-      echo "auto get public ip is $auto_ip"
-      PUBLIC_IP=$auto_ip
-      break
-    else
-      echo "auto get ip failed, retry"
-    fi
-    # 等待1秒钟
-    sleep 1
-    ((counter++))
-  done
-  if [ -z "$PUBLIC_IP" ]; then
-    echo "failed to get public ip from 3rd party api, exiting."
-    exit -1
-  fi
-  echo "auto get public_ip: $PUBLIC_IP"
-fi
-
-# 检查Netbird IP
-if [ -z "$PUBLIC_IP" ] && [ -n "$NB_SETUP_KEY" ] && [ -n "$NB_MANAGEMENT_URL" ]; then
-  # 重新安装netbird service
-  if [ -f "/etc/init.d/netbird" ];then
-    echo "uninstall old netbird service"
-    rm -rf /etc/init.d/netbird
-  fi
-  echo "install new netbird service"
-  cp /home/template/init/netbird /etc/init.d/
-  # 替换变量
-  sed -i "s#NB_MANAGEMENT_URL#$NB_MANAGEMENT_URL#g" /etc/init.d/netbird
-  echo "starting netbird service[$NB_MANAGEMENT_URL] use setup_key: $NB_SETUP_KEY"
-  service netbird start
-  NB_FOREGROUND_MODE=false netbird up
-  # 等待60秒,如果无法连接直接退出
-  counter=0
-  while [ $counter -lt 60 ]
-  do
-    echo "check private ip from $NB_MANAGEMENT_URL"
-    # 检查是否连接成功并拿到内网IP
-    nb_status=$(netbird status 2>/dev/null || true)
-    netbird_ip=$(echo "$nb_status" | grep 'NetBird IP' | awk -F': ' '{print $2}' | cut -d'/' -f1)
-    management_status=$(echo "$nb_status" | grep 'Management' | awk -F': ' '{print $2}')
-    signal_status=$(echo "$nb_status" | grep 'Signal' | awk -F': ' '{print $2}')
-    # 连接成功
-    if [ -n "$netbird_ip" ] && [ "$management_status" = "Connected" ] && [ "$signal_status" = "Connected" ]; then
-      echo "connected to netbird with ip $netbird_ip"
-      PUBLIC_IP=$netbird_ip
-      # 将内网IP写入文件中
-      echo $PUBLIC_IP > /data/netbird/NETBIRD_IP
-      break
-    else
-      echo "connect failed, netbird_ip is $netbird_ip, management_status is $management_status, signal_status is $signal_status, retry"
-    fi
-    # 等待1秒钟
-    sleep 1
-    ((counter++))
-  done
-  if [ -z "$PUBLIC_IP" ]; then
-    echo "connect to netbird failed, exiting."
-    exit -1
-  fi
-else
-    echo "no need to start netbird"
-fi
-
-# 检查DDNS
-if [ -z "$PUBLIC_IP" ] && [ "$DDNS_ENABLE" = true ] && [ -n "$DDNS_DOMAIN" ]; then
-  # 等待60秒,如果无法成功获得ip直接退出
-  counter=0
-  while [ $counter -lt 60 ]
-  do
-    echo "check ddns ip from $DDNS_DOMAIN"
-    # 检查是否成功拿到ddns ip
-    nslookup_output=$(nslookup -debug $DDNS_DOMAIN 2>/dev/null || true)
-    ddns_ip=$(echo "$nslookup_output" | awk '/^Address: / { print $2 }')
-    # 连接成功
-    if [ -n "$ddns_ip" ]; then
-      echo "ddns ip is $ddns_ip"
-      PUBLIC_IP=$ddns_ip
-      break
-    else
-      echo "lookup dns failed, retry"
-    fi
-    # 等待1秒钟
-    sleep 1
-    ((counter++))
-  done
-  if [ -z "$PUBLIC_IP" ]; then
-    echo "failed to lookup dns, exiting."
-    exit -1
-  fi
-  echo "use ddns, get public_ip: $PUBLIC_IP"
-  # 记录当前PUBLIC_IP到文件
-  echo "$PUBLIC_IP" > /data/ddns/DDNS_IP_RECORD
-fi
-
-# 如果未设置PUBLIC_IP则退出
-if [ -z "$PUBLIC_IP" ]; then
-  echo "warning!!! empty PUBLIC_IP, exit..."
-  exit -1
-fi
-echo "final PUBLIC_IP is $PUBLIC_IP"
-# 替换配置文件中的PUBLIC_IP
-find /home/template/neople-tmp -type f -name "*.cfg" -print0 | xargs -0 sed -i "s/PUBLIC_IP/$PUBLIC_IP/g"
 
 # 加密GAME密码并修改配置文件
 chmod +x /TeaEncrypt
