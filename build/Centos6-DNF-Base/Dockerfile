@@ -1,5 +1,5 @@
 # Base Image
-FROM 1995chen/centos:6.9.1
+FROM 1995chen/centos:6.9.2
 
 MAINTAINER 1995chen
 
