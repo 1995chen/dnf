@@ -4,7 +4,7 @@ services:
 
   dnf:
     hostname: dnf
-    image: 1995chen/dnf:centos5-2.1.3
+    image: 1995chen/dnf:centos5-2.1.4
     privileged: true
     cap_add:
       - NET_ADMIN

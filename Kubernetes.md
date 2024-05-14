@@ -64,7 +64,7 @@ spec:
       containers:
       - name: dnf
         imagePullPolicy: IfNotPresent
-        image: 1995chen/dnf:centos5-2.1.2
+        image: 1995chen/dnf:centos5-2.1.4
         ports:
         - name: mysql
           containerPort: 3306
