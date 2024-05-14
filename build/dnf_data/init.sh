@@ -179,10 +179,10 @@ if [ ! -f "/data/channel/start_channel.sh" ];then
 else
   echo "start_channel.sh have already inited, do nothing!"
 fi
-# 判断start_sirico脚本是否初始化
-if [ ! -f "/data/channel/start_sirico.sh" ];then
-  cp /home/template/init/channel/start_sirico.sh /data/channel/
-  echo "init start_sirico.sh success"
+# 判断start_siroco脚本是否初始化
+if [ ! -f "/data/channel/start_siroco.sh" ];then
+  cp /home/template/init/channel/start_siroco.sh /data/channel/
+  echo "init start_siroco.sh success"
 else
-  echo "start_sirico.sh have already inited, do nothing!"
+  echo "start_siroco.sh have already inited, do nothing!"
 fi
