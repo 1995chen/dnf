@@ -79,7 +79,7 @@ stopasgroup=true
 killasgroup=true
 stdout_logfile=/data/log/game_siroco11.log
 redirect_stderr=true
-depend=zergsvr
+depend=channel
 
 [program:game_siroco22]
 command=/bin/bash -c "/home/neople/game/start_siroco.sh 22 3"
@@ -91,7 +91,7 @@ stopasgroup=true
 killasgroup=true
 stdout_logfile=/data/log/game_siroco22.log
 redirect_stderr=true
-depend=zergsvr
+depend=channel
 
 [program:game_siroco52]
 command=/bin/bash -c "/home/neople/game/start_siroco.sh 52 5"
@@ -103,7 +103,7 @@ stopasgroup=true
 killasgroup=true
 stdout_logfile=/data/log/game_siroco52.log
 redirect_stderr=true
-depend=game_siroco11
+depend=channel
 
 [group:dnf_channel]
 programs=channel,game_siroco11,game_siroco52,game_siroco22
