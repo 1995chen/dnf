@@ -24,6 +24,8 @@ ENV NB_MANAGEMENT_URL=''
 
 # 添加mysql配置
 COPY build/dnf_data/my.cnf /etc/
+# 添加频道脚本
+ADD build/dnf_data/channel /home/template/init/channel
 # 添加monitor_ip脚本
 ADD build/dnf_data/monitor_ip /home/template/init/monitor_ip
 # 添加netbird

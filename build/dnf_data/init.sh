@@ -172,3 +172,17 @@ if [ ! -f "/data/monitor_ip/get_ddns_ip.sh" ];then
 else
   echo "get_ddns_ip.sh have already inited, do nothing!"
 fi
+# 判断start_channel脚本是否初始化
+if [ ! -f "/data/channel/start_channel.sh" ];then
+  cp /home/template/init/channel/start_channel.sh /data/channel/
+  echo "init start_channel.sh success"
+else
+  echo "start_channel.sh have already inited, do nothing!"
+fi
+# 判断start_sirico脚本是否初始化
+if [ ! -f "/data/channel/start_sirico.sh" ];then
+  cp /home/template/init/channel/start_sirico.sh /data/channel/
+  echo "init start_sirico.sh success"
+else
+  echo "start_sirico.sh have already inited, do nothing!"
+fi

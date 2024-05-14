@@ -11,7 +11,7 @@ cd /data/data/conf.d
 ```shell
 # channel 配置,理论上你不应该修改这块配置
 [program:channel]
-command=/bin/bash -c "/home/neople/channel/start_channel.sh"
+command=/bin/bash -c "/data/channel/start_channel.sh"
 directory=/home/neople/channel
 user=root
 autostart=true
@@ -24,7 +24,7 @@ depend=bridge
 
 # ch.11频道[普通频道]配置
 [program:game_siroco11]
-command=/bin/bash -c "/home/neople/game/start_siroco.sh 11 3" # 启动命令 11为频道编号 3为普通频道 默认会自动使用10011端口
+command=/bin/bash -c "/data/channel/start_siroco.sh 11 3" # 启动命令 11为频道编号 3为普通频道 默认会自动使用10011端口
 directory=/home/neople/game
 user=root
 autostart=true
@@ -37,7 +37,7 @@ depend=zergsvr
 
 # ch.52频道[决斗场频道]配置
 [program:game_siroco52]
-command=/bin/bash -c "/home/neople/game/start_siroco.sh 52 5"  # 启动命令 52为频道编号 5为决斗场频道 默认会自动使用10052端口
+command=/bin/bash -c "/data/channel/start_siroco.sh 52 5"  # 启动命令 52为频道编号 5为决斗场频道 默认会自动使用10052端口
 directory=/home/neople/game
 user=root
 autostart=true
@@ -58,7 +58,7 @@ priority=999
 这里我们假设新增22频道,配置文件变更如下:
 ```shell
 [program:channel]
-command=/bin/bash -c "/home/neople/channel/start_channel.sh"
+command=/bin/bash -c "/data/channel/start_channel.sh"
 directory=/home/neople/channel
 user=root
 autostart=true
@@ -70,7 +70,7 @@ redirect_stderr=true
 depend=bridge
 
 [program:game_siroco11]
-command=/bin/bash -c "/home/neople/game/start_siroco.sh 11 3"
+command=/bin/bash -c "/data/channel/start_siroco.sh 11 3"
 directory=/home/neople/game
 user=root
 autostart=true
@@ -82,7 +82,7 @@ redirect_stderr=true
 depend=channel
 
 [program:game_siroco22]
-command=/bin/bash -c "/home/neople/game/start_siroco.sh 22 3"
+command=/bin/bash -c "/data/channel/start_siroco.sh 22 3"
 directory=/home/neople/game
 user=root
 autostart=true
@@ -94,7 +94,7 @@ redirect_stderr=true
 depend=channel
 
 [program:game_siroco52]
-command=/bin/bash -c "/home/neople/game/start_siroco.sh 52 5"
+command=/bin/bash -c "/data/channel/start_siroco.sh 52 5"
 directory=/home/neople/game
 user=root
 autostart=true

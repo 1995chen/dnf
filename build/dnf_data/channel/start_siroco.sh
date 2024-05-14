@@ -38,6 +38,8 @@ sed -i "s/PUBLIC_IP/$MONITOR_PUBLIC_IP/g" /data/channel/$channel_name.cfg
 sed -i "s/DEC_GAME_PWD/$DEC_GAME_PWD/g" /data/channel/$channel_name.cfg
 cp /data/channel/$channel_name.cfg /home/neople/game/cfg/$channel_name.cfg
 echo "generate $channel_name.cfg success"
+# 清理cfg文件
+rm -rf /data/channel/$channel_name.cfg
 # 启动服务
 old_pid=$(pgrep -f "df_game_r $channel_name start")
 echo "ch.$channel_no old pid is $old_pid"

@@ -23,7 +23,7 @@ mkdir -p /data/log/netbird
 mkdir -p /data/monitor_ip
 # 创建netbird目录
 mkdir -p /data/netbird
-# 创建频道目录
+# 创建频道目录[存放频道脚本]
 mkdir -p /data/channel
 if [ $(find /data/conf.d -name "*.conf" | wc -l) -gt 0 ]; then
   echo "Add permissions to the extension configuration."

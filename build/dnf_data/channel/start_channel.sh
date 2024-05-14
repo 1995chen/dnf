@@ -29,6 +29,8 @@ sed -i "s/PUBLIC_IP/$MONITOR_PUBLIC_IP/g" /data/channel/channel.cfg
 sed -i "s/GAME_PASSWORD/$DNF_DB_GAME_PASSWORD/g" /data/channel/channel.cfg
 sed -i "s/DEC_GAME_PWD/$DEC_GAME_PWD/g" /data/channel/channel.cfg
 cp /data/channel/channel.cfg /home/neople/channel/cfg/channel.cfg
+# 清理cfg文件
+rm -rf /data/channel/channel.cfg
 # 启动服务
 echo "starting channel..."
 LD_PRELOAD=/data/dp/libhook.so ./df_channel_r channel start
