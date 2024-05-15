@@ -47,11 +47,9 @@ ADD build/dnf_data/init.sh /home/template/init/
 ADD build/dnf_data/Config.ini /home/template/init/
 # 添加默认DP文件
 ADD build/dnf_data/libhook.so /home/template/init/
-RUN cat /home/template/init/supervisor/dnf.conf
 # 链接supervisor配置文件
 RUN rm -rf /etc/supervisord.conf && mkdir -p /etc/supervisor/conf.d
 RUN ln -s /home/template/init/supervisor/supervisord.conf /etc/supervisord.conf
-RUN ln -s /home/template/init/supervisor/dnf.conf /etc/supervisor/conf.d/dnf.conf
 RUN ln -s /home/template/init/netbird/netbird.conf /etc/supervisor/conf.d/netbird.conf
 # 将模板添加到模版目录下[后续容器启动需要先将环境变量替换,再将文件移动到正确位置]
 ADD build/dnf_data/neople /home/template/neople

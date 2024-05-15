@@ -144,6 +144,13 @@ if [ ! -f "/data/dp/libhook.so" ];then
 else
   echo "libhook.so have already inited, do nothing!"
 fi
+# 判断supervisor dnf 配置是否初始化
+if [ ! -f "/data/conf.d/dnf.conf" ];then
+  cp /home/template/init/supervisor/dnf.conf /data/conf.d/
+  echo "init dnf.conf success"
+else
+  echo "dnf.conf have already inited, do nothing!"
+fi
 # 判断supervisor channel 配置是否初始化
 if [ ! -f "/data/conf.d/channel.conf" ];then
   cp /home/template/init/supervisor/channel.conf /data/conf.d/
