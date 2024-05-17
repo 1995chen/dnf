@@ -33,6 +33,6 @@ cp /data/channel/channel.cfg /home/neople/channel/cfg/channel.cfg
 rm -rf /data/channel/channel.cfg
 # 启动服务
 echo "starting channel..."
-LD_PRELOAD=/data/dp/libhook.so ./df_channel_r channel start
+LD_PRELOAD=/dp2/libhook.so ./df_channel_r channel start
 sleep 2
 cat pid/*.pid |xargs -n1 -I{} tail --pid={} -f /dev/null

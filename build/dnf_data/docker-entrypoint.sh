@@ -9,6 +9,8 @@ rm -rf /data/monitor_ip/MONITOR_PUBLIC_IP
 # 清理日志
 rm -rf /home/neople/game/log/siroco11/*
 rm -rf /home/neople/game/log/siroco52/*
+# 清理/dp2目录
+rm -rf /dp2
 # 重设supervisor web网页密码
 sed -i "s/^username=.*/username=$WEB_USER/" /etc/supervisord.conf
 sed -i "s/^password=.*/password=$WEB_PASS/" /etc/supervisord.conf
@@ -16,6 +18,7 @@ sed -i "s/^password=.*/password=$WEB_PASS/" /etc/supervisord.conf
 mkdir -p /data/conf.d
 # 创建DP目录
 mkdir -p /data/dp
+ln -s /data/dp /dp2
 # 创建日志目录
 mkdir -p /data/log
 mkdir -p /data/log/netbird
