@@ -6,6 +6,7 @@ dp2.9.0+frida_240418
 ## 如何使用
 将本目录下的dp2.tgz复制到/data/data/dp目录下,然后手动解压dp2.tgz。
 解压后目录结构如下:
+请务必删除原有的libhook.so文件！！！！！！！
 ```shell
 dp
 ├── df_game_r.js
