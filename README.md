@@ -21,8 +21,7 @@ For cooperation and suggestions please contact chenl2448365088@gmail.com or yzd3
 ## 2.1.5 Release Plan 
 ```shell
 1.支持假人
-2.支持一款流行的网页GM_Tool
-3.通过插件支持几款登陆器
+2.通过插件支持几款登陆器
 ```
 
 ## 自动化构建
@@ -97,10 +96,10 @@ https://www.cnblogs.com/EasonJim/p/7777904.html
 以下命令三选一
 
 ```shell
-docker pull 1995chen/dnf:centos5-2.1.4
-docker pull 1995chen/dnf:centos6-2.1.4
+docker pull 1995chen/dnf:centos5-2.1.4.fix1
+docker pull 1995chen/dnf:centos6-2.1.4.fix1
 如何您需要使用centos7作为基础镜像的特殊需求,可以使用:
-docker pull 1995chen/dnf:centos7-2.1.4
+docker pull 1995chen/dnf:centos7-2.1.4.fix1
 所有镜像版本列表请参考[记得点赞三连,帮助更多的人了解该镜像]:
 https://hub.docker.com/repository/docker/1995chen/dnf
 ```
@@ -118,7 +117,7 @@ mkdir -p /data/log /data/mysql /data/data
 # DNF_DB_ROOT_PASSWORD为mysql root密码,容器启动是root密码会跟随该环境变量的变化自动更新
 # WEB_USER为supervisor web管理页面用户名
 # WEB_PASS为supervisor web管理页面密码(可以访问PUBLIC_IP:2000来访问进程管理页面)
-docker run -d -e PUBLIC_IP=x.x.x.x -e WEB_USER=root -e WEB_PASS=123456 -e DNF_DB_ROOT_PASSWORD=88888888 -e GM_ACCOUNT=gmuser -e GM_PASSWORD=gmpass -v /data/log:/home/neople/game/log -v /data/mysql:/var/lib/mysql -v /data/data:/data -p 2000:180 -p 3000:3306/tcp -p 7600:7600/tcp -p 881:881/tcp -p 7001:7001/tcp -p 7001:7001/udp -p 10011:10011/tcp -p 11011:11011/udp -p 10052:10052/tcp -p 11052:11052/udp -p 7200:7200/tcp -p 7200:7200/udp -p 2311-2313:2311-2313/udp --privileged=true --cap-add=NET_ADMIN --hostname=dnf --cpus=1 --memory=1g --memory-swap=-1 --shm-size=8g --name=dnf 1995chen/dnf:centos5-2.1.4
+docker run -d -e PUBLIC_IP=x.x.x.x -e WEB_USER=root -e WEB_PASS=123456 -e DNF_DB_ROOT_PASSWORD=88888888 -e GM_ACCOUNT=gmuser -e GM_PASSWORD=gmpass -v /data/log:/home/neople/game/log -v /data/mysql:/var/lib/mysql -v /data/data:/data -p 2000:180 -p 3000:3306/tcp -p 7600:7600/tcp -p 881:881/tcp -p 7001:7001/tcp -p 7001:7001/udp -p 10011:10011/tcp -p 11011:11011/udp -p 10052:10052/tcp -p 11052:11052/udp -p 7200:7200/tcp -p 7200:7200/udp -p 2311-2313:2311-2313/udp --privileged=true --cap-add=NET_ADMIN --hostname=dnf --cpus=1 --memory=1g --memory-swap=-1 --shm-size=8g --name=dnf 1995chen/dnf:centos5-2.1.4.fix1
 ```
 
 ## docker-compose部署[群晖推荐]
