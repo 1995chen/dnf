@@ -5,7 +5,7 @@ services:
   dnf:
     hostname: dnf
     image: 1995chen/dnf:centos5-2.1.4.fix1
-    privileged: true
+    # privileged: true
     cap_add:
       - NET_ADMIN
     environment:
