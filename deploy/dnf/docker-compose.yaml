@@ -24,6 +24,7 @@ services:
       # 开启DDNS[可选配置]
       # - DDNS_ENABLE=true
       # - DDNS_DOMAIN=''
+    # shm_size: 8g【不可删除】，docker默认为64M较小，需要增加才能保证运行
     shm_size: 8g
     memswap_limit: -1
     mem_limit: 1g
