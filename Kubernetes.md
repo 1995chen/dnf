@@ -56,6 +56,7 @@ spec:
       - name: dnf
         persistentVolumeClaim:
           claimName: dnf
+      # 【不可删除】，docker等容器运行时默认较小，需要增加才能保证运行
       - name: memory
         emptyDir:
           medium: Memory
