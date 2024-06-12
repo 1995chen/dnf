@@ -100,6 +100,8 @@ docker pull 1995chen/dnf:centos5-2.1.4.fix1
 docker pull 1995chen/dnf:centos6-2.1.4.fix1
 如何您需要使用centos7作为基础镜像的特殊需求,可以使用:
 docker pull 1995chen/dnf:centos7-2.1.4.fix1
+# 国内镜像无法拉取请使用[完整复制整行命令执行]
+docker pull registry.cn-hangzhou.aliyuncs.com/1995chen/dnf:centos7-2.1.4.fix1 && docker tag registry.cn-hangzhou.aliyuncs.com/1995chen/dnf:centos7-2.1.4.fix1 1995chen/dnf:centos7-2.1.4.fix1
 所有镜像版本列表请参考[记得点赞三连,帮助更多的人了解该镜像]:
 https://hub.docker.com/repository/docker/1995chen/dnf
 ```
