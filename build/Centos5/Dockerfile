@@ -3,6 +3,7 @@ FROM centos:5.11
 
 MAINTAINER 1995chen
 
+ENV GOROOT /usr/local/go
 # 删除旧源
 RUN cd /etc/yum.repos.d/ && \
     rm -rf *.repo && \
@@ -11,6 +12,9 @@ RUN cd /etc/yum.repos.d/ && \
 ADD build/Centos5/*.repo /etc/yum.repos.d/
 # 更新ca证书
 ADD build/Centos5/ca-bundle.crt /etc/pki/tls/certs/ca-bundle.crt
+# 添加GCC
+COPY build/Centos5/gcc-5.5.0-part-1.tgz /tmp/
+COPY build/Centos5/gcc-5.5.0-part-2.tgz /tmp/
 # 添加perl
 COPY build/Centos5/perl-5.10.0.tar.gz /tmp/
 # 添加openssl
@@ -23,12 +27,28 @@ COPY build/Centos5/wget2-2.1.0.tar.gz /tmp/
 COPY build/Centos5/git-2.44.0.tar.gz /tmp/
 # 添加vim
 COPY build/Centos5/vim-9.1.0380.tar.gz /tmp/
+# 添加GO
+COPY build/Centos5/go1.22.4.linux-amd64.tar.gz /tmp/
 # 更新repo
 RUN yum clean all && yum makecache && yum update -y && \
     yum install -y gcc gcc-c++ make zlib-devel libc.so.6 autoconf gettext ncurses-devel libstdc++ libstdc++.so.6 \
-    glibc.i686 libssl.so.6 xulrunner.x86_64 libXtst.x86_64 initscripts iptables nc && \ 
+    glibc.i686 libssl.so.6 xulrunner.x86_64 libXtst.x86_64 initscripts iptables nc unzip bzip2 file texinfo && \ 
     yum clean all && ln -sf /lib/libssl.so.6 /usr/lib64/libssl.so.6 && ln -sf /usr/lib64/libcrypto.so.10 /usr/lib64/libcrypto.so.6
 WORKDIR /tmp
+# 编译gcc
+RUN tar -zxvf gcc-5.5.0-part-1.tgz && tar -zxvf gcc-5.5.0-part-2.tgz && mkdir gcc-build && cd gcc-build && \
+    /tmp/gcc-5.5.0/configure --enable-languages=c,c++ --prefix=/usr/local/gcc-5.5.0 --enable-shared --enable-plugin --program-suffix=-5.5.0 --disable-multilib && \
+    make MAKEINFO="makeinfo --force" && make install && cd /tmp && rm -rf /tmp/gcc-* && \
+    echo "/usr/local/gcc-5.5.0/lib64" >> /etc/ld.so.conf && ldconfig -v && \
+    mv /usr/bin/gcc /usr/bin/gcc-4.1.2 && \
+    mv /usr/bin/g++ /usr/bin/g++-4.1.2 && \
+    mv /usr/bin/c++ /usr/bin/c++-4.1.2 && \
+    ln -s /usr/local/gcc-5.5.0/bin/gcc-5.5.0 /usr/bin/gcc-5.5.0 && \
+    ln -s /usr/local/gcc-5.5.0/bin/g++-5.5.0 /usr/bin/g++-5.5.0 && \
+    ln -s /usr/local/gcc-5.5.0/bin/c++-5.5.0 /usr/bin/c++-5.5.0 && \
+    ln -sf /usr/bin/gcc-5.5.0 /usr/bin/gcc && \
+    ln -sf /usr/bin/g++-5.5.0 /usr/bin/g++ && \
+    ln -sf /usr/bin/c++-5.5.0 /usr/bin/c++
 # 编译perl
 RUN tar -zxvf perl-5.10.0.tar.gz && cd perl-5.10.0 && ./Configure -des -Dprefix=/usr/local && \
     make && make install && rm -rf /tmp/perl-5.10.0*
@@ -61,7 +81,9 @@ RUN tar -zxvf git-2.44.0.tar.gz && cd git-2.44.0 && \
     make && make install && ln -s /usr/local/git/bin/git /usr/bin/git && rm -rf /tmp/git-2.44.0*
 # 编译vim
 RUN tar -zxvf vim-9.1.0380.tar.gz && cd vim-9.1.0380 && \
-    ./configure --prefix=/usr/local/vim && \
+    CFLAGS="-gdwarf-2" ./configure --prefix=/usr/local/vim && \
     make && make install && ln -s /usr/local/vim/bin/vim /usr/bin/vim && rm -rf /tmp/vim-9.1.0380*
+# 安装GO
+RUN tar -zxvf go1.22.4.linux-amd64.tar.gz && mv /tmp/go /usr/local/ && ln -s /usr/local/go/bin/go /usr/bin/go
 # 切换工作目录
 WORKDIR /root
