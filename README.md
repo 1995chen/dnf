@@ -170,7 +170,7 @@ docker run -d -e PUBLIC_IP=x.x.x.x -e WEB_USER=root -e WEB_PASS=123456 -e DNF_DB
 └── Log20211203.snap  
 查看Logxxxxxxxx.init文件(其中xxxxxxxx为当天时间,需要按实际情况替换),四国的初始化日志都在这里  
 成功出现四国后,日志文件大概如下,四国初始化时间大概1分钟左右,请耐心等待  
-[root@centos-02 siroco11]# tail -f Log20211203.init  
+[root@centos-02 siroco11]# tail -f Log$(date +%Y%m%d).init  
 [09:40:23]    - RestrictBegin : 1  
 [09:40:23]    - DropRate : 0  
 [09:40:23]    Security Restrict End  
