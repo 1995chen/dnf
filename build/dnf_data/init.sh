@@ -84,11 +84,11 @@ chmod 777 -R /tmp
 cd /home/template/init/
 
 # 判断数据库是否初始化过
-if [ ! -d "/var/lib/mysql/d_taiwan" ];then
+if [ ! -d "/var/lib/mysql/d_taiwan" ] && [ -z "$MYSQL_HOST" ] && [ -z "$MYSQL_PORT" ];then
   tar -zxvf /home/template/init/init_sql.tgz
   initMysql
 else
-  echo "mysql have already inited, do nothing!"
+  echo "mysql have already inited or use standalone mysql service, do nothing!"
 fi
 
 # 判断Script.pvf文件是否初始化过

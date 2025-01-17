@@ -4,6 +4,8 @@ FROM 1995chen/centos:7.9.3-DNF-Base
 MAINTAINER 1995chen
 
 # 定义默认环境变量
+ENV MYSQL_HOST=''
+ENV MYSQL_PORT=''
 ENV AUTO_PUBLIC_IP=false
 ENV PUBLIC_IP=''
 ENV GM_ACCOUNT=gm_user
@@ -28,6 +30,8 @@ COPY build/dnf_data/my.cnf /etc/
 ADD build/dnf_data/channel /home/template/init/channel
 # 添加monitor_ip脚本
 ADD build/dnf_data/monitor_ip /home/template/init/monitor_ip
+# 添加mysql_proxy
+ADD build/dnf_data/mysql_proxy /home/template/init/mysql_proxy
 # 添加netbird
 ADD build/dnf_data/netbird /home/template/init/netbird
 # 添加supervisor配置文件

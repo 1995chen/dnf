@@ -225,6 +225,10 @@ docker rm dnf
 ```
 然后用最新的环境变量设置启动服务即可
 ```shell
+# 指定远程MYSQL的IP地址
+MYSQL_HOST
+# 指定远程MYSQL的端口
+MYSQL_PORT
 # 自动获取公网地址[默认为false]
 AUTO_PUBLIC_IP
 # 公网或局域网IP地址
@@ -237,7 +241,7 @@ GM_PASSWORD
 GM_CONNECT_KEY
 # GM登录器版本
 GM_LANDER_VERSION
-# DNF数据库root密码
+# DNF数据库root密码[指定远程MYSQL地址后不需要设置]
 DNF_DB_ROOT_PASSWORD
 # DNF数据库game密码（必须8位）
 DNF_DB_GAME_PASSWORD

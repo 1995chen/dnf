@@ -1,6 +1,6 @@
 #! /bin/bash
 
-# 清楚mysql sock以及pid文件
+# 清除mysql sock以及pid文件
 rm -rf /var/lib/mysql/mysql.sock
 rm -rf /var/lib/mysql/*.pid
 rm -rf /var/lib/mysql/*.err
@@ -91,23 +91,27 @@ sed -i "s/GM_CONNECT_KEY/$GM_CONNECT_KEY/g" `find /data -name "*.ini"`
 sed -i "s/GM_LANDER_VERSION/$GM_LANDER_VERSION/g" `find /data -name "*.ini"`
 
 # 重建root, game用户,并限制game只能容器内服务访问
-service mysql start --skip-grant-tables
-mysql -u root <<EOF
-delete from mysql.user;
-flush privileges;
-grant all privileges on *.* to 'root'@'%' identified by '$DNF_DB_ROOT_PASSWORD';
-grant all privileges on *.* to 'game'@'127.0.0.1' identified by '$DNF_DB_GAME_PASSWORD';
-flush privileges;
-select user,host,password from mysql.user;
+if [ -d "/var/lib/mysql/d_taiwan" ] && [ -z "$MYSQL_HOST" ] && [ -z "$MYSQL_PORT" ];then
+  service mysql start --skip-grant-tables
+  mysql -u root <<EOF
+  delete from mysql.user;
+  flush privileges;
+  grant all privileges on *.* to 'root'@'%' identified by '$DNF_DB_ROOT_PASSWORD';
+  grant all privileges on *.* to 'game'@'127.0.0.1' identified by '$DNF_DB_GAME_PASSWORD';
+  flush privileges;
+  select user,host,password from mysql.user;
 EOF
-# 关闭服务
-service mysql stop
-service mysql start
-# 修改数据库IP和端口 & 刷新game账户权限只允许本地登录
-mysql -u root -p$DNF_DB_ROOT_PASSWORD -P 3306 -h 127.0.0.1 <<EOF
-update d_taiwan.db_connect set db_ip="127.0.0.1", db_port="3306", db_passwd="$DEC_GAME_PWD";
-select * from d_taiwan.db_connect;
+  # 关闭服务
+  service mysql stop
+  service mysql start
+  # 修改数据库IP和端口 & 刷新game账户权限只允许本地登录
+  mysql -u root -p$DNF_DB_ROOT_PASSWORD -P 3306 -h 127.0.0.1 <<EOF
+  update d_taiwan.db_connect set db_ip="127.0.0.1", db_port="3306", db_passwd="$DEC_GAME_PWD";
+  select * from d_taiwan.db_connect;
 EOF
+else
+  echo "use standalone mysql service, do nothing!"
+fi
 
 cd /root
 # 启动服务
