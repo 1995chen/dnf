@@ -6,7 +6,7 @@ services:
       image: 1995chen/mysql:5.0.95
       mem_limit: 1g
       environment:
-        - MYSQL_ROOT_PASSWORD=88888888
+        - DNF_DB_ROOT_PASSWORD=88888888
         - TZ=Asia/Shanghai
       ports:
         - "3000:3306"
