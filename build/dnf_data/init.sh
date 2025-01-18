@@ -2,14 +2,16 @@
 
 # 定义方法
 initMysql(){
-  # 清理数据
-  rm -rf /var/lib/mysql/*
-  # 启动mysql
-  mysql_install_db --user=mysql
-  service mysql start
-
+  INIT_MYSQL_IP=127.0.0.1
+  INIT_MYSQL_PORT=3306
+  # 判断拿到要导入的数据库IP和端口
+  if [ -n "$MYSQL_HOST" ] && [ -n "$MYSQL_PORT" ];then
+    INIT_MYSQL_IP=$MYSQL_HOST
+    INIT_MYSQL_PORT=$MYSQL_PORT
+  fi
+  echo "execute init sql to $INIT_MYSQL_IP:$INIT_MYSQL_PORT"
   # 导入数据
-  mysql -u root <<EOF
+  mysql -h $INIT_MYSQL_IP -P $INIT_MYSQL_PORT -u root -p$DNF_DB_ROOT_PASSWORD <<EOF
 CREATE SCHEMA d_channel DEFAULT CHARACTER SET utf8 ;
 use d_channel;
 source /home/template/init/d_channel.sql;
@@ -75,20 +77,84 @@ use taiwan_siroco;
 source /home/template/init/taiwan_siroco.sql;
 flush PRIVILEGES;
 EOF
-  service mysql stop
   echo "init mysql success"
 }
 # 赋予权限
-chmod 777 -R /var/lib/mysql
 chmod 777 -R /tmp
 cd /home/template/init/
 
 # 判断数据库是否初始化过
-if [ ! -d "/var/lib/mysql/d_taiwan" ] && [ -z "$MYSQL_HOST" ] && [ -z "$MYSQL_PORT" ];then
-  tar -zxvf /home/template/init/init_sql.tgz
-  initMysql
+if [ -z "$MYSQL_HOST" ] && [ -z "$MYSQL_PORT" ];then
+  echo "use local mysql service....."
+  if [ ! -d "/var/lib/mysql/d_taiwan" ];then
+    echo "prepare to init local mysql data....."
+    tar -zxvf /home/template/init/init_sql.tgz
+    # 清理数据
+    rm -rf /var/lib/mysql/*
+    # 启动mysql
+    mysql_install_db --user=mysql
+    service mysql start
+    /usr/bin/mysqladmin -u root password $DNF_DB_ROOT_PASSWORD
+    initMysql
+    service mysql stop      
+  else
+    echo "local mysql data already inited."
+  fi
+  echo "local mysql service flush privileges....."
+  service mysql start --skip-grant-tables
+  mysql -u root <<EOF
+  delete from mysql.user;
+  flush privileges;
+  grant all privileges on *.* to 'root'@'%' identified by '$DNF_DB_ROOT_PASSWORD';
+  grant all privileges on *.* to 'game'@'127.0.0.1' identified by '$DNF_DB_GAME_PASSWORD';
+  flush privileges;
+  select user,host,password from mysql.user;
+  update d_taiwan.db_connect set db_ip="127.0.0.1", db_port="3306", db_passwd="$DEC_GAME_PWD";
+EOF
+  # 关闭服务
+  service mysql stop
+  # 赋予权限
+  chmod 777 -R /var/lib/mysql
+  service mysql start
+  # 测试并查询数据库连接设置
+  mysql -h 127.0.0.1 -P 3306 -u game -p$DNF_DB_GAME_PASSWORD <<EOF
+    select db_ip, db_port, db_passwd from d_taiwan.db_connect;
+EOF
 else
-  echo "mysql have already inited or use standalone mysql service, do nothing!"
+  if [ -z "$MYSQL_GAME_ALLOW_IP" ];then
+    MYSQL_GAME_ALLOW_IP=$(ip route | awk '/default/ { print $3 }')
+  fi
+  echo "use standalone mysql service, MYSQL_GAME_ALLOW_IP is $MYSQL_GAME_ALLOW_IP....."
+  check_result=$(mysql -h $MYSQL_HOST -P $MYSQL_PORT -u root -p$DNF_DB_ROOT_PASSWORD -e "use d_taiwan" 2>&1)
+  error_code=$?
+  if [ $error_code -eq 0 ]; then
+    echo "remote mysql data already inited."
+  else
+    mysql_error_code=$(echo "$check_result" | awk '{print $2}')
+    if [ "$mysql_error_code" == "1049" ]; then
+        echo "prepare to init remote mysql service dnf data."
+        tar -zxvf /home/template/init/init_sql.tgz
+        initMysql
+    else
+        echo "can not connect to remote mysql service $MYSQL_HOST:$MYSQL_PORT"
+        echo $check_result
+        exit -1
+    fi
+  fi
+  echo "remote mysql service flush privileges....."
+  mysql -h $MYSQL_HOST -P $MYSQL_PORT -u root -p$DNF_DB_ROOT_PASSWORD <<EOF
+  delete from mysql.user where user='game';
+  grant all privileges on *.* to 'game'@'$MYSQL_GAME_ALLOW_IP' identified by '$DNF_DB_GAME_PASSWORD';
+  select user,host from mysql.user;
+  update d_taiwan.db_connect set db_ip="127.0.0.1", db_port="3306", db_passwd="$DEC_GAME_PWD";
+  select * from d_taiwan.db_connect;
+  flush privileges;
+EOF
+  # 测试并查询数据库连接设置
+  echo $DNF_DB_GAME_PASSWORD
+  mysql -h $MYSQL_HOST -P $MYSQL_PORT -u game -p$DNF_DB_GAME_PASSWORD <<EOF
+  select db_ip, db_port, db_passwd from d_taiwan.db_connect;
+EOF
 fi
 
 # 判断Script.pvf文件是否初始化过

@@ -1,5 +1,12 @@
 #! /bin/bash
 
+# 加密GAME密码
+chmod +x /TeaEncrypt
+export DNF_DB_GAME_PASSWORD=${DNF_DB_GAME_PASSWORD:0:8}
+export DEC_GAME_PWD=`/TeaEncrypt $DNF_DB_GAME_PASSWORD`
+echo "game password: $DNF_DB_GAME_PASSWORD"
+echo "game pwd key: $DEC_GAME_PWD"
+
 # 清除mysql sock以及pid文件
 rm -rf /var/lib/mysql/mysql.sock
 rm -rf /var/lib/mysql/*.pid
@@ -36,6 +43,10 @@ else
 fi
 # 初始化数据
 bash /home/template/init/init.sh
+error_code=$?
+if [ ! $error_code -eq 0 ]; then
+  exit -1
+fi
 # 删除无用文件
 rm -rf /home/template/neople-tmp
 rm -rf /home/template/root-tmp
@@ -52,13 +63,7 @@ rm -rf /root/privatekey.pem
 # 复制待使用文件
 cp -r /home/template/neople /home/template/neople-tmp
 cp -r /home/template/root /home/template/root-tmp
-
-# 加密GAME密码并修改配置文件
-chmod +x /TeaEncrypt
-export DNF_DB_GAME_PASSWORD=${DNF_DB_GAME_PASSWORD:0:8}
-export DEC_GAME_PWD=`/TeaEncrypt $DNF_DB_GAME_PASSWORD`
-echo "game password: $DNF_DB_GAME_PASSWORD"
-echo "game pwd key: $DEC_GAME_PWD"
+# 修改配置文件
 find /home/template/neople-tmp -type f -name "*.cfg" -print0 | xargs -0 sed -i "s/GAME_PASSWORD/$DNF_DB_GAME_PASSWORD/g"
 find /home/template/neople-tmp -type f -name "*.cfg" -print0 | xargs -0 sed -i "s/DEC_GAME_PWD/$DEC_GAME_PWD/g"
 
@@ -89,29 +94,6 @@ sed -i "s/GM_ACCOUNT/$GM_ACCOUNT/g" `find /data -name "*.ini"`
 sed -i "s/GM_PASSWORD/$GM_PASSWORD/g" `find /data -name "*.ini"`
 sed -i "s/GM_CONNECT_KEY/$GM_CONNECT_KEY/g" `find /data -name "*.ini"`
 sed -i "s/GM_LANDER_VERSION/$GM_LANDER_VERSION/g" `find /data -name "*.ini"`
-
-# 重建root, game用户,并限制game只能容器内服务访问
-if [ -d "/var/lib/mysql/d_taiwan" ] && [ -z "$MYSQL_HOST" ] && [ -z "$MYSQL_PORT" ];then
-  service mysql start --skip-grant-tables
-  mysql -u root <<EOF
-  delete from mysql.user;
-  flush privileges;
-  grant all privileges on *.* to 'root'@'%' identified by '$DNF_DB_ROOT_PASSWORD';
-  grant all privileges on *.* to 'game'@'127.0.0.1' identified by '$DNF_DB_GAME_PASSWORD';
-  flush privileges;
-  select user,host,password from mysql.user;
-EOF
-  # 关闭服务
-  service mysql stop
-  service mysql start
-  # 修改数据库IP和端口 & 刷新game账户权限只允许本地登录
-  mysql -u root -p$DNF_DB_ROOT_PASSWORD -P 3306 -h 127.0.0.1 <<EOF
-  update d_taiwan.db_connect set db_ip="127.0.0.1", db_port="3306", db_passwd="$DEC_GAME_PWD";
-  select * from d_taiwan.db_connect;
-EOF
-else
-  echo "use standalone mysql service, do nothing!"
-fi
 
 cd /root
 # 启动服务
