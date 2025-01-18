@@ -151,7 +151,6 @@ else
   flush privileges;
 EOF
   # 测试并查询数据库连接设置
-  echo $DNF_DB_GAME_PASSWORD
   mysql -h $MYSQL_HOST -P $MYSQL_PORT -u game -p$DNF_DB_GAME_PASSWORD <<EOF
   select db_ip, db_port, db_passwd from d_taiwan.db_connect;
 EOF

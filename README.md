@@ -143,6 +143,10 @@ docker run -d -e PUBLIC_IP=x.x.x.x -e WEB_USER=root -e WEB_PASS=123456 -e DNF_DB
 
 [Yaml文件](deploy/dnf/docker-compose.yaml)
 
+## 站库分离
+
+[Yaml文件](deploy/dnf/docker-compose_standalone_db.yaml)
+
 ## k8s启动
 
 [部署文档](Kubernetes.md)
@@ -229,6 +233,8 @@ docker rm dnf
 MYSQL_HOST
 # 指定远程MYSQL的端口
 MYSQL_PORT
+# 配置远程数据库GAME账号ALLOW IP
+MYSQL_GAME_ALLOW_IP
 # 自动获取公网地址[默认为false]
 AUTO_PUBLIC_IP
 # 公网或局域网IP地址
@@ -241,7 +247,7 @@ GM_PASSWORD
 GM_CONNECT_KEY
 # GM登录器版本
 GM_LANDER_VERSION
-# DNF数据库root密码[指定远程MYSQL地址后不需要设置]
+# DNF数据库root密码[当使用独立数据库时,root密码用于初始化数据以及game账号自动化创建、授权]
 DNF_DB_ROOT_PASSWORD
 # DNF数据库game密码（必须8位）
 DNF_DB_GAME_PASSWORD
