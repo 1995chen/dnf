@@ -34,6 +34,7 @@ jobs:
       - attach_workspace:
           at: /root
       - setup_remote_docker:
+          version: 20.10.14
       - run: 
           name: Docker Login
           command: |
@@ -74,6 +75,7 @@ jobs:
       - attach_workspace:
           at: /root
       - setup_remote_docker:
+          version: 20.10.14
       - run:
           name: Load archived Docker image
           command: |
