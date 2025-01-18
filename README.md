@@ -339,6 +339,10 @@ PUBLIC_IP(你的服务器IP)  start.dnf.tw
 * A: 环境变量AUTO_PUBLIC_IP 可以启动容器时自己获取公网ip，自动重启的话需要自己写脚本去检测并重启容器
 * A: 客户端使用统一网关登录器+DOF7补丁，支持域名配置；统一补丁貌似不能用域名
 
+14.无法连接数据库
+* A: 外网访问数据库端口默认为3000端口，不是3306
+* A: game用户默认无法外网访问，请使用root账号和root密码连接数据库
+
 ## 客户端地址下载
 链接：https://pan.baidu.com/s/10RgXFtpEhvRUm-hA98Am4A?pwd=fybn 提取码：fybn
 
