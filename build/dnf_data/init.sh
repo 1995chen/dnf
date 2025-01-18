@@ -105,7 +105,7 @@ if [ -z "$MYSQL_HOST" ] && [ -z "$MYSQL_PORT" ];then
   mysql -u root <<EOF
   delete from mysql.user;
   flush privileges;
-  grant all privileges on *.* to 'root'@'%' identified by '$DNF_DB_ROOT_PASSWORD';
+  grant all privileges on *.* to 'root'@'%' identified by '$DNF_DB_ROOT_PASSWORD' WITH GRANT OPTION;
   grant all privileges on *.* to 'game'@'127.0.0.1' identified by '$DNF_DB_GAME_PASSWORD';
   flush privileges;
   select user,host,password from mysql.user;
@@ -144,6 +144,7 @@ else
   echo "remote mysql service flush privileges....."
   mysql -h $MYSQL_HOST -P $MYSQL_PORT -u root -p$DNF_DB_ROOT_PASSWORD <<EOF
   delete from mysql.user where user='game';
+  flush privileges;
   grant all privileges on *.* to 'game'@'$MYSQL_GAME_ALLOW_IP' identified by '$DNF_DB_GAME_PASSWORD';
   select user,host from mysql.user;
   update d_taiwan.db_connect set db_ip="127.0.0.1", db_port="3306", db_passwd="$DEC_GAME_PWD";

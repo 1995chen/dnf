@@ -2,6 +2,18 @@ version: "2.3"
 
 services:
 
+  mysql:
+      image: 1995chen/mysql:5.0.95
+      mem_limit: 1g
+      environment:
+        - MYSQL_ROOT_PASSWORD=88888888
+        - TZ=Asia/Shanghai
+      ports:
+        - "3000:3306"
+      volumes:
+        - ./mysql:/var/lib/mysql
+      restart: always
+
   dnf:
     hostname: dnf
     image: 1995chen/dnf:centos5-2.1.4.fix1
