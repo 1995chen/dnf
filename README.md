@@ -18,7 +18,7 @@ For cooperation and suggestions please contact chenl2448365088@gmail.com or yzd3
 
 如果觉得本项目和[XanderYe/dnf](https://github.com/XanderYe/dnf)对你有帮助，可以点一下 Star 支持下我们，谢谢。
 
-## 2.1.5 Release Plan 
+## 3.0.0 Release Plan 
 ```
 1. 支持假人
 2. 通过插件支持几款登陆器
@@ -112,12 +112,12 @@ sysctl -p
 以下命令任选一个，可拉取镜像到本机
 
 ```shell
-docker pull 1995chen/dnf:centos5-2.1.4.fix1
-docker pull 1995chen/dnf:centos6-2.1.4.fix1
+docker pull 1995chen/dnf:centos5-2.1.5
+docker pull 1995chen/dnf:centos6-2.1.5
 # 如何您需要使用 CentOS7 作为基础镜像的特殊需求,可以使用:
-docker pull 1995chen/dnf:centos7-2.1.4.fix1
+docker pull 1995chen/dnf:centos7-2.1.5
 # 国内镜像无法拉取请使用(完整复制下面两行命令执行)
-docker pull registry.cn-hangzhou.aliyuncs.com/1995chen/dnf:centos7-2.1.4.fix1 && docker tag registry.cn-hangzhou.aliyuncs.com/1995chen/dnf:centos7-2.1.4.fix1 1995chen/dnf:centos7-2.1.4.fix1
+docker pull registry.cn-hangzhou.aliyuncs.com/1995chen/dnf:centos7-2.1.5 && docker tag registry.cn-hangzhou.aliyuncs.com/1995chen/dnf:centos7-2.1.5 1995chen/dnf:centos7-2.1.5
 ```
 
 ## 简单启动
@@ -135,8 +135,8 @@ mkdir -p /data/log /data/mysql /data/data
 # WEB_USER 为 supervisor web 管理页面用户名
 # WEB_PASS 为 supervisor web 管理页面密码（可以访问 PUBLIC_IP:2000 来访问进程管理页面）
 # --shm-size=8g【不可删除】，docker默认为64M较小，需要增加才能保证运行
-# 注意，最后的 1995chen/dnf:centos5-2.1.4.fix1 部分中的 centos5，你在上一步拉取得哪个版本，则应替换为哪个版本
-docker run -d -e PUBLIC_IP=x.x.x.x -e WEB_USER=root -e WEB_PASS=123456 -e DNF_DB_ROOT_PASSWORD=88888888 -e GM_ACCOUNT=gmuser -e GM_PASSWORD=gmpass -v /data/log:/home/neople/game/log -v /data/mysql:/var/lib/mysql -v /data/data:/data -p 2000:180 -p 3000:3306/tcp -p 7600:7600/tcp -p 881:881/tcp -p 7001:7001/tcp -p 7001:7001/udp -p 10011:10011/tcp -p 11011:11011/udp -p 10052:10052/tcp -p 11052:11052/udp -p 7200:7200/tcp -p 7200:7200/udp -p 2311-2313:2311-2313/udp --cap-add=NET_ADMIN --hostname=dnf --cpus=1 --memory=1g --memory-swap=-1 --shm-size=8g --name=dnf 1995chen/dnf:centos5-2.1.4.fix1
+# 注意，最后的 1995chen/dnf:centos5-2.1.5 部分中的 centos5，你在上一步拉取得哪个版本，则应替换为哪个版本
+docker run -d -e PUBLIC_IP=x.x.x.x -e WEB_USER=root -e WEB_PASS=123456 -e DNF_DB_ROOT_PASSWORD=88888888 -e GM_ACCOUNT=gmuser -e GM_PASSWORD=gmpass -v /data/log:/home/neople/game/log -v /data/mysql:/var/lib/mysql -v /data/data:/data -p 2000:180 -p 3000:3306/tcp -p 7600:7600/tcp -p 881:881/tcp -p 7001:7001/tcp -p 7001:7001/udp -p 10011:10011/tcp -p 11011:11011/udp -p 10052:10052/tcp -p 11052:11052/udp -p 7200:7200/tcp -p 7200:7200/udp -p 2311-2313:2311-2313/udp --cap-add=NET_ADMIN --hostname=dnf --cpus=1 --memory=1g --memory-swap=-1 --shm-size=8g --name=dnf 1995chen/dnf:centos5-2.1.5
 ```
 
 ## docker-compose部署[群晖推荐]
