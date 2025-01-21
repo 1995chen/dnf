@@ -123,6 +123,17 @@ EOF
 else
   if [ -z "$MYSQL_GAME_ALLOW_IP" ];then
     MYSQL_GAME_ALLOW_IP=$(ip route | awk '/default/ { print $3 }')
+    # 尝试连接mysql自动配置ALLOW_IP
+    check_result=$(mysql --connect_timeout=2 -h $MYSQL_HOST -P $MYSQL_PORT -u game 2>&1)
+    error_code=$?
+    if [ $error_code -ne 0 ]; then
+      echo "try to get game allow ip....."
+      mysql_error_code=$(echo "$check_result" | awk '{print $2}')
+      if [ "$mysql_error_code" == "1045" ]; then
+          MYSQL_GAME_ALLOW_IP=$(echo $check_result | awk -F"'" '{print $4}')
+          echo "set MYSQL_GAME_ALLOW_IP=$MYSQL_GAME_ALLOW_IP"
+      fi
+    fi
   fi
   echo "use standalone mysql service, MYSQL_GAME_ALLOW_IP is $MYSQL_GAME_ALLOW_IP....."
   check_result=$(mysql -h $MYSQL_HOST -P $MYSQL_PORT -u root -p$DNF_DB_ROOT_PASSWORD -e "use d_taiwan" 2>&1)
