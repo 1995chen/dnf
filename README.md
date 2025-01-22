@@ -239,6 +239,8 @@ MYSQL_GAME_ALLOW_IP
 AUTO_PUBLIC_IP
 # 公网或局域网IP地址
 PUBLIC_IP
+# 需要开启的频道[默认为11和52,支持配置范围,配置之间用逗号分隔,例如:1-11,12,22-25,51-55]
+OPEN_CHANNEL='11,52'
 # GM管理员账号
 GM_ACCOUNT
 # GM管理员密码
