@@ -33,6 +33,8 @@ ADD build/dnf_data/channel /home/template/init/channel
 ADD build/dnf_data/monitor_ip /home/template/init/monitor_ip
 # 添加mysql_proxy
 ADD build/dnf_data/mysql_proxy /home/template/init/mysql_proxy
+# 添加daily_job
+ADD build/dnf_data/daily_job /home/template/init/daily_job
 # 添加netbird
 ADD build/dnf_data/netbird /home/template/init/netbird
 # 添加supervisor配置文件
