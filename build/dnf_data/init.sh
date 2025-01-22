@@ -231,6 +231,36 @@ fi
 # 判断supervisor channel 配置是否初始化
 if [ ! -f "/data/conf.d/channel.conf" ];then
   cp /home/template/init/supervisor/channel.conf /data/conf.d/
+  # 根据环境变量重置频道配置文件
+  numbers=$(echo "1" | tr ',' '\n' | sed 's/-/ /g' | xargs -n 2 seq | tr '\n' ' ')
+  process_sequence=3
+  group_programs="channel"
+  echo \ >> /data/conf.d/channel.conf
+  # 循环遍历存储的数字
+  for num in $numbers; do
+      group_programs="$group_programs,game_siroco$num"
+      if [ $num -ge 11 ] && [ $num -le 51 ]; then
+          process_sequence=3
+      else
+          process_sequence=5
+      fi
+      echo \ >> /data/conf.d/channel.conf
+      echo "[program:game_siroco$num]" >> /data/conf.d/channel.conf
+      echo "command=/bin/bash -c \"/data/channel/start_siroco.sh $num $process_sequence\"" >> /data/conf.d/channel.conf
+      echo "directory=/home/neople/game" >> /data/conf.d/channel.conf
+      echo "user=root" >> /data/conf.d/channel.conf
+      echo "autostart=true" >> /data/conf.d/channel.conf
+      echo "autorestart=true" >> /data/conf.d/channel.conf
+      echo "stopasgroup=true" >> /data/conf.d/channel.conf
+      echo "killasgroup=true" >> /data/conf.d/channel.conf
+      echo "stdout_logfile=/data/log/game_siroco$num.log" >> /data/conf.d/channel.conf
+      echo "redirect_stderr=true" >> /data/conf.d/channel.conf
+      echo "depend=channel" >> /data/conf.d/channel.conf
+  done
+  echo \ >> /data/conf.d/channel.conf
+  echo "[group:dnf_channel]" >> /data/conf.d/channel.conf
+  echo "programs=$group_programs" >> /data/conf.d/channel.conf
+  echo "priority=999" >> /data/conf.d/channel.conf
   echo "init channel.conf success"
 else
   echo "channel.conf have already inited, do nothing!"
