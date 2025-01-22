@@ -31,6 +31,8 @@ mkdir -p /data/log
 mkdir -p /data/log/netbird
 # 创建ip监控目录
 mkdir -p /data/monitor_ip
+# 创建daily_job目录
+mkdir -p /data/daily_job
 # 创建netbird目录
 mkdir -p /data/netbird
 # 创建频道目录[存放频道脚本]
