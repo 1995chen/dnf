@@ -232,7 +232,7 @@ fi
 if [ ! -f "/data/conf.d/channel.conf" ];then
   cp /home/template/init/supervisor/channel.conf /data/conf.d/
   # 根据环境变量重置频道配置文件
-  numbers=$(echo "1" | tr ',' '\n' | sed 's/-/ /g' | xargs -n 2 seq | tr '\n' ' ')
+  numbers=$(echo "$OPEN_CHANNEL" | tr ',' '\n' | sed 's/-/ /g' | xargs -n 2 seq | tr '\n' ' ')
   process_sequence=3
   group_programs="channel"
   echo \ >> /data/conf.d/channel.conf

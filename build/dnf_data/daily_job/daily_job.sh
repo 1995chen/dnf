@@ -4,7 +4,7 @@
 while true
 do
   echo "try to run daily job....."
-  dt = $(date +'%Y%m')
+  dt=$(date +'%Y%m')
   echo "create auction_cera and auction_gold table, current date is $dt."
   # 自动创建拍卖行以及金币寄售表
   if [ -z "$MYSQL_HOST" ] && [ -z "$MYSQL_PORT" ];then
@@ -20,7 +20,7 @@ EOF
     CREATE TABLE IF NOT EXISTS taiwan_cain_auction_cera.auction_history_buyer_$dt LIKE taiwan_cain_auction_cera.auction_history_buyer_201603;
     CREATE TABLE IF NOT EXISTS taiwan_cain_auction_gold.auction_history_$dt LIKE taiwan_cain_auction_gold.auction_history_201603;
     CREATE TABLE IF NOT EXISTS taiwan_cain_auction_gold.auction_history_buyer_$dt LIKE taiwan_cain_auction_gold.auction_history_buyer_201603;
-EOF 
+EOF
   fi
   echo "create auction_cera and auction_gold table done."
   sleep 3600
