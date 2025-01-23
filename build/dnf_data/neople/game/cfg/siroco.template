@@ -37,8 +37,8 @@ auction_server_port = 30803
 cera_auction_server_ip = 127.0.0.1
 cera_auction_server_port = 30603
 
-ipg_ip = PUBLIC_IP
-nxj_ipg_ip = PUBLIC_IP
+ipg_ip = 127.0.0.1
+nxj_ipg_ip = 127.0.0.1
 nxj_ipg_port = 9006
 
 relay_ip = PUBLIC_IP
