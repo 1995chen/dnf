@@ -232,7 +232,7 @@ fi
 rm -rf /data/conf.d/channel.conf
 cp /home/template/init/supervisor/channel.conf /data/conf.d/
 # 根据环境变量重置频道配置文件
-number=$(echo "$OPEN_CHANNEL" | awk -F, '{for(i=1;i<=NF;i++){if($i~/-/){split($i,a,"-");for(j=a[1];j<=a[2];j++)printf j" "}else{printf $i" "}}}')
+numbers=$(echo "$OPEN_CHANNEL" | awk -F, '{for(i=1;i<=NF;i++){if($i~/-/){split($i,a,"-");for(j=a[1];j<=a[2];j++)printf j" "}else{printf $i" "}}}')
 process_sequence=3
 group_programs="channel"
 echo "" >> /data/conf.d/channel.conf
@@ -261,6 +261,7 @@ for num in $numbers; do
     echo "stdout_logfile=/data/log/game_siroco$num.log" >> /data/conf.d/channel.conf
     echo "redirect_stderr=true" >> /data/conf.d/channel.conf
     echo "depend=channel" >> /data/conf.d/channel.conf
+    continue
   fi
   echo "invalid channel number: $num"
 done
