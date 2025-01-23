@@ -230,22 +230,26 @@ else
 fi
 # 重新生成channel配置文件
 rm -rf /data/conf.d/channel.conf
-if [ ! -f "/data/conf.d/channel.conf" ];then
 cp /home/template/init/supervisor/channel.conf /data/conf.d/
 # 根据环境变量重置频道配置文件
 number=$(echo "$OPEN_CHANNEL" | awk -F, '{for(i=1;i<=NF;i++){if($i~/-/){split($i,a,"-");for(j=a[1];j<=a[2];j++)printf j" "}else{printf $i" "}}}')
 process_sequence=3
 group_programs="channel"
-echo \ >> /data/conf.d/channel.conf
+echo "" >> /data/conf.d/channel.conf
 # 循环遍历存储的数字
 for num in $numbers; do
-    group_programs="$group_programs,game_siroco$num"
+  if [[ $num -eq 1 || $num -eq 6 || $num -eq 7 || ($num -ge 11 && $num -le 39) || ($num -ge 52 && $num -le 56) ]];then
     if [ $num -ge 11 ] && [ $num -le 51 ]; then
         process_sequence=3
     else
         process_sequence=5
     fi
-    echo \ >> /data/conf.d/channel.conf
+    # 对于小于10的频道补0
+    if [[ $num -lt 10 ]];then
+      num="0$num"
+    fi
+    group_programs="$group_programs,game_siroco$num"
+    echo "" >> /data/conf.d/channel.conf
     echo "[program:game_siroco$num]" >> /data/conf.d/channel.conf
     echo "command=/bin/bash -c \"/data/channel/start_siroco.sh $num $process_sequence\"" >> /data/conf.d/channel.conf
     echo "directory=/home/neople/game" >> /data/conf.d/channel.conf
@@ -257,8 +261,11 @@ for num in $numbers; do
     echo "stdout_logfile=/data/log/game_siroco$num.log" >> /data/conf.d/channel.conf
     echo "redirect_stderr=true" >> /data/conf.d/channel.conf
     echo "depend=channel" >> /data/conf.d/channel.conf
+  fi
+  echo "invalid channel number: $num"
 done
-echo \ >> /data/conf.d/channel.conf
+# 添加dnf_channel分组
+echo "" >> /data/conf.d/channel.conf
 echo "[group:dnf_channel]" >> /data/conf.d/channel.conf
 echo "programs=$group_programs" >> /data/conf.d/channel.conf
 echo "priority=999" >> /data/conf.d/channel.conf
