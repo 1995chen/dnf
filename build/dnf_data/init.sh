@@ -231,6 +231,8 @@ fi
 # 重新生成channel配置文件
 rm -rf /data/conf.d/channel.conf
 cp /home/template/init/supervisor/channel.conf /data/conf.d/
+# 去除可能存在的单双引号
+OPEN_CHANNEL=$(echo $OPEN_CHANNEL | sed "s/[\'\"]//g")
 # 根据环境变量重置频道配置文件
 numbers=$(echo "$OPEN_CHANNEL" | awk -F, '{for(i=1;i<=NF;i++){if($i~/-/){split($i,a,"-");for(j=a[1];j<=a[2];j++)printf j" "}else{printf $i" "}}}')
 process_sequence=3
