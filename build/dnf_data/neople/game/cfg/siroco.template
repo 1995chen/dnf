@@ -27,7 +27,7 @@ tcp_port_of_channel = 7000
 exchange_server_ip = 127.0.0.1
 exchange_server_port = 200CHANNEL_NO
 
-udp_ip_of_hades = PUBLIC_IP
+udp_ip_of_hades = 127.0.0.1
 udp_port_of_hades = 31003
 tcp_port_of_hades = 31003
 
