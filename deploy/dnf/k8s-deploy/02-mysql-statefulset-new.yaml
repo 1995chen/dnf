@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: dnf-mysql-new
+  namespace: dnf-server
+spec:
+  selector:
+    matchLabels:
+      app: dnf-mysql-new
+      app.kubernetes.io/name: dnf-mysql-new
+  template:
+    metadata:
+      labels:
+        app: dnf-mysql-new
+        app.kubernetes.io/name: dnf-mysql-new
+    spec:
+      containers:
+        - name: dnf-mysql-new
+          image: 1995chen/mysql:7-5.0.95
+          env:
+            - name: DNF_DB_ROOT_PASSWORD
+              value: "88888888"
+            - name: TZ
+              value: "Asia/Shanghai"
+          ports:
+            - name: mysql
+              containerPort: 3306
+          volumeMounts:
+            - name: mysql-persistent-storage-new
+              mountPath: /var/lib/mysql
+      volumes:
+        - name: mysql-persistent-storage-new
+  volumeClaimTemplates:
+    - metadata:
+        name: mysql-persistent-storage-new
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+          requests:
+            storage: 10Gi
+        storageClassName: nfs-client
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dnf-mysql-server-new
+  labels:
+    app: dnf-mysql-server-new
+    app.kubernetes.io/name: dnf-mysql-server-new
+  namespace: dnf-server
+spec:
+  ports:
+    - name: dnf-mysql-server-new-port
+      port: 3306
+  selector:
+    app: dnf-mysql-new
+  clusterIP: None
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ext-dnf-mysql-server-new
+  labels:
+    app: ext-dnf-mysql-server-new
+    app.kubernetes.io/name: ext-dnf-mysql-server-new
+  namespace: dnf-server
+spec:
+  ports:
+    - name: ext-dnf-mysql-server-new-port
+      port: 3306
+      targetPort: 3306
+      nodePort: 30036
+  selector:
+    app: dnf-mysql-new
+  type: NodePort
+
+
+#  GRANT ALL PRIVILEGES ON *.* TO 'game'@'%' IDENTIFIED BY 'your_password' WITH GRANT OPTION;
+#  FLUSH PRIVILEGES;

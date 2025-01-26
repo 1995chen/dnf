@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: dnf-new-service-udp
+  namespace: dnf-server
+spec:
+  selector:
+    app: dnf-server-new
+  ports:
+
+    - name: udp-7001
+      port: 7001
+      targetPort: 7001
+      protocol: UDP
+    - name: udp-7200
+      port: 7200
+      targetPort: 7200
+      protocol: UDP
+    - name: udp-11011
+      port: 11011
+      targetPort: 11011
+      protocol: UDP
+    - name: udp-11052
+      port: 11052
+      targetPort: 11052
+      protocol: UDP
+    - name: udp-2311
+      port: 2311
+      targetPort: 2311
+      protocol: UDP
+    - name: udp-2312
+      port: 2312
+      targetPort: 2312
+      protocol: UDP
+    - name: udp-2313
+      port: 2313
+      targetPort: 2313
+      protocol: UDP
+  type: NodePort
