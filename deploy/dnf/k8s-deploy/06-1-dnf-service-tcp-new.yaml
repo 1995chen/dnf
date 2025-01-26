@@ -1,0 +1,43 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: dnf-new-service-tcp
+  namespace: dnf-server
+spec:
+  selector:
+    app: dnf-server-new
+  ports:
+    - name: tcp-180
+      port: 180
+      targetPort: 180
+      protocol: TCP
+    - name: tcp-3306
+      port: 3306
+      targetPort: 3306
+      protocol: TCP
+    - name: tcp-7600
+      port: 7600
+      targetPort: 7600
+      protocol: TCP
+    - name: tcp-881
+      port: 881
+      targetPort: 881
+      protocol: TCP
+    - name: tcp-7001
+      port: 7001
+      targetPort: 7001
+      protocol: TCP
+    - name: tcp-7200
+      port: 7200
+      targetPort: 7200
+      protocol: TCP
+    - name: tcp-10011
+      port: 10011
+      targetPort: 10011
+      protocol: TCP
+    - name: tcp-10052
+      port: 10052
+      targetPort: 10052
+      protocol: TCP
+
+  type: NodePort

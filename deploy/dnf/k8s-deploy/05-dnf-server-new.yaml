@@ -1,0 +1,100 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dnf-server-new
+  namespace: dnf-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dnf-server-new
+  template:
+    metadata:
+      labels:
+        app: dnf-server-new
+    spec:
+      containers:
+        - name: dnf-server-new
+          image: 1995chen/dnf:centos5-2.1.5
+          resources:
+            requests:
+              memory: "8Gi"
+              cpu: "2"
+            limits:
+              memory: "8Gi"
+              cpu: "2"
+          ports:
+            - containerPort: 180
+              protocol: TCP
+            - containerPort: 3306
+              protocol: TCP
+            - containerPort: 7600
+              protocol: TCP
+            - containerPort: 881
+              protocol: TCP
+            - containerPort: 7001
+              protocol: TCP
+            - containerPort: 7200
+              protocol: TCP
+            - containerPort: 10011
+              protocol: TCP
+            - containerPort: 10052
+              protocol: TCP
+
+            - containerPort: 7001
+              protocol: UDP
+            - containerPort: 7200
+              protocol: UDP
+            - containerPort: 11011
+              protocol: UDP
+            - containerPort: 11052
+              protocol: UDP
+            - containerPort: 2311
+              protocol: UDP
+            - containerPort: 2312
+              protocol: UDP
+            - containerPort: 2313
+              protocol: UDP
+          env:
+            - name: TZ
+              value: "Asia/Shanghai"
+            - name: MYSQL_HOST
+              value: "dnf-mysql-server-new.dnf-server"
+            - name: MYSQL_PORT
+              value: "3306"
+            - name: MYSQL_GAME_ALLOW_IP
+              value: "%"
+            - name: DNF_DB_ROOT_PASSWORD
+              value: "88888888"
+            - name: GM_ACCOUNT
+              value: "gmuser"
+            - name: GM_PASSWORD
+              value: "gmpass"
+            - name: GM_CONNECT_KEY
+              value: "763WXRBW3PFTC3IXPFWH"
+            - name: GM_LANDER_VERSION
+              value: "20180307"
+            - name: PUBLIC_IP
+              value: "172.31.0.11"
+          securityContext:
+            capabilities:
+              add:
+                - NET_ADMIN
+          volumeMounts:
+            - name: dnf-server-log
+              mountPath: /home/neople/game/log
+            - name: dnf-server-data
+              mountPath: /data
+            - name: memory
+              mountPath: /dev/shm
+      volumes:
+        - name: dnf-server-log
+          persistentVolumeClaim:
+            claimName: new-dnf-log-storage
+        - name: dnf-server-data
+          persistentVolumeClaim:
+            claimName: new-dnf-data-storage
+        - name: memory
+          emptyDir:
+            medium: Memory
+            sizeLimit: 8Gi

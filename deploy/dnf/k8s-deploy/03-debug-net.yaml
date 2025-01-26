@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: dnsutils
+  namespace: dnf-server
+spec:
+  containers:
+    - name: dnsutils
+      image: registry.k8s.io/e2e-test-images/agnhost:2.39
+      imagePullPolicy: IfNotPresent
+  restartPolicy: Always
+
+#  kubectl exec -i -t dnsutils -n dnf-server -- nslookup dnf-mysql-server.dnf-server
+# 这个pod用来测试mysql是否能联通
