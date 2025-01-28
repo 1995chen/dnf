@@ -1,9 +1,10 @@
 #! /bin/bash
 
 # 检查是否配置MYSQL地址
-if [ -n "$MYSQL_HOST" ] && [ -n "$MYSQL_PORT" ]; then
+echo "CUR_SG_DB_HOST: $CUR_SG_DB_HOST, CUR_SG_DB_PORT: $CUR_SG_DB_PORT"
+if [ -n "$CUR_SG_DB_HOST" ] && [ -n "$CUR_SG_DB_PORT" ]; then
   # 代理本地3306端口并转发
-  ./forward --forward 3306/$MYSQL_HOST:$MYSQL_PORT/tcp
+  ./forward --forward 3306/$CUR_SG_DB_HOST:$CUR_SG_DB_PORT/tcp
 else
     echo "no need to start mysql proxy"
 fi

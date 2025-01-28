@@ -58,6 +58,10 @@ do
     echo "domain ip changed, old ip is $old_ip, new ip is $ddns_ip"
     # 通知其他进程[写入文件]
     echo $ddns_ip > /data/monitor_ip/MONITOR_PUBLIC_IP
+    # 重启bridge proxy
+    if [ -n "$MAIN_BRIDGE_IP" ]; then
+      supervisorctl restart dnf:bridge
+    fi
     # 重启所有频道服务
     supervisorctl restart dnf_channel:*
   else
@@ -76,6 +80,10 @@ do
     echo "net ip changed, old ip is $old_ip, new ip is $ddns_ip"
     # 通知其他进程[写入文件]
     echo $ddns_ip > /data/monitor_ip/MONITOR_PUBLIC_IP
+    # 重启bridge proxy
+    if [ -n "$MAIN_BRIDGE_IP" ]; then
+      supervisorctl restart dnf:bridge
+    fi
     # 重启所有频道服务
     supervisorctl restart dnf_channel:*
   else

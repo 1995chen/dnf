@@ -3,7 +3,7 @@
 # 获得频道传入参数
 channel_no=$1
 process_sequence=$2
-channel_name="siroco$channel_no"
+channel_name="$SERVER_GROUP_NAME$channel_no"
 
 echo "channel_name is $channel_name"
 echo "prepare to start ch.$channel_no, process_sequence is $process_sequence"
@@ -11,7 +11,7 @@ echo "prepare to start ch.$channel_no, process_sequence is $process_sequence"
 counter=0
 while [ $counter -lt 30 ]
 do
-  if nc -zv 127.0.0.1 7000 2>&1 | grep succeeded >/dev/null ; then
+  if nc -zv $MAIN_BRIDGE_IP 7000 2>&1 | grep succeeded >/dev/null ; then
     echo "bridge 7000 port ready"
     break
   fi
@@ -30,12 +30,14 @@ MONITOR_PUBLIC_IP=$(cat /data/monitor_ip/MONITOR_PUBLIC_IP 2>/dev/null || true)
 echo "MONITOR_PUBLIC_IP is $MONITOR_PUBLIC_IP"
 # 生成配置文件
 rm -rf /data/channel/$channel_name.cfg
-cp /home/template/neople/game/cfg/siroco.template /data/channel/$channel_name.cfg
+cp /home/template/neople/game/cfg/server.template /data/channel/$channel_name.cfg
 # 重设PUBLIC_IP,game密码,频道编号,端口信息等
+sed -i "s/MAIN_BRIDGE_IP/$MAIN_BRIDGE_IP/g" /data/channel/$channel_name.cfg
 sed -i "s/CHANNEL_NO/$channel_no/g" /data/channel/$channel_name.cfg
 sed -i "s/PROCESS_SEQUENCE/$process_sequence/g" /data/channel/$channel_name.cfg
 sed -i "s/PUBLIC_IP/$MONITOR_PUBLIC_IP/g" /data/channel/$channel_name.cfg
 sed -i "s/DEC_GAME_PWD/$DEC_GAME_PWD/g" /data/channel/$channel_name.cfg
+sed -i "s/SERVER_GROUP/$SERVER_GROUP/g" /data/channel/$channel_name.cfg
 cp /data/channel/$channel_name.cfg /home/neople/game/cfg/$channel_name.cfg
 echo "generate $channel_name.cfg success"
 # 清理cfg文件
