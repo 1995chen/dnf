@@ -5,7 +5,7 @@ rm -rf pid/*.pid
 counter=0
 while [ $counter -lt 20 ]
 do
-  if nc -zv 127.0.0.1 7000 2>&1 | grep succeeded >/dev/null ; then
+  if nc -zv $MAIN_BRIDGE_IP 7000 2>&1 | grep succeeded >/dev/null ; then
     echo "bridge 7000 port ready"
     break
   fi
@@ -23,11 +23,11 @@ done
 MONITOR_PUBLIC_IP=$(cat /data/monitor_ip/MONITOR_PUBLIC_IP 2>/dev/null || true)
 # 生成配置文件
 rm -rf /data/channel/channel.cfg
-cp /home/template/neople/channel/cfg/channel.cfg /data/channel/channel.cfg
-# 重设PUBLIC_IP和game密码
+cp /home/template/neople/channel/cfg/server.cfg /data/channel/channel.cfg
+sed -i "s/MAIN_BRIDGE_IP/$MAIN_BRIDGE_IP/g" /data/channel/channel.cfg
+# 重设PUBLIC_IP和server group
 sed -i "s/PUBLIC_IP/$MONITOR_PUBLIC_IP/g" /data/channel/channel.cfg
-sed -i "s/GAME_PASSWORD/$DNF_DB_GAME_PASSWORD/g" /data/channel/channel.cfg
-sed -i "s/DEC_GAME_PWD/$DEC_GAME_PWD/g" /data/channel/channel.cfg
+sed -i "s/SERVER_GROUP/$SERVER_GROUP/g" /data/channel/channel.cfg
 cp /data/channel/channel.cfg /home/neople/channel/cfg/channel.cfg
 # 清理cfg文件
 rm -rf /data/channel/channel.cfg

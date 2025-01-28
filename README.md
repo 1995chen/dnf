@@ -229,11 +229,18 @@ docker rm dnf
 ```
 然后用最新的环境变量设置启动服务即可
 ```shell
-# 指定远程MYSQL的IP地址
+# 1卡恩、2狄瑞吉、3希洛克[默认为3,不要随便配置,大多数PVF只支持希洛克]
+SERVER_GROUP
+# 主数据库配置
+MAIN_MYSQL_HOST
+MAIN_MYSQL_PORT
+MAIN_MYSQL_ROOT_PASSWORD
+MAIN_MYSQL_GAME_ALLOW_IP
+# 大区MYSQL的IP地址
 MYSQL_HOST
-# 指定远程MYSQL的端口
+# 大区MYSQL的端口
 MYSQL_PORT
-# 配置远程数据库GAME账号ALLOW IP
+# 大区数据库GAME账号ALLOW IP
 MYSQL_GAME_ALLOW_IP
 # 自动获取公网地址[默认为false]
 AUTO_PUBLIC_IP
