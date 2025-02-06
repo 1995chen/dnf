@@ -96,7 +96,7 @@ if [ -z "$MYSQL_HOST" ] && [ -z "$MYSQL_PORT" ];then
     service mysql start
     /usr/bin/mysqladmin -u root password $DNF_DB_ROOT_PASSWORD
     initMysql
-    service mysql stop      
+    service mysql stop
   else
     echo "local mysql data already inited."
   fi
@@ -221,6 +221,7 @@ if [ ! -f "/data/dp/libhook.so" ];then
 else
   echo "libhook.so have already inited, do nothing!"
 fi
+
 # 判断supervisor dnf 配置是否初始化
 if [ ! -f "/data/conf.d/dnf.conf" ];then
   cp /home/template/init/supervisor/dnf.conf /data/conf.d/
