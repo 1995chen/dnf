@@ -48,6 +48,17 @@ if [ -n "$old_pid" ]; then
   kill -9 $old_pid
 fi
 rm -rf pid/$channel_name.pid
-LD_PRELOAD=/dp2/libhook.so ./df_game_r $channel_name start
+
+# 查看是否有dp
+RAW_HOOK_HASH=`sha256sum /home/template/init/libhook.so`
+HOOK_HASH=`sha256sum /dp2/libhook.so`
+LD_PATH="/dp2/libhook.so"
+if test "$RAW_HOOK_HASH" != "$HOOK_HASH"
+then
+  echo "enable dp for channel"
+  LD_PATH="${LD_PATH}:/home/template/init/libhook.so"
+fi
+
+LD_PRELOAD="${LD_PATH}" ./df_game_r $channel_name start
 sleep 2
 cat pid/$channel_name.pid |xargs -n1 -I{} tail --pid={} -f /dev/null
