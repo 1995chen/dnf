@@ -1,4 +1,4 @@
-# /bin/bash
+#!/bin/bash
 killall -9 df_channel_r
 rm -rf pid/*.pid
 # 等待bridge启动,最多等待20秒
@@ -33,6 +33,16 @@ cp /data/channel/channel.cfg /home/neople/channel/cfg/channel.cfg
 rm -rf /data/channel/channel.cfg
 # 启动服务
 echo "starting channel..."
-LD_PRELOAD=/dp2/libhook.so ./df_channel_r channel start
+# 查看是否有dp
+RAW_HOOK_HASH=`sha256sum /home/template/init/libhook.so`
+HOOK_HASH=`sha256sum /dp2/libhook.so`
+LD_PATH="/dp2/libhook.so"
+if test "$RAW_HOOK_HASH" != "$HOOK_HASH"
+then
+  echo "enable dp for channel"
+  LD_PATH="${LD_PATH}:/home/template/init/libhook.so"
+fi
+
+LD_PRELOAD="${LD_PATH}" ./df_channel_r channel start
 sleep 2
 cat pid/*.pid |xargs -n1 -I{} tail --pid={} -f /dev/null
