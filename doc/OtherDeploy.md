@@ -126,7 +126,9 @@
 ### 多大区部署
 
 [卡恩-点击查看部署文件](../deploy/dnf/docker-compose/multi_server_group/cain.yaml)
+
 [狄瑞吉-点击查看部署文件](../deploy/dnf/docker-compose/multi_server_group/diregie.yaml)
+
 [希洛克-点击查看部署文件](../deploy/dnf/docker-compose/multi_server_group/siroco.yaml)
 
 注意，使用多大区部署时，请保重每个节点服务端IP不同。
@@ -134,6 +136,7 @@
 ## k8s启动
 
 [最新的K8S部署方式](../deploy/dnf/k8s-deploy/00-1开始一定要看前期准备.md)
+
 [2.1.5版本以前部署文档](Kubernetes.md)
 
 ## 各大区频道对应端口
