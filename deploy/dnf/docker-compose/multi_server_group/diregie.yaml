@@ -2,28 +2,31 @@ version: "2.3"
 
 services:
 
-  dnf:
-    hostname: dnf
-    image: 1995chen/dnf:centos5-2.1.5
-    # privileged: true
-    cap_add:
-      - NET_ADMIN
+  dnf-1:
+    hostname: dnf-1
+    image: 1995chen/dnf:centos5-2.1.7
     environment:
       - TZ=Asia/Shanghai
-      # 数据库root密码
+      - SERVER_GROUP=2
+      # 仅开启11和52频道
+      - OPEN_CHANNEL='11,52'
+      # 手动指定对外IP
+      - PUBLIC_IP=IP-2
+      - MAIN_BRIDGE_IP=IP-1
+      - MAIN_MYSQL_HOST=IP-1
+      - MAIN_MYSQL_PORT=3000
+      - MAIN_MYSQL_ROOT_PASSWORD=88888888
+      # - MAIN_MYSQL_GAME_ALLOW_IP=%
+      - MYSQL_HOST=IP-1
+      # 远程mysql的端口号[这里以3000为例]
+      - MYSQL_PORT=3000
+      # 远程数据库root密码
       - DNF_DB_ROOT_PASSWORD=88888888
+      # - MYSQL_GAME_ALLOW_IP=%
       - GM_ACCOUNT=gmuser
       - GM_PASSWORD=gmpass
       - GM_CONNECT_KEY=763WXRBW3PFTC3IXPFWH
       - GM_LANDER_VERSION=20180307
-      # 手动指定对外IP
-      - PUBLIC_IP=127.0.0.1
-      # Netbird[可选配置][没有公网IP的可选私有内网接入]
-      #- NB_SETUP_KEY=''
-      #- NB_MANAGEMENT_URL=''
-      # 开启DDNS[可选配置]
-      # - DDNS_ENABLE=true
-      # - DDNS_DOMAIN=''
     # shm_size: 8g【不可删除】，docker默认为64M较小，需要增加才能保证运行
     shm_size: 8g
     memswap_limit: -1
@@ -39,12 +42,11 @@ services:
       - 7001:7001/udp             # df_channel_r
       - 7200:7200/tcp             # df_relay_r
       - 7200:7200/udp             # df_relay_r
-      - 10011:10011/tcp           # df_game_r[ch.11]
-      - 11011:11011/udp           # df_game_r[ch.11]
-      - 10052:10052/tcp           # df_game_r[ch.52]
-      - 11052:11052/udp           # df_game_r[ch.52]
+      - 20011:20011/tcp           # df_game_r[ch.11]
+      - 21011:21011/udp           # df_game_r[ch.11]
+      - 20052:20052/tcp           # df_game_r[ch.52]
+      - 21052:21052/udp           # df_game_r[ch.52]
       - 2311-2313:2311-2313/udp   # df_stun_r
     volumes:
       - ./data:/data
-      - ./mysql:/var/lib/mysql
       - ./log:/home/neople/game/log

@@ -4,17 +4,9 @@
 [![Docker Image](https://img.shields.io/docker/pulls/1995chen/dnf.svg?maxAge=3600)](https://hub.docker.com/r/1995chen/dnf/)
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/1995chen/dnf/master/LICENSE)
 
-## Contact US
-For cooperation and suggestions please contact chenl2448365088@gmail.com or yzd315695355@gmail.com
+## 概述
 
-## 说明
-
-该项目是将地下城与勇士(毒奶粉、DNF、DOF)整合成一个 Docker 镜像的项目 如果想实际部署，则只需要拷贝其中的[部署文件夹](deploy)即可，即 deploy 目录。本项目使用官方 CentOS
-6.9 为基础镜像，通过增加环境变量以及初始化脚本实现 应用的快速部署。
-
-感谢 xyz1001 大佬提供`libhook.so`优化CPU占用 [源码](https://godbolt.org/z/EKsYGh5dv)
-
-站库分离详见 [XanderYe/dnf](https://github.com/XanderYe/dnf)
+该项目是将地下城与勇士(毒奶粉、DNF、DOF)整合成一个 Docker 镜像的项目，本项目使用官方 `CentOS-5/6/7`为基础镜像，通过增加环境变量以及初始化脚本实现 应用的快速部署。
 
 如果觉得本项目和[XanderYe/dnf](https://github.com/XanderYe/dnf)对你有帮助，可以点一下 Star 支持下我们，谢谢。
 
@@ -24,103 +16,29 @@ For cooperation and suggestions please contact chenl2448365088@gmail.com or yzd3
 2. 通过插件支持几款登陆器
 ```
 
-## 自动化构建
+## 2.1.7 版本升级注意事项(首次部署请忽略)
 
-该项目已经接入 CircleCI，会自动化构建每一个版本。
+<span style="color:red;">
+特别注意：由于2.1.7版本引入多大区功能，我们对原有希洛克大区端口进行如下调整：
 
-## 部署流程
+| 2.1.7版本前频道端口 | 变更后频道端口 |
+| ------- | ------- |
+| 10011 | 30011 |
+| 11011 | 31011 |
+| 10052 | 30052 |
+| 11052 | 31052 |
 
-### CentOS 6/7 安装 Docker
+对于从旧版本升级的镜像，需要调整相应的频道端口号，并配置大区数据库。
+具体来说，需要新增环境变量: SERVER_GROUP_DB=cain
 
-先升级 yum 源
+</span>
 
-```shell
-yum update -y
-```
+## 环境配置
+我们可以根据以下指南，在Linux服务器上进行初始化，并安装所需软件。理论上，这个镜像可以在任何未修改过的Linux操作系统上运行（不包括ARM架构）。
 
-下载 docker 安装脚本
+[初始化Linux服务器](doc/PrepareLinux.md)
 
-```shell
-curl -fsSL https://get.docker.com -o get-docker.sh
-```
-
-运行安装 docker 的脚本
-
-```shell
-sudo sh get-docker.sh
-```
-
-启动 docker
-
-```shell
-systemctl enable docker
-systemctl restart docker
-```
-
-关闭防火墙
-
-```shell
-systemctl disable firewalld
-systemctl stop firewalld
-```
-
-关闭 selinux
-
-```shell
-sudo sed -i 's/SELINUX=enforcing/SELINUX=disabled/' /etc/selinux/config
-```
-
-### 配置虚拟内存（若内存不足 8GB）
-
-[参考文献](https://www.cnblogs.com/EasonJim/p/7777904.html)
-
-创建 Swap 文件
-
-```shell
-which /usr/bin/fallocate && /usr/bin/fallocate --length 8GiB /var/swap.1 || /bin/dd if=/dev/zero of=/var/swap.1 bs=1M count=8000
-mkswap /var/swap.1
-swapon /var/swap.1
-sed -i '$a /var/swap.1 swap swap default 0 0' /etc/fstab
-```
-
-查看系统是否已启用 Swap
-
-```shell
-sysctl vm.swappiness
-```
-
-如果输出最后的数字不为 0，则代表已经启用 Swap，可不做处理。
-
-如果输出最后的数字为 0，则使用下面的命令添加 Swap 配置（设定为比起内存，优先使用 Swap）
-
-```shell
-# 其中的 100 也可以进行修改，100 代表尽可能使用虚拟内存，0 代表尽可能使用物理内存
-# 物理内存远快于虚拟内存，但对于 DNF 服务来说，个位数玩家在玩时，基本体会不到差异
-sed -i '$a vm.swappiness = 100' /etc/sysctl.conf
-```
-
-重新启动服务器，或执行以下命令使 Swap 配置生效：
-
-```shell
-sysctl -p
-```
-
-## 拉取镜像
-
-[所有镜像版本可点击查看(记得点赞三连，帮助更多人了解到该镜像)](https://hub.docker.com/repository/docker/1995chen/dnf)
-
-以下命令任选一个，可拉取镜像到本机
-
-```shell
-docker pull 1995chen/dnf:centos5-2.1.5
-docker pull 1995chen/dnf:centos6-2.1.5
-# 如何您需要使用 CentOS7 作为基础镜像的特殊需求,可以使用:
-docker pull 1995chen/dnf:centos7-2.1.5
-# 国内镜像无法拉取请使用(完整复制下面两行命令执行)
-docker pull registry.cn-hangzhou.aliyuncs.com/1995chen/dnf:centos7-2.1.5 && docker tag registry.cn-hangzhou.aliyuncs.com/1995chen/dnf:centos7-2.1.5 1995chen/dnf:centos7-2.1.5
-```
-
-## 简单启动
+## 快速开始
 
 ```shell
 # 创建一个目录，保存游戏的数据、PVF、日志等，这里以保存到 /data 为例
@@ -136,20 +54,8 @@ mkdir -p /data/log /data/mysql /data/data
 # WEB_PASS 为 supervisor web 管理页面密码（可以访问 PUBLIC_IP:2000 来访问进程管理页面）
 # --shm-size=8g【不可删除】，docker默认为64M较小，需要增加才能保证运行
 # 注意，最后的 1995chen/dnf:centos5-2.1.5 部分中的 centos5，你在上一步拉取得哪个版本，则应替换为哪个版本
-docker run -d -e PUBLIC_IP=x.x.x.x -e WEB_USER=root -e WEB_PASS=123456 -e DNF_DB_ROOT_PASSWORD=88888888 -e GM_ACCOUNT=gmuser -e GM_PASSWORD=gmpass -v /data/log:/home/neople/game/log -v /data/mysql:/var/lib/mysql -v /data/data:/data -p 2000:180 -p 3000:3306/tcp -p 7600:7600/tcp -p 881:881/tcp -p 7001:7001/tcp -p 7001:7001/udp -p 10011:10011/tcp -p 11011:11011/udp -p 10052:10052/tcp -p 11052:11052/udp -p 7200:7200/tcp -p 7200:7200/udp -p 2311-2313:2311-2313/udp --cap-add=NET_ADMIN --hostname=dnf --cpus=1 --memory=1g --memory-swap=-1 --shm-size=8g --name=dnf 1995chen/dnf:centos5-2.1.5
+docker run -d -e PUBLIC_IP=x.x.x.x -e WEB_USER=root -e WEB_PASS=123456 -e DNF_DB_ROOT_PASSWORD=88888888 -e GM_ACCOUNT=gmuser -e GM_PASSWORD=gmpass -v /data/log:/home/neople/game/log -v /data/mysql:/var/lib/mysql -v /data/data:/data -p 2000:180 -p 3000:3306/tcp -p 7600:7600/tcp -p 881:881/tcp -p 7001:7001/tcp -p 7001:7001/udp -p 30011:30011/tcp -p 31011:31011/udp -p 30052:30052/tcp -p 31052:31052/udp -p 7200:7200/tcp -p 7200:7200/udp -p 2311-2313:2311-2313/udp --cap-add=NET_ADMIN --hostname=dnf --cpus=1 --memory=1g --memory-swap=-1 --shm-size=8g --name=dnf 1995chen/dnf:centos5-2.1.7
 ```
-
-## docker-compose部署[群晖推荐]
-
-[Yaml文件](deploy/dnf/docker-compose.yaml)
-
-## 站库分离
-
-[Yaml文件](deploy/dnf/docker-compose_standalone_db.yaml)
-
-## k8s启动
-
-[部署文档](Kubernetes.md)
 
 ## 如何确认已经成功启动
 
@@ -172,7 +78,7 @@ docker run -d -e PUBLIC_IP=x.x.x.x -e WEB_USER=root -e WEB_PASS=123456 -e DNF_DB
 ├── Log20211203.log  
 ├── Log20211203.money  
 └── Log20211203.snap  
-查看Logxxxxxxxx.init文件(其中xxxxxxxx为当天时间,需要按实际情况替换),四国的初始化日志都在这里  
+查看Logxxxxxxxx.init文件(其中xxxxxxxx为`当天时间`,需要按实际情况替换),四国的初始化日志都在这里  
 成功出现四国后,日志文件大概如下,四国初始化时间大概1分钟左右,请耐心等待  
 [root@centos-02 siroco11]# tail -f Log$(date +%Y%m%d).init  
 [09:40:23]    - RestrictBegin : 1  
@@ -198,17 +104,6 @@ root 22514 13398 0 20:53 pts/0 00:00:00 grep --color=auto df_game
 可以通过访问http://PUBLIC_IP:2000端口来访问进程管理页面,可以在
 页面上点击dnf:game_siroco11或dnf:game_siroco52进程的Tail -f来查看日志。
 
-## 重启服务
-
-该服务占有内存较大，极有可能被系统杀死,当进程被杀死时则需要重启服务  
-重启服务命令
-
-```shell
-docker restart dnf
-```
-
-或在进程管理页面(http://PUBLIC_IP:2000页面手动重启相关进程)。
-
 ## 默认的网关信息
 
 ```shell
@@ -220,78 +115,25 @@ GM账户: gmuser
 GM密码: gmpass
 ```
 
-## 可选的环境变量
-当容器用最新的环境变量启动时，以下所有的环境变量，包括数据库root密码都会立即生效
-需要更新配置时只需要先停止服务
+## 重启服务
+
+该服务占有内存较大，极有可能被系统杀死,当进程被杀死时则需要重启服务  
+重启服务命令
+
 ```shell
-docker stop dnf
-docker rm dnf
+docker restart dnf
 ```
-然后用最新的环境变量设置启动服务即可
-```shell
-# 1卡恩、2狄瑞吉、3希洛克[默认为3,不要随便配置,大多数PVF只支持希洛克]
-SERVER_GROUP
-# 主数据库配置
-MAIN_MYSQL_HOST
-MAIN_MYSQL_PORT
-MAIN_MYSQL_ROOT_PASSWORD
-MAIN_MYSQL_GAME_ALLOW_IP
-# 大区MYSQL的IP地址
-MYSQL_HOST
-# 大区MYSQL的端口
-MYSQL_PORT
-# 大区数据库GAME账号ALLOW IP
-MYSQL_GAME_ALLOW_IP
-# 自动获取公网地址[默认为false]
-AUTO_PUBLIC_IP
-# 公网或局域网IP地址
-PUBLIC_IP
-# 需要开启的频道[默认为11和52,支持配置范围,配置之间用逗号分隔,例如:1-11,12,22-25,51-55]
-OPEN_CHANNEL='11,52'
-# GM管理员账号
-GM_ACCOUNT
-# GM管理员密码
-GM_PASSWORD
-# GM连接KEY(自定以密钥请使用网关生成的密钥，因为密钥有格式限制，不符合格式的密钥会导致登录器一致卡在网关连接那里)
-GM_CONNECT_KEY
-# GM登录器版本
-GM_LANDER_VERSION
-# DNF数据库root密码[当使用独立数据库时,root密码用于初始化数据以及game账号自动化创建、授权]
-DNF_DB_ROOT_PASSWORD
-# DNF数据库game密码（必须8位）
-DNF_DB_GAME_PASSWORD
-# supervisor web页面用户名
-WEB_USER
-# supervisor web页面密码
-WEB_PASS
-# ddns开关,默认为false,打开配置为true
-DDNS_ENABLE
-# ddns域名
-DDNS_DOMAIN
-# Netbird服务器地址
-NB_MANAGEMENT_URL
-# Netbird初始化KEY
-NB_SETUP_KEY
-```
-统一登陆器5.x版本，需要添加hosts，否则无法进入频道
-```shell
-PUBLIC_IP(你的服务器IP)  start.dnf.tw
-```
-请注意PUBLIC_IP手动设置后AUTO_PUBLIC_IP、DDNS、Netbird都会默认禁用。
 
-如果需要使用AUTO_PUBLIC_IP、DDNS、Netbird需要设置PUBLIC_IP=''
+或在进程管理页面(http://PUBLIC_IP:2000页面手动重启相关进程)。
 
-最后需要注意的是PUBLIC_IP、AUTO_PUBLIC_IP、DDNS和Netbird只会有一个生效。
+## 常见问题
 
-## 更换/新增频道
-[点击查看更换频道教程](UpdateChannel.md)
-
-## FAQ
 1.点击网关登录，没反应，不出游戏（请透过Garena+执行）
 * A: windows7需要用管理员权限运行网关，windows10请不要用管理员权限运行网关
 * A: 无法使用虚拟机Console、VNC等访问Windows。
 * A: WIN+R输入dxdiag检查显示-DirectX功能是否全部开启。
 * A: 没有覆盖客户端补丁。
+* A: 统一登陆器5.x版本，需要添加`hosts`[start.dnf.tw]，否则无法进入频道
 
 2.服务端不出五国
 * A: 机器内存不够，swap未配置或配置后未生效，通过free -m查看swap占用内存
@@ -314,6 +156,7 @@ PUBLIC_IP(你的服务器IP)  start.dnf.tw
 * A: PUBLIC_IP是否填错，windows需要能够访问到这个配置的PUBLIC_IP
 * A: 使用统一补丁需要检查网关生成的登陆器的IP
 * A: 使用Dof7.6补丁需要检查DNF.toml中的IP
+* A: 公钥私钥文件是否匹配
 
 6.点击登录后报错（请重新安装Init）
 * A: PVF加密错误，需要重新加密PVF
@@ -352,6 +195,14 @@ PUBLIC_IP(你的服务器IP)  start.dnf.tw
 * A: 外网访问数据库端口默认为3000端口，不是3306
 * A: game用户默认无法外网访问，请使用root账号和root密码连接数据库
 
+## 高级部署
+
+[点击查看更多部署方式](doc/OtherDeploy.md)
+
+## 如何构建自定义镜像
+
+该项目已经接入 CircleCI，您在本项目的任意分支提交代码均会触发镜像构建。镜像的版本为本次提交commit-id的前7位。
+
 ## 客户端地址下载
 链接：https://pan.baidu.com/s/10RgXFtpEhvRUm-hA98Am4A?pwd=fybn 提取码：fybn
 
@@ -360,6 +211,9 @@ PUBLIC_IP(你的服务器IP)  start.dnf.tw
 
 ### Dof7补丁下载
 链接：https://pan.baidu.com/s/1rxlGfkfHTeGwzMKUNAbSlQ?pwd=ier2 提取码：ier2
+
+## DNF台服架构图
+[点击查看DNF台服架构图](doc/ArchitectureDiagram.md)
 
 ## 沟通交流
 
@@ -373,9 +227,13 @@ QQ 3群：954929189
 
 (群内没有任何的收费项目)
 
-## 学习资料
+## 社区
 
 DNF 玲珑学习网：https://daf.linglonger.com
+
+XanderYe站库分离镜像：[XanderYe/dnf](https://github.com/XanderYe/dnf)
+
+`libhook.so`优化CPU占用源码：https://godbolt.org/z/EKsYGh5dv
 
 ## 申明
 ```
@@ -385,6 +243,11 @@ DNF 玲珑学习网：https://daf.linglonger.com
 ```
 
 ## 🤝 特别感谢
-特别感谢 JetBrains 为本项目赞助 License
 
-[![Jetbrains](https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.svg?_gl=1*ng7jek*_ga*NTA3MTc0NTg3LjE2NDEwODQzMDI.*_ga_V0XZL7QHEB*MTY0MjU1NzM4OC40LjEuMTY0MjU1ODI0Mi4w)](https://jb.gg/OpenSourceSupport)
+作为一位开源库的作者，我要衷心感谢所有支持和贡献给我项目的人。您的热情参与和无私奉献让这个项目变得更加强大和有意义。没有您的支持，这个项目将无法取得如此巨大的成功。
+
+感谢您无私分享您的时间、知识和技能，让我们能够共同推动开源社区的发展。您的贡献不仅仅是对我个人的支持，更是对整个开源精神的认可和传承。
+
+在未来的道路上，我将继续努力改进和完善这个项目，以回报您的支持与信任。希望我们能够继续保持联系，共同见证这个项目的成长与发展。
+
+再次感谢您的支持与帮助！

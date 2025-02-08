@@ -4,7 +4,7 @@
 # 1 : 卡恩, 2 :狄瑞吉, 3 : 希洛克, 4 : 普雷prey, 5 : 凱西亞斯casillas, 6 : 赫爾德hilder , 99 : first server  first , 98 : 開發server
 # 其他待探索ruke anton seria
 # 大区取决于PVF, PVF不支持则会出现大区灰色
-# 目前限制只支持1-3区,其他大区数据库暂时没有内置大区数据库配置
+# 目前限制只支持1-6区,其他大区数据库暂时没有内置大区数据库配置
 export SERVER_GROUP_NAME_1="cain"
 export SERVER_GROUP_NAME_2="diregie"
 export SERVER_GROUP_NAME_3="siroco"
@@ -40,12 +40,12 @@ export NB_SETUP_KEY=$(echo $NB_SETUP_KEY | sed "s/[\'\"]//g")
 export NB_MANAGEMENT_URL=$(echo $NB_MANAGEMENT_URL | sed "s/[\'\"]//g")
 # 校验用户选择的大区
 SERVER_GROUP_NAME_VAR="SERVER_GROUP_NAME_$SERVER_GROUP"
-export SERVER_GROUP_NAME=${!SERVER_GROUP_NAME_VAR}
-if [[ "$SERVER_GROUP" == "1" || "$SERVER_GROUP" == "2" || "$SERVER_GROUP" == "3" ]]; then
-    echo "server group is $SERVER_GROUP, server group name is $SERVER_GROUP_NAME"
+if [ "$SERVER_GROUP" -ge 1 ] && [ "$SERVER_GROUP" -le 6 ]; then
+  export SERVER_GROUP_NAME=${!SERVER_GROUP_NAME_VAR}
+  echo "server group is $SERVER_GROUP, server group name is $SERVER_GROUP_NAME"
 else
-    echo "invalid server group: $SERVER_GROUP"
-    exit -1
+  echo "invalid server group: $SERVER_GROUP"
+  exit -1
 fi
 # 大区使用的数据库[不同大区可以共有数据库]
 if [ -z "$SERVER_GROUP_DB" ]; then

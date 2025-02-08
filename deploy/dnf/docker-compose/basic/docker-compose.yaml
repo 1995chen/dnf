@@ -2,34 +2,18 @@ version: "2.3"
 
 services:
 
-  mysql:
-      # 1995chen/mysql:7-5.0.95 1995chen/mysql:6-5.0.95 1995chen/mysql:5-5.0.95 镜像已同步到阿里云镜像源
-      image: 1995chen/mysql:7-5.0.95
-      mem_limit: 1g
-      environment:
-        - DNF_DB_ROOT_PASSWORD=88888888
-        - TZ=Asia/Shanghai
-      ports:
-        - "3000:3306"
-      volumes:
-        - ./mysql:/var/lib/mysql
-      restart: always
-
-  dnf:
-    hostname: dnf
-    image: 1995chen/dnf:centos5-2.1.5
+  dnf-1:
+    hostname: dnf-1
+    image: 1995chen/dnf:centos5-2.1.7
     # privileged: true
-    cap_add:
-      - NET_ADMIN
+    # cap_add:
+    #   - NET_ADMIN
     environment:
       - TZ=Asia/Shanghai
-      # 远程mysql的IP地址[这里以192.168.31.100为例]
-      - MYSQL_HOST=192.168.31.100
-      # 远程mysql的端口号[这里以3000为例]
-      - MYSQL_PORT=3000
-      # game账号ALLOW_IP
-      - MYSQL_GAME_ALLOW_IP='%'
-      # 远程数据库root密码
+      - SERVER_GROUP=3
+      # 兼容GM工具使用cain数据库[也可以不配置，则会使用siroco数据库]
+      # - SERVER_GROUP_DB=cain
+      # 数据库root密码
       - DNF_DB_ROOT_PASSWORD=88888888
       - GM_ACCOUNT=gmuser
       - GM_PASSWORD=gmpass
@@ -37,6 +21,8 @@ services:
       - GM_LANDER_VERSION=20180307
       # 手动指定对外IP
       - PUBLIC_IP=127.0.0.1
+      # 仅开启11和52频道
+      - OPEN_CHANNEL='11,52'
       # Netbird[可选配置][没有公网IP的可选私有内网接入]
       #- NB_SETUP_KEY=''
       #- NB_MANAGEMENT_URL=''
@@ -58,11 +44,12 @@ services:
       - 7001:7001/udp             # df_channel_r
       - 7200:7200/tcp             # df_relay_r
       - 7200:7200/udp             # df_relay_r
-      - 10011:10011/tcp           # df_game_r[ch.11]
-      - 11011:11011/udp           # df_game_r[ch.11]
-      - 10052:10052/tcp           # df_game_r[ch.52]
-      - 11052:11052/udp           # df_game_r[ch.52]
+      - 30011:30011/tcp           # df_game_r[ch.11]
+      - 31011:31011/udp           # df_game_r[ch.11]
+      - 30052:30052/tcp           # df_game_r[ch.52]
+      - 31052:31052/udp           # df_game_r[ch.52]
       - 2311-2313:2311-2313/udp   # df_stun_r
     volumes:
       - ./data:/data
+      - ./mysql:/var/lib/mysql
       - ./log:/home/neople/game/log

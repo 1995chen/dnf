@@ -1,0 +1,52 @@
+version: "2.3"
+
+services:
+
+  dnf-1:
+    hostname: dnf-1
+    image: 1995chen/dnf:centos5-2.1.7
+    environment:
+      - TZ=Asia/Shanghai
+      - SERVER_GROUP=3
+      # 仅开启11和52频道
+      - OPEN_CHANNEL='11,52'
+      # 手动指定对外IP
+      - PUBLIC_IP=IP-3
+      - MAIN_BRIDGE_IP=IP-1
+      - MAIN_MYSQL_HOST=IP-1
+      - MAIN_MYSQL_PORT=3000
+      - MAIN_MYSQL_ROOT_PASSWORD=88888888
+      # - MAIN_MYSQL_GAME_ALLOW_IP=%
+      - MYSQL_HOST=IP-1
+      # 远程mysql的端口号[这里以3000为例]
+      - MYSQL_PORT=3000
+      # 远程数据库root密码
+      - DNF_DB_ROOT_PASSWORD=88888888
+      # - MYSQL_GAME_ALLOW_IP=%
+      - GM_ACCOUNT=gmuser
+      - GM_PASSWORD=gmpass
+      - GM_CONNECT_KEY=763WXRBW3PFTC3IXPFWH
+      - GM_LANDER_VERSION=20180307
+    # shm_size: 8g【不可删除】，docker默认为64M较小，需要增加才能保证运行
+    shm_size: 8g
+    memswap_limit: -1
+    mem_limit: 1g
+    cpu_count: 1
+    restart: always
+    ports:
+      - 2000:180/tcp              # supervisor web
+      - 3000:3306/tcp             # mysql
+      - 7600:7600/tcp             # 统一登陆器
+      - 881:881/tcp               # 统一网关
+      - 7001:7001/tcp             # df_channel_r
+      - 7001:7001/udp             # df_channel_r
+      - 7200:7200/tcp             # df_relay_r
+      - 7200:7200/udp             # df_relay_r
+      - 30011:30011/tcp           # df_game_r[ch.11]
+      - 31011:31011/udp           # df_game_r[ch.11]
+      - 30052:30052/tcp           # df_game_r[ch.52]
+      - 31052:31052/udp           # df_game_r[ch.52]
+      - 2311-2313:2311-2313/udp   # df_stun_r
+    volumes:
+      - ./data:/data
+      - ./log:/home/neople/game/log
