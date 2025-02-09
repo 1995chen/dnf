@@ -137,6 +137,16 @@
 
 [卡恩/狄瑞吉/希洛克-点击查看部署文件](../deploy/dnf/docker-compose/multi_server_group/combine_server_group.yaml)
 
+如果发现连接频道时网络中断的问题，大概率是GEO拦截，需要从频道的log中找到拦截的IP地址，并修改data/daily_job/user_daily_script.sh脚本，
+添加白名单并重启服务。当发生拦截时，会产生类似以下的日志：
+
+[16:02:51] bool RestrictGeolocation::isAllow(std::string, std::string)(90): [Taiwan, GeoIP] Fail Account:18000000, IP:192.168.48.1, CountryCode:
+
+上述日志被拦截的IP地址为192.168.48.1,则添加如下命令。
+```shell
+insert into d_taiwan.geo_allow values ('192.168.48.1', "*", "2016-04-09 23:53:04");
+```
+
 ## k8s启动
 
 [最新的K8S部署方式](../deploy/dnf/k8s-deploy/00-1开始一定要看前期准备.md)
@@ -210,4 +220,4 @@
 | N | 52-56 | TCP | N0052-N0056 |
 | N | 52-56 | UDP | N1052-N1056 |
 
-其中N为1-6之间的数字。
+其中N为1-6之间的数字。目前发现cain服没有52频道。数据库数据或PVF可能需要更近一步适配，欢迎大家提PR。

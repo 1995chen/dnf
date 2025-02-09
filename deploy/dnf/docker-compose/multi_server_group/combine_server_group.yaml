@@ -14,14 +14,13 @@ services:
         - ./mysql:/var/lib/mysql
       restart: always
 
-  dnf-1:
-    hostname: dnf-1
+  dnf-cain:
     image: 1995chen/dnf:centos5-2.1.7
     environment:
       - TZ=Asia/Shanghai
       - SERVER_GROUP=1
       # 仅开启11和52频道
-      - OPEN_CHANNEL='11,52'
+      - OPEN_CHANNEL='11'
       # 手动指定对外IP
       - PUBLIC_IP=IP-1
       - MAIN_MYSQL_HOST=IP-1
@@ -54,21 +53,18 @@ services:
       - 7100:7100/udp             # df_relay_r
       - 10011:10011/tcp           # df_game_r[ch.11]
       - 11011:11011/udp           # df_game_r[ch.11]
-      - 10052:10052/tcp           # df_game_r[ch.52]
-      - 11052:11052/udp           # df_game_r[ch.52]
       - 2111-2113:2111-2113/udp   # df_stun_r
     volumes:
       - ./data_1:/data
       - ./log_1:/home/neople/game/log
 
-  dnf-2:
-    hostname: dnf-2
+  dnf-diregie:
     image: 1995chen/dnf:centos5-2.1.7
     environment:
       - TZ=Asia/Shanghai
       - SERVER_GROUP=2
       # 仅开启11和52频道
-      - OPEN_CHANNEL='11,52'
+      - OPEN_CHANNEL='11,12'
       # 手动指定对外IP
       - PUBLIC_IP=IP-1
       - MAIN_BRIDGE_IP=IP-1
@@ -98,15 +94,14 @@ services:
       - 7200:7200/udp             # df_relay_r
       - 20011:20011/tcp           # df_game_r[ch.11]
       - 21011:21011/udp           # df_game_r[ch.11]
-      - 20052:20052/tcp           # df_game_r[ch.52]
-      - 21052:21052/udp           # df_game_r[ch.52]
+      - 20012:20012/tcp           # df_game_r[ch.12]
+      - 21012:21012/udp           # df_game_r[ch.12]
       - 2211-2213:2211-2213/udp   # df_stun_r
     volumes:
       - ./data_2:/data
       - ./log_2:/home/neople/game/log
 
-  dnf-3:
-    hostname: dnf-3
+  dnf-siroco:
     image: 1995chen/dnf:centos5-2.1.7
     environment:
       - TZ=Asia/Shanghai
@@ -119,7 +114,6 @@ services:
       - MAIN_MYSQL_HOST=IP-1
       - MAIN_MYSQL_PORT=3000
       - MAIN_MYSQL_ROOT_PASSWORD=88888888
-      # - MAIN_MYSQL_GAME_ALLOW_IP=%
       - MYSQL_HOST=IP-1
       # 远程mysql的端口号[这里以3000为例]
       - MYSQL_PORT=3000

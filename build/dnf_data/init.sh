@@ -177,9 +177,9 @@ else
   echo "start_game.sh have already inited, do nothing!"
 fi
 # 判断每日脚本是否初始化
-if [ ! -f "/data/daily_job/daily_job.sh" ];then
-  cp /home/template/init/daily_job/daily_job.sh /data/daily_job/
-  echo "init daily_job.sh success"
+if [ ! -f "/data/daily_job/user_daily_script.sh" ];then
+  cp /home/template/init/daily_job/user_daily_script.sh /data/daily_job/
+  echo "init user_daily_script.sh success"
 else
-  echo "daily_job.sh have already inited, do nothing!"
+  echo "user_daily_script.sh have already inited, do nothing!"
 fi
