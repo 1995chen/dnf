@@ -77,8 +77,8 @@
 
 | 环境变量名称 | 描述 | 可选参数 | 默认值 |
 | ------- | ------- | ------- | ------- |
-| WEB_USER | supervisor web页面用户名 |  | '' |
-| WEB_PASS | supervisor web页面密码 |  | '' |
+| WEB_USER | supervisor web页面用户名 |  | root |
+| WEB_PASS | supervisor web页面密码 |  | 123456 |
 
 
 ### 统一网关配置
@@ -134,6 +134,7 @@
 [希洛克-点击查看部署文件](../deploy/dnf/docker-compose/multi_server_group/siroco.yaml)
 
 或者你只有一台云服务器也可以同时开启三个大区，参考如下部署方式：
+
 [卡恩/狄瑞吉/希洛克-点击查看部署文件](../deploy/dnf/docker-compose/multi_server_group/combine_server_group.yaml)
 
 ## k8s启动
