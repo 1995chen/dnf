@@ -122,6 +122,8 @@ for num in $numbers; do
     echo "killasgroup=true" >> /data/conf.d/channel.conf
     echo "stdout_logfile=/data/log/game_$SERVER_GROUP_NAME$num.log" >> /data/conf.d/channel.conf
     echo "redirect_stderr=true" >> /data/conf.d/channel.conf
+    echo "stdout_logfile_maxbytes=10MB" >> /data/conf.d/channel.conf
+    echo "stderr_logfile_maxbytes=10MB" >> /data/conf.d/channel.conf
     echo "depend=channel" >> /data/conf.d/channel.conf
     continue
   fi
