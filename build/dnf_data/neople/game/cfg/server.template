@@ -42,16 +42,16 @@ nxj_ipg_ip = 127.0.0.1
 nxj_ipg_port = 9006
 
 relay_ip = PUBLIC_IP
-relay_tcp_port = 7200
-relay_udp_port = 7200
+relay_tcp_port = 7SERVER_GROUP00
+relay_udp_port = 7SERVER_GROUP00
 
 stun_ip= PUBLIC_IP
 stun_ip= PUBLIC_IP
 stun_ip= PUBLIC_IP
 
-stun_port=2311
-stun_port=2312
-stun_port=2313
+stun_port=2SERVER_GROUP11
+stun_port=2SERVER_GROUP12
+stun_port=2SERVER_GROUP13
 
 lls_keys = 3240332317335214766634233322344377569687
 

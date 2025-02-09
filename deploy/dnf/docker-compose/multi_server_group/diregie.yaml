@@ -34,19 +34,14 @@ services:
     cpu_count: 1
     restart: always
     ports:
-      - 2000:180/tcp              # supervisor web
-      - 3000:3306/tcp             # mysql
-      - 7600:7600/tcp             # 统一登陆器
-      - 881:881/tcp               # 统一网关
-      - 7001:7001/tcp             # df_channel_r
-      - 7001:7001/udp             # df_channel_r
+      - 2002:180/tcp              # supervisor web
       - 7200:7200/tcp             # df_relay_r
       - 7200:7200/udp             # df_relay_r
       - 20011:20011/tcp           # df_game_r[ch.11]
       - 21011:21011/udp           # df_game_r[ch.11]
       - 20052:20052/tcp           # df_game_r[ch.52]
       - 21052:21052/udp           # df_game_r[ch.52]
-      - 2311-2313:2311-2313/udp   # df_stun_r
+      - 2211-2213:2211-2213/udp   # df_stun_r
     volumes:
       - ./data:/data
       - ./log:/home/neople/game/log

@@ -125,19 +125,52 @@
 
 ### 多大区部署
 
+当你有多台云服务器可以分别在不同的云服务器运行三个大区。
+
 [卡恩-点击查看部署文件](../deploy/dnf/docker-compose/multi_server_group/cain.yaml)
 
 [狄瑞吉-点击查看部署文件](../deploy/dnf/docker-compose/multi_server_group/diregie.yaml)
 
 [希洛克-点击查看部署文件](../deploy/dnf/docker-compose/multi_server_group/siroco.yaml)
 
-注意，使用多大区部署时，请保重每个节点服务端IP不同。
+或者你只有一台云服务器也可以同时开启三个大区，参考如下部署方式：
+[卡恩/狄瑞吉/希洛克-点击查看部署文件](../deploy/dnf/docker-compose/multi_server_group/combine_server_group.yaml)
 
 ## k8s启动
 
 [最新的K8S部署方式](../deploy/dnf/k8s-deploy/00-1开始一定要看前期准备.md)
 
 [2.1.5版本以前部署文档](Kubernetes.md)
+
+## 各大区Relay对应频道
+
+| 大区编号 | 协议 | 端口号 |
+| ------- | ------- | ------- |
+| 1 | TCP | 7100 |
+| 1 | UDP | 7100 |
+| 2 | TCP | 7200 |
+| 2 | UDP | 7200 |
+| 3 | TCP | 7300 |
+| 3 | UDP | 7300 |
+| N | TCP | 7N00 |
+| N | UDP | 7N00 |
+
+其中N为1-6之间的数字。
+
+## 各大区Stun对应频道
+
+| 大区编号 | 协议 | 端口号 |
+| ------- | ------- | ------- |
+| 1 | TCP | 2111-2113 |
+| 1 | UDP | 2111-2113 |
+| 2 | TCP | 2211-2213 |
+| 2 | UDP | 2211-2213 |
+| 3 | TCP | 2311-2313 |
+| 3 | UDP | 2311-2313 |
+| N | TCP | 2N11-2N13 |
+| N | UDP | 2N11-2N13 |
+
+其中N为1-6之间的数字。
 
 ## 各大区频道对应端口
 

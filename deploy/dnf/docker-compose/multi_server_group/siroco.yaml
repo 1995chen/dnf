@@ -34,14 +34,9 @@ services:
     cpu_count: 1
     restart: always
     ports:
-      - 2000:180/tcp              # supervisor web
-      - 3000:3306/tcp             # mysql
-      - 7600:7600/tcp             # 统一登陆器
-      - 881:881/tcp               # 统一网关
-      - 7001:7001/tcp             # df_channel_r
-      - 7001:7001/udp             # df_channel_r
-      - 7200:7200/tcp             # df_relay_r
-      - 7200:7200/udp             # df_relay_r
+      - 2003:180/tcp              # supervisor web
+      - 7300:7300/tcp             # df_relay_r
+      - 7300:7300/udp             # df_relay_r
       - 30011:30011/tcp           # df_game_r[ch.11]
       - 31011:31011/udp           # df_game_r[ch.11]
       - 30052:30052/tcp           # df_game_r[ch.52]
