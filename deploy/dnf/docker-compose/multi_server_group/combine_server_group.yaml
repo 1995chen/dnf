@@ -58,8 +58,8 @@ services:
       - 11052:11052/udp           # df_game_r[ch.52]
       - 2111-2113:2111-2113/udp   # df_stun_r
     volumes:
-      - ./data:/data
-      - ./log:/home/neople/game/log
+      - ./data_1:/data
+      - ./log_1:/home/neople/game/log
 
   dnf-2:
     hostname: dnf-2
@@ -102,8 +102,8 @@ services:
       - 21052:21052/udp           # df_game_r[ch.52]
       - 2211-2213:2211-2213/udp   # df_stun_r
     volumes:
-      - ./data:/data
-      - ./log:/home/neople/game/log
+      - ./data_2:/data
+      - ./log_2:/home/neople/game/log
 
   dnf-3:
     hostname: dnf-3
@@ -146,5 +146,5 @@ services:
       - 31052:31052/udp           # df_game_r[ch.52]
       - 2311-2313:2311-2313/udp   # df_stun_r
     volumes:
-      - ./data:/data
-      - ./log:/home/neople/game/log
+      - ./data_3:/data
+      - ./log_3:/home/neople/game/log
