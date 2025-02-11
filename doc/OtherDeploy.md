@@ -144,7 +144,9 @@
 
 上述日志被拦截的IP地址为192.168.48.1,则添加如下命令。
 ```shell
-insert into d_taiwan.geo_allow values ('192.168.48.1', "*", "2016-04-09 23:53:04");
+mysql -h $CUR_MAIN_DB_HOST -P $CUR_MAIN_DB_PORT -u game -p$DNF_DB_GAME_PASSWORD <<EOF
+  insert into d_taiwan.geo_allow values ('192.168.48.1', "*", "2016-04-09 23:53:04");
+EOF
 ```
 
 ## k8s部署

@@ -12,5 +12,8 @@ EOF
 mysql -h $CUR_MAIN_DB_HOST -P $CUR_MAIN_DB_PORT -u game -p$DNF_DB_GAME_PASSWORD <<EOF
   insert into d_taiwan.geo_allow values ('$gateway_ip', "*", "2016-04-09 23:53:04");
 EOF
-# 请在下方insert into语句后添加添加你的ip白名单
+# 请在下方添加添加你的ip白名单,例如192.168.6.1:
+# mysql -h $CUR_MAIN_DB_HOST -P $CUR_MAIN_DB_PORT -u game -p$DNF_DB_GAME_PASSWORD <<EOF
+#   insert into d_taiwan.geo_allow values ('192.168.6.1', "*", "2016-04-09 23:53:04");
+# EOF
 echo "update d_taiwan.geo_allow done, ALLOW ALL COUNTRY."
