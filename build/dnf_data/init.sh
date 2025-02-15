@@ -157,21 +157,24 @@ if [ ! -f "/data/monitor_ip/get_ddns_ip.sh" ];then
 else
   echo "get_ddns_ip.sh have already inited, do nothing!"
 fi
-# 判断start_bridge脚本是否初始化
+# 判断start_bridge脚本是否初始化[这版本强制更新]
+rm -rf /data/channel/start_bridge.sh
 if [ ! -f "/data/channel/start_bridge.sh" ];then
   cp /home/template/init/channel/start_bridge.sh /data/channel/
   echo "init start_bridge.sh success"
 else
   echo "start_bridge.sh have already inited, do nothing!"
 fi
-# 判断start_channel脚本是否初始化
+# 判断start_channel脚本是否初始化[这版本强制更新]
+rm -rf /data/channel/start_channel.sh
 if [ ! -f "/data/channel/start_channel.sh" ];then
   cp /home/template/init/channel/start_channel.sh /data/channel/
   echo "init start_channel.sh success"
 else
   echo "start_channel.sh have already inited, do nothing!"
 fi
-# 判断start_game脚本是否初始化
+# 判断start_game脚本是否初始化[这版本强制更新]
+rm -rf /data/channel/start_game.sh
 if [ ! -f "/data/channel/start_game.sh" ];then
   cp /home/template/init/channel/start_game.sh /data/channel/
   echo "init start_game.sh success"

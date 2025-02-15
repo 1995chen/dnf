@@ -7,7 +7,7 @@ dp2.9.0+frida_240418
 
 ## 镜像版本要求
 
-* dp2插件需要docker镜像版本>=2.1.4.fix1
+* dp2插件需要docker镜像版本>=2.1.7.fix1
 * game密码必须为默认密码，
 * 需要配置环境变量SERVER_GROUP_DB=cain
 * 只支持希洛克大区
