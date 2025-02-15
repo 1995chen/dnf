@@ -16,6 +16,10 @@
 2. 通过插件支持几款登陆器
 ```
 
+## 2025年计划
+
+[支持新的DP插件](https://tieba.baidu.com/p/9366042070?&share=9105&fr=sharewise&is_video=false&unique=B2A11FA6311C7A25903F0C33D1E2FEC1&st=1739609146&client_type=1&client_version=12.75.1.0&sfc=qqfriend&share_from=post)
+
 ## 2.1.7 版本升级注意事项(首次部署请忽略)
 
 <font color="red">
