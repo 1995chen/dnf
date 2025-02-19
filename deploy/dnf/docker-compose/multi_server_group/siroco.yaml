@@ -14,12 +14,12 @@ services:
       - PUBLIC_IP=IP-3
       - MAIN_BRIDGE_IP=IP-1
       - MAIN_MYSQL_HOST=IP-1
-      - MAIN_MYSQL_PORT=3000
+      - MAIN_MYSQL_PORT=3001
       - MAIN_MYSQL_ROOT_PASSWORD=88888888
       # - MAIN_MYSQL_GAME_ALLOW_IP=%
-      - MYSQL_HOST=IP-1
+      - MYSQL_HOST=IP-3
       # 远程mysql的端口号[这里以3000为例]
-      - MYSQL_PORT=3000
+      - MYSQL_PORT=3003
       # 远程数据库root密码
       - DNF_DB_ROOT_PASSWORD=88888888
       # - MYSQL_GAME_ALLOW_IP=%

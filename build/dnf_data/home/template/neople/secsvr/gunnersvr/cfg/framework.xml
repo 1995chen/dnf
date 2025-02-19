@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="GBK" standalone="yes" ?>
+
+<framework_config __version="1">
+
+    <!--trans_info_: 事务的配置-->
+    <trans_info_>
+
+        <!--trans_num_: 事务的数量-->
+        <!--DEFAULT VALUE: '1048576'-->
+        <trans_num_>1048576 </trans_num_>
+
+        <!--trans_cmd_num_: 事务命令字的个数-->
+        <!--DEFAULT VALUE: '2048'-->
+        <trans_cmd_num_>2048 </trans_cmd_num_>
+
+        <!--func_cmd_num_: 函数命令字的个数-->
+        <!--DEFAULT VALUE: '2048'-->
+        <func_cmd_num_>2048 </func_cmd_num_>
+
+    </trans_info_>
+
+    <!--task_info_: Task的配置，使用notifytrans时有效-->
+    <task_info_>
+
+        <!--task_thread_num_: task线程数量-->
+        <!--DEFAULT VALUE: '100'-->
+        <task_thread_num_>100 </task_thread_num_>
+
+        <!--task_thread_stack_size_: task线程堆栈大小-->
+        <!--DEFAULT VALUE: '2097152'-->
+        <task_thread_stack_size_>2097152 </task_thread_stack_size_>
+
+    </task_info_>
+
+    <!--log_info_: 日志帐单的配置信息-->
+    <log_info_>
+
+        <!--log_output_: 日志输出方式: 0001=file 0010=stdout 0100=stderr 1000=windbg,多种输出方式可以组合-->
+        <!--DEFAULT VALUE: '1'-->
+        <log_output_>1 </log_output_>
+
+        <!--log_div_type_: 日志分割方式:101按大小 201按小时 205按天-->
+        <!--DEFAULT VALUE: '205'-->
+        <log_div_type_>205 </log_div_type_>
+
+        <!--max_log_file_num_: 日志文件保留个数，多出的日志文件将会被删除-->
+        <!--DEFAULT VALUE: '2'-->
+        <max_log_file_num_>10 </max_log_file_num_>
+
+        <!--max_log_file_size_: 日志文件最大大小-->
+        <!--DEFAULT VALUE: '2048000000'-->
+        <max_log_file_size_>2048000000 </max_log_file_size_>
+
+        <!--bill_output_: 帐单输出方式: 0001=net 0010=file,多种输出方式可以组合-->
+        <!--DEFAULT VALUE: '3'-->
+        <bill_output_>3 </bill_output_>
+
+        <!--bill_div_type_: 日志分割方式:101按大小 201按小时 205按天-->
+        <!--DEFAULT VALUE: '205'-->
+        <bill_div_type_>205 </bill_div_type_>
+
+        <!--max_bill_file_num_: 帐单文件保留个数-->
+        <!--DEFAULT VALUE: '1'-->
+        <max_bill_file_num_>10 </max_bill_file_num_>
+
+        <!--max_bill_file_size_: 帐单文件最大大小-->
+        <!--DEFAULT VALUE: '2048000000'-->
+        <max_bill_file_size_>2048000000 </max_bill_file_size_>
+
+    </log_info_>
+
+</framework_config>
+

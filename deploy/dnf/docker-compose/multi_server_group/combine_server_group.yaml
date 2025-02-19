@@ -2,16 +2,40 @@ version: "2.3"
 
 services:
 
-  mysql:
+  mysql-cain:
       image: 1995chen/mysql:7-5.0.95
       mem_limit: 1g
       environment:
         - DNF_DB_ROOT_PASSWORD=88888888
         - TZ=Asia/Shanghai
       ports:
-        - "3000:3306"
+        - "3001:3306"
       volumes:
-        - ./mysql:/var/lib/mysql
+        - ./mysql_cain:/var/lib/mysql
+      restart: always
+
+  mysql-diregie:
+      image: 1995chen/mysql:7-5.0.95
+      mem_limit: 1g
+      environment:
+        - DNF_DB_ROOT_PASSWORD=88888888
+        - TZ=Asia/Shanghai
+      ports:
+        - "3002:3306"
+      volumes:
+        - ./mysql_diregie:/var/lib/mysql
+      restart: always
+
+  mysql-siroco:
+      image: 1995chen/mysql:7-5.0.95
+      mem_limit: 1g
+      environment:
+        - DNF_DB_ROOT_PASSWORD=88888888
+        - TZ=Asia/Shanghai
+      ports:
+        - "3003:3306"
+      volumes:
+        - ./mysql_siroco:/var/lib/mysql
       restart: always
 
   dnf-cain:
@@ -24,12 +48,12 @@ services:
       # 手动指定对外IP
       - PUBLIC_IP=IP-1
       - MAIN_MYSQL_HOST=IP-1
-      - MAIN_MYSQL_PORT=3000
+      - MAIN_MYSQL_PORT=3001
       - MAIN_MYSQL_ROOT_PASSWORD=88888888
       # - MAIN_MYSQL_GAME_ALLOW_IP=%
       - MYSQL_HOST=IP-1
       # 远程mysql的端口号[这里以3000为例]
-      - MYSQL_PORT=3000
+      - MYSQL_PORT=3001
       # 远程数据库root密码
       - DNF_DB_ROOT_PASSWORD=88888888
       # - MYSQL_GAME_ALLOW_IP=%
@@ -69,12 +93,12 @@ services:
       - PUBLIC_IP=IP-1
       - MAIN_BRIDGE_IP=IP-1
       - MAIN_MYSQL_HOST=IP-1
-      - MAIN_MYSQL_PORT=3000
+      - MAIN_MYSQL_PORT=3001
       - MAIN_MYSQL_ROOT_PASSWORD=88888888
       # - MAIN_MYSQL_GAME_ALLOW_IP=%
       - MYSQL_HOST=IP-1
-      # 远程mysql的端口号[这里以3000为例]
-      - MYSQL_PORT=3000
+      # 远程mysql的端口号[这里以3002为例]
+      - MYSQL_PORT=3002
       # 远程数据库root密码
       - DNF_DB_ROOT_PASSWORD=88888888
       # - MYSQL_GAME_ALLOW_IP=%
@@ -112,11 +136,11 @@ services:
       - PUBLIC_IP=IP-1
       - MAIN_BRIDGE_IP=IP-1
       - MAIN_MYSQL_HOST=IP-1
-      - MAIN_MYSQL_PORT=3000
+      - MAIN_MYSQL_PORT=3001
       - MAIN_MYSQL_ROOT_PASSWORD=88888888
       - MYSQL_HOST=IP-1
-      # 远程mysql的端口号[这里以3000为例]
-      - MYSQL_PORT=3000
+      # 远程mysql的端口号[这里以3003为例]
+      - MYSQL_PORT=3003
       # 远程数据库root密码
       - DNF_DB_ROOT_PASSWORD=88888888
       # - MYSQL_GAME_ALLOW_IP=%

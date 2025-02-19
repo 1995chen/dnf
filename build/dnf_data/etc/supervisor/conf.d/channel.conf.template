@@ -1,0 +1,13 @@
+[program:channel]
+command=/bin/bash -c "/data/run/start_channel.sh"
+directory=/home/neople/channel
+user=root
+autostart=true
+autorestart=true
+stopasgroup=true
+killasgroup=true
+stdout_logfile=/data/log/channel.log
+redirect_stderr=true
+stdout_logfile_maxbytes=1MB
+stderr_logfile_maxbytes=1MB
+depend=bridge

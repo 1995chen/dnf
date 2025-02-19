@@ -114,6 +114,9 @@ for i in {1..52}; do
     rm -rf /home/neople/game/log/cain$(printf "%02d" $i)/*
     rm -rf /home/neople/game/log/siroco$(printf "%02d" $i)/*
 done
+# 启动时清理日志
+rm -rf /data/log/*
+rm -rf /home/neople/game/log/*
 # 清理/dp2目录
 rm -rf /dp2
 # 给supervisor扩展文件赋予权限[可用于扩展第三方网关]
@@ -130,8 +133,8 @@ mkdir -p /data/monitor_ip
 mkdir -p /data/daily_job
 # 创建netbird目录
 mkdir -p /data/netbird
-# 创建频道目录[存放频道脚本]
-mkdir -p /data/channel
+# 创建run脚本目录
+mkdir -p /data/run
 # 初始化数据
 bash /home/template/init/init.sh
 error_code=$?
@@ -148,20 +151,16 @@ else
 fi
 # 删除无用文件
 rm -rf /home/template/neople-tmp
-rm -rf /home/template/root-tmp
 mkdir -p /home/neople
 # 清理root下文件
 rm -rf /root/DnfGateServer
 rm -rf /root/GateRestart
 rm -rf /root/GateStop
-rm -rf /root/run
-rm -rf /root/stop
 rm -rf /root/Config.ini
 rm -rf /root/privatekey.pem
 
 # 复制待使用文件
 cp -r /home/template/neople /home/template/neople-tmp
-cp -r /home/template/root /home/template/root-tmp
 # 修改配置文件
 find /home/template/neople-tmp -type f -name "*.cfg" -print0 | xargs -0 sed -i "s/GAME_PASSWORD/$DNF_DB_GAME_PASSWORD/g"
 find /home/template/neople-tmp -type f -name "*.cfg" -print0 | xargs -0 sed -i "s/DEC_GAME_PWD/$DEC_GAME_PWD/g"
@@ -172,6 +171,11 @@ find /home/template/neople-tmp -type f -name "*.tbl" -print0 | xargs -0 sed -i "
 
 # 将结果文件拷贝到对应目录[这里是为了保住日志文件目录,将日志文件挂载到宿主机外,因此采用复制而不是mv]
 cp -rf /home/template/neople-tmp/* /home/neople
+# 清理log, pid, core文件
+find /home/neople/ -name '*.log' -type f -print -exec rm -f {} \;
+find /home/neople/ -name '*.pid' -type f -print -exec rm -f {} \;
+find /home/neople/ -name 'core.*' -type f -print -exec rm -f {} \;
+chmod 777 -R /home/neople
 rm -rf /home/template/neople-tmp
 # 复制版本文件
 cp /data/Script.pvf /home/neople/game/Script.pvf
@@ -184,8 +188,7 @@ cp /data/publickey.pem /home/neople/game/
 # 为DP目录赋予权限[为了支持更多未知场景, 这里直接给整个目录777权限]
 chmod 777 -R /data/dp
 # 重置root目录
-mv /home/template/root-tmp/* /root/
-rm -rf /home/template/root-tmp
+cp /home/template/root/* /root/
 chmod 777 /root/*
 # 拷贝证书key
 cp /data/privatekey.pem /root/
@@ -205,5 +208,4 @@ SUPERVISORD_ENV="MAIN_BRIDGE_IP=\"$MAIN_BRIDGE_IP\",SERVER_GROUP_NAME=\"$SERVER_
 sed -i "s/^environment=.*/environment=$SUPERVISORD_ENV/" /etc/supervisord.conf
 # 切换到主目录
 cd /root
-# 启动服务
-./run
+supervisord -c /etc/supervisord.conf
