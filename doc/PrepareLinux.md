@@ -82,11 +82,11 @@ sysctl -p
 最新可用的镜像版本如下所示:
 ```shell
 # 存储在DockerHub官方镜像库中（国内用户可能无法直接获取）
-1995chen/dnf:centos5-2.1.7.fix1
+1995chen/dnf:centos5-2.1.7.fix2
 1995chen/dnf:centos6-2.1.7.fix1
 1995chen/dnf:centos7-2.1.7.fix1
 # 存储在国内阿里云的镜像库中
-registry.cn-hangzhou.aliyuncs.com/1995chen/dnf:centos5-2.1.7.fix1
+registry.cn-hangzhou.aliyuncs.com/1995chen/dnf:centos5-2.1.7.fix2
 registry.cn-hangzhou.aliyuncs.com/1995chen/dnf:centos6-2.1.7.fix1
 registry.cn-hangzhou.aliyuncs.com/1995chen/dnf:centos7-2.1.7.fix1
 ```
