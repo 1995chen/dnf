@@ -1,4 +1,4 @@
-# dnf-console
+# 70s2 DP
 
 70s2专用DP插件
 
