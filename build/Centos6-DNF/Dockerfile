@@ -29,7 +29,7 @@ RUN cd /etc/yum.repos.d/ && rm -rf * && sed -i "s|enabled=1|enabled=0|g" /etc/yu
     tar -zxvf GeoIP-1.4.8.tgz && \
     tar -zxvf lib.tgz && \
     # 移动so文件
-    mv /tmp/*.so /lib/ && \
+    mv /tmp/*.so /lib/ &&  mv /tmp/*.so.1 /lib/ && \
     # 编译python2.7 supervisor
     cd /tmp/Python-2.7.13 && ./configure && make install && \
     cd /tmp/setuptools-18.0.1 && python2.7 setup.py install && \
