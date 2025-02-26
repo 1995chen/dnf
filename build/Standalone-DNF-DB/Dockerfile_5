@@ -1,0 +1,33 @@
+FROM 1995chen/centos:5.11.7
+
+LABEL AUTHOR 1995chen
+
+# 定义默认环境变量
+ENV DNF_DB_ROOT_PASSWORD=88888888
+
+# 安装环境
+RUN cd /etc/yum.repos.d/ && rm -rf * && sed -i "s|enabled=1|enabled=0|g" /etc/yum/pluginconf.d/fastestmirror.conf && \
+    # 添加源
+    wget https://raw.githubusercontent.com/1995chen/dnf_util/refs/heads/main/Centos5/Centos5-Base.repo && \
+    # 更新软件
+    yum clean all && yum update -y && yum install -y perl initscripts && yum clean all && \
+    # 下载软件
+    cd /tmp && \
+    wget https://raw.githubusercontent.com/1995chen/dnf_util/refs/heads/main/common_pkgs/MySQL-shared-compat-5.0.95-1.rhel5.x86_64.rpm && \
+    wget https://raw.githubusercontent.com/1995chen/dnf_util/refs/heads/main/common_pkgs/MySQL-devel-community-5.0.95-1.rhel5.x86_64.rpm && \
+    wget https://raw.githubusercontent.com/1995chen/dnf_util/refs/heads/main/common_pkgs/MySQL-client-community-5.0.95-1.rhel5.x86_64.rpm && \
+    wget https://raw.githubusercontent.com/1995chen/dnf_util/refs/heads/main/common_pkgs/MySQL-server-community-5.0.95-1.rhel5.x86_64.rpm && \
+    # 安装mysql
+    rpm -ivh /tmp/MySQL-shared-compat-5.0.95-1.rhel5.x86_64.rpm && \
+    rpm -ivh /tmp/MySQL-devel-community-5.0.95-1.rhel5.x86_64.rpm && \
+    rpm -ivh /tmp/MySQL-client-community-5.0.95-1.rhel5.x86_64.rpm && \
+    rpm -ivh /tmp/MySQL-server-community-5.0.95-1.rhel5.x86_64.rpm && \
+    service mysql stop && rm -rf /var/lib/mysql/* && \
+    rm -rf /tmp/*
+
+# 添加mysql配置
+COPY build/dnf_data/etc/my.cnf /etc/
+COPY build/Standalone-DNF-DB/docker-entrypoint.sh /
+# 切换工作目录
+WORKDIR /
+CMD ["/bin/bash", "/docker-entrypoint.sh"]
