@@ -4,7 +4,7 @@ services:
 
   dnf-1:
     hostname: dnf-1
-    image: 1995chen/dnf:centos5-2.1.7.fix2
+    image: 1995chen/dnf:centos5-2.1.8
     environment:
       - TZ=Asia/Shanghai
       - SERVER_GROUP=3

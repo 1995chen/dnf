@@ -3,6 +3,7 @@
 ## 如何使用
 
 将本目录下的by-gate.tar.gz、by-gate.conf复制到/data/data/conf.d目录下。
+由于GLIBC版本问题，暂时需要使用centos6/centos7系列的镜像。
 
 ## 映射端口
 
