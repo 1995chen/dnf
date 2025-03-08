@@ -4,7 +4,7 @@
 echo "CUR_MAIN_DB_HOST: $CUR_MAIN_DB_HOST, CUR_MAIN_DB_PORT: $CUR_MAIN_DB_PORT"
 if [ -n "$CUR_MAIN_DB_HOST" ] && [ -n "$CUR_MAIN_DB_PORT" ]; then
   # 代理本地3307端口并转发
-  ./forward --forward 3307/$CUR_MAIN_DB_HOST:$CUR_MAIN_DB_PORT/tcp
+  socat TCP-LISTEN:3307,fork,reuseaddr TCP:$CUR_MAIN_DB_HOST:$CUR_MAIN_DB_PORT
 else
     echo "no need to start master mysql proxy"
 fi
