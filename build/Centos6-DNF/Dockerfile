@@ -44,7 +44,7 @@ RUN cd /etc/yum.repos.d/ && rm -rf * && sed -i "s|enabled=1|enabled=0|g" /etc/yu
     # 编译GeoIP
     cd /tmp/GeoIP-1.4.8/ && chmod 777 configure && ./configure && make && make install && \
     # 本地端口转发工具
-    yum install socat -y \
+    yum install socat -y && \
     # 清理
     yum clean all && \
     rm -rf /tmp/*
