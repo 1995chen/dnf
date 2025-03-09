@@ -1,7 +1,7 @@
 #! /bin/bash
 
 # 判断本地数据库是否初始化过,端口号4000
-if [ -z "$MASTER_MYSQL_HOST" ] && [ -z "$MASTER_MYSQL_PORT" ] && [ -z "$MYSQL_HOST" ] && [ -z "$MYSQL_PORT" ];then
+if [ -z "$MAIN_MYSQL_HOST" ] && [ -z "$MAIN_MYSQL_PORT" ] && [ -z "$MYSQL_HOST" ] && [ -z "$MYSQL_PORT" ];then
   echo "use local mysql service"
   # 是否需要初始化
   if [ ! -d "/var/lib/mysql/mysql" ];then
