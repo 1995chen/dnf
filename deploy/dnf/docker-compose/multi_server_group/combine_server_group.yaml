@@ -39,7 +39,7 @@ services:
       restart: always
 
   dnf-cain:
-    image: 1995chen/dnf:centos5-2.1.9
+    image: 1995chen/dnf:centos5-2.1.9.fix1
     environment:
       - TZ=Asia/Shanghai
       - SERVER_GROUP=1
@@ -83,7 +83,7 @@ services:
       - ./log_1:/home/neople/game/log
 
   dnf-diregie:
-    image: 1995chen/dnf:centos5-2.1.9
+    image: 1995chen/dnf:centos5-2.1.9.fix1
     environment:
       - TZ=Asia/Shanghai
       - SERVER_GROUP=2
@@ -126,7 +126,7 @@ services:
       - ./log_2:/home/neople/game/log
 
   dnf-siroco:
-    image: 1995chen/dnf:centos5-2.1.9
+    image: 1995chen/dnf:centos5-2.1.9.fix1
     environment:
       - TZ=Asia/Shanghai
       - SERVER_GROUP=3

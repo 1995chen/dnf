@@ -82,26 +82,26 @@ sysctl -p
 最新可用的镜像版本如下所示:
 ```shell
 # 存储在DockerHub官方镜像库中（国内用户可能无法直接获取）
-1995chen/dnf:centos5-2.1.9
-1995chen/dnf:centos6-2.1.9
-1995chen/dnf:centos7-2.1.9
+1995chen/dnf:centos5-2.1.9.fix1
+1995chen/dnf:centos6-2.1.9.fix1
+1995chen/dnf:centos7-2.1.9.fix1
 # 存储在国内阿里云的镜像库中
-registry.cn-hangzhou.aliyuncs.com/1995chen/dnf:centos5-2.1.9
-registry.cn-hangzhou.aliyuncs.com/1995chen/dnf:centos6-2.1.9
-registry.cn-hangzhou.aliyuncs.com/1995chen/dnf:centos7-2.1.9
+registry.cn-hangzhou.aliyuncs.com/1995chen/dnf:centos5-2.1.9.fix1
+registry.cn-hangzhou.aliyuncs.com/1995chen/dnf:centos6-2.1.9.fix1
+registry.cn-hangzhou.aliyuncs.com/1995chen/dnf:centos7-2.1.9.fix1
 ```
 以上镜像没有区别，您可以随意选择其中一个进行拉取。
 
 例如，对于国内用户，我们选择阿里云仓库中的任何一个镜像，执行以下命令：
 ```
-docker pull registry.cn-hangzhou.aliyuncs.com/1995chen/dnf:centos7-2.1.9
+docker pull registry.cn-hangzhou.aliyuncs.com/1995chen/dnf:centos7-2.1.9.fix1
 ```
 如果从`阿里云`拉取的`镜像`需要重新命名，需要`额外`执行以下`命令`：
 ```shell
-docker tag registry.cn-hangzhou.aliyuncs.com/1995chen/dnf:centos7-2.1.9 1995chen/dnf:centos7-2.1.9
+docker tag registry.cn-hangzhou.aliyuncs.com/1995chen/dnf:centos7-2.1.9.fix1 1995chen/dnf:centos7-2.1.9.fix1
 ```
 
 对于国外用户，直接选择任意一个镜像进行拉取，例如：
 ```shell
-docker pull 1995chen/dnf:centos7-2.1.9
+docker pull 1995chen/dnf:centos7-2.1.9.fix1
 ```
