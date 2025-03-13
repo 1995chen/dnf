@@ -61,7 +61,7 @@ mkdir -p /data/log /data/mysql /data/data
 # WEB_PASS 为 supervisor web 管理页面密码（可以访问 PUBLIC_IP:2000 来访问进程管理页面）
 # --shm-size=8g【不可删除】，docker默认为64M较小，需要增加才能保证运行
 # 注意，最后的 1995chen/dnf:centos5-2.1.5 部分中的 centos5，你在上一步拉取得哪个版本，则应替换为哪个版本
-docker run -d -e PUBLIC_IP=x.x.x.x -e WEB_USER=root -e WEB_PASS=123456 -e DNF_DB_ROOT_PASSWORD=88888888 -e GM_ACCOUNT=gmuser -e GM_PASSWORD=gmpass -v /data/log:/home/neople/game/log -v /data/mysql:/var/lib/mysql -v /data/data:/data -p 2000:180 -p 3000:3306/tcp -p 7600:7600/tcp -p 881:881/tcp -p 7001:7001/tcp -p 7001:7001/udp -p 30011:30011/tcp -p 31011:31011/udp -p 30052:30052/tcp -p 31052:31052/udp -p 7200:7200/tcp -p 7200:7200/udp -p 2311-2313:2311-2313/udp --cap-add=NET_ADMIN --hostname=dnf --cpus=1 --memory=1g --memory-swap=-1 --shm-size=8g --name=dnf 1995chen/dnf:centos5-2.1.8
+docker run -d -e PUBLIC_IP=x.x.x.x -e WEB_USER=root -e WEB_PASS=123456 -e DNF_DB_ROOT_PASSWORD=88888888 -e GM_ACCOUNT=gmuser -e GM_PASSWORD=gmpass -v /data/log:/home/neople/game/log -v /data/mysql:/var/lib/mysql -v /data/data:/data -p 2000:180 -p 3000:3306/tcp -p 7600:7600/tcp -p 881:881/tcp -p 7001:7001/tcp -p 7001:7001/udp -p 30011:30011/tcp -p 31011:31011/udp -p 30052:30052/tcp -p 31052:31052/udp -p 7200:7200/tcp -p 7200:7200/udp -p 2311-2313:2311-2313/udp --cap-add=NET_ADMIN --hostname=dnf --cpus=1 --memory=1g --memory-swap=-1 --shm-size=8g --name=dnf 1995chen/dnf:centos5-2.1.9
 ```
 
 ## 如何确认已经成功启动
@@ -228,7 +228,9 @@ QQ 1群：852685848(已满)
 
 QQ 2群：418505204(已满)
 
-QQ 3群：954929189
+QQ 3群：954929189(已满)
+
+QQ 5群：738105518(已满)
 
 欢迎各路大神加入。一起完善项目，成就当年梦，800万勇士冲！
 

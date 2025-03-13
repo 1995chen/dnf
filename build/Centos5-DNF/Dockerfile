@@ -5,6 +5,7 @@ LABEL AUTHOR 1995chen
 # 安装环境
 RUN cd /tmp && \
     wget https://raw.githubusercontent.com/1995chen/dnf_util/refs/heads/main/Centos5/meld3-2.0.1.tar.gz && \
+    wget https://raw.githubusercontent.com/1995chen/dnf_util/refs/heads/main/Centos5/socat-1.7.4.3.tar.gz && \
     wget https://raw.githubusercontent.com/1995chen/dnf_util/refs/heads/main/common_pkgs/Python-2.7.13.tgz && \
     wget https://raw.githubusercontent.com/1995chen/dnf_util/refs/heads/main/common_pkgs/setuptools-18.0.1.tgz && \
     wget https://raw.githubusercontent.com/1995chen/dnf_util/refs/heads/main/common_pkgs/pip-7.1.0.tar.gz && \
@@ -17,6 +18,7 @@ RUN cd /tmp && \
     wget https://raw.githubusercontent.com/1995chen/dnf_util/refs/heads/main/common_pkgs/lib.tgz && \
     # 解压
     tar -zxvf meld3-2.0.1.tar.gz && \
+    tar -zxvf socat-1.7.4.3.tar.gz && \
     tar -zxvf supervisor-3.1.3.tar.gz && \
     tar -zxvf Python-2.7.13.tgz && \
     tar -zxvf setuptools-18.0.1.tgz && \
@@ -25,6 +27,8 @@ RUN cd /tmp && \
     tar -zxvf lib.tgz && \
     # 移动so文件
     mv /tmp/*.so /lib/ && mv /tmp/*.so.1 /lib/ && \
+    # 安装socat
+    cd /tmp/socat-1.7.4.3 && ./configure --disable-fips make && make install && \
     # 编译python2.7 supervisor
     cd /tmp/Python-2.7.13 && ./configure && make install && \
     cd /tmp/setuptools-18.0.1 && python2.7 setup.py install && \
@@ -38,9 +42,7 @@ RUN cd /tmp && \
     rpm -ivh /tmp/MySQL-server-community-5.0.95-1.rhel5.x86_64.rpm && \
     service mysql stop && rm -rf /var/lib/mysql/* && \
     # 编译GeoIP
-    mv /tmp/GeoIP-1.4.8 /home/ && cd //home/GeoIP-1.4.8/ && chmod 777 configure && ./configure && make && make install && \
-    # 本地端口转发工具
-    yum install socat -y && \
+    mv /tmp/GeoIP-1.4.8 /home/ && cd /home/GeoIP-1.4.8/ && chmod 777 configure && ./configure && make && make install && \
     # 清理
     yum clean all && \
     rm -rf /tmp/*
