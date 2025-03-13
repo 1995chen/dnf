@@ -2,6 +2,7 @@ FROM 1995chen/centos:5.11.7
 
 LABEL AUTHOR 1995chen
 
+ENV TZ=Asia/Shanghai
 # 安装环境
 RUN cd /tmp && \
     wget https://raw.githubusercontent.com/1995chen/dnf_util/refs/heads/main/Centos5/meld3-2.0.1.tar.gz && \
@@ -43,6 +44,8 @@ RUN cd /tmp && \
     service mysql stop && rm -rf /var/lib/mysql/* && \
     # 编译GeoIP
     mv /tmp/GeoIP-1.4.8 /home/ && cd /home/GeoIP-1.4.8/ && chmod 777 configure && ./configure && make && make install && \
+    # 设置时区
+    ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
     # 清理
     yum clean all && \
     rm -rf /tmp/*
