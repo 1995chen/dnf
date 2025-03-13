@@ -12,9 +12,9 @@
 | 5 | casillas | 卡西利亚斯 | taiwan_casillas |
 | 6 | hilder | 赫尔德 | taiwan_hilder |
 
-<font color="red">
+```
 默认情况下，当指定运行一个大区时，该项目会创建并连接该大区对应的数据库。
-</font>
+```
 
 然而，目前市面上`主流的PVF`只有160MB左右，并且`仅开放了希洛克大区`。因此，我们将SERVER_GROUP的默认值设置为3（代表希洛克大区）。
 
