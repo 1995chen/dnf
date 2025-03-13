@@ -6,7 +6,7 @@ ENV TZ=Asia/Shanghai
 # 安装环境
 RUN cd /tmp && \
     wget https://raw.githubusercontent.com/1995chen/dnf_util/refs/heads/main/Centos5/meld3-2.0.1.tar.gz && \
-    wget https://raw.githubusercontent.com/1995chen/dnf_util/refs/heads/main/Centos5/socat-1.7.4.3.tar.gz && \
+    wget https://raw.githubusercontent.com/1995chen/dnf_util/refs/heads/main/common_pkgs/socat-1.7.4.3.tar.gz && \
     wget https://raw.githubusercontent.com/1995chen/dnf_util/refs/heads/main/common_pkgs/Python-2.7.13.tgz && \
     wget https://raw.githubusercontent.com/1995chen/dnf_util/refs/heads/main/common_pkgs/setuptools-18.0.1.tgz && \
     wget https://raw.githubusercontent.com/1995chen/dnf_util/refs/heads/main/common_pkgs/pip-7.1.0.tar.gz && \

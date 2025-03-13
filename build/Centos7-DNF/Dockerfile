@@ -13,6 +13,7 @@ RUN cd /etc/yum.repos.d/ && rm -rf * && sed -i "s|enabled=1|enabled=0|g" /etc/yu
     ln -sf /usr/lib64/libssl.so.10 /usr/lib64/libssl.so.6 && ln -sf /usr/lib64/libcrypto.so.10 /usr/lib64/libcrypto.so.6 && \
     # 下载软件
     cd /tmp && \
+    wget https://raw.githubusercontent.com/1995chen/dnf_util/refs/heads/main/common_pkgs/socat-1.7.4.3.tar.gz && \
     wget https://raw.githubusercontent.com/1995chen/dnf_util/refs/heads/main/common_pkgs/Python-2.7.13.tgz && \
     wget https://raw.githubusercontent.com/1995chen/dnf_util/refs/heads/main/common_pkgs/setuptools-18.0.1.tgz && \
     wget https://raw.githubusercontent.com/1995chen/dnf_util/refs/heads/main/common_pkgs/pip-7.1.0.tar.gz && \
@@ -23,6 +24,7 @@ RUN cd /etc/yum.repos.d/ && rm -rf * && sed -i "s|enabled=1|enabled=0|g" /etc/yu
     wget https://raw.githubusercontent.com/1995chen/dnf_util/refs/heads/main/common_pkgs/GeoIP-1.4.8.tgz && \
     wget https://raw.githubusercontent.com/1995chen/dnf_util/refs/heads/main/common_pkgs/lib.tgz && \
     # 解压
+    tar -zxvf socat-1.7.4.3.tar.gz && \
     tar -zxvf Python-2.7.13.tgz && \
     tar -zxvf setuptools-18.0.1.tgz && \
     tar -zxvf pip-7.1.0.tar.gz && \
@@ -30,6 +32,8 @@ RUN cd /etc/yum.repos.d/ && rm -rf * && sed -i "s|enabled=1|enabled=0|g" /etc/yu
     tar -zxvf lib.tgz && \
     # 移动so文件
     mv /tmp/*.so /lib/ &&  mv /tmp/*.so.1 /lib/ && \
+    # 安装socat
+    cd /tmp/socat-1.7.4.3 && ./configure --disable-fips make && make install && \
     # 编译python2.7 supervisor
     cd /tmp/Python-2.7.13 && ./configure && make install && \
     cd /tmp/setuptools-18.0.1 && python2.7 setup.py install && \
@@ -43,8 +47,6 @@ RUN cd /etc/yum.repos.d/ && rm -rf * && sed -i "s|enabled=1|enabled=0|g" /etc/yu
     service mysql stop && rm -rf /var/lib/mysql/* && \
     # 编译GeoIP
     cd /tmp/GeoIP-1.4.8/ && chmod 777 configure && ./configure && make && make install && \
-    # 本地端口转发工具
-    yum install socat -y && \
     # 设置时区
     ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
     # 清理
