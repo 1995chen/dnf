@@ -237,7 +237,6 @@ QQ 5群：738105518
 
 ## 社区
 
-DNF 玲珑学习网：https://daf.linglonger.com
 
 XanderYe站库分离镜像：[XanderYe/dnf](https://github.com/XanderYe/dnf)
 
