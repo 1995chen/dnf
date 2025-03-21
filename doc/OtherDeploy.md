@@ -66,7 +66,7 @@
 | 环境变量名称 | 描述 | 可选参数 | 默认值 |
 | ------- | ------- | ------- | ------- |
 | SERVER_GROUP | 大区编号 | 1-6范围的数字 | 3 |
-| SERVER_GROUP_DB | 大区数据库 | 所有大区名称 | '' |
+| SERVER_GROUP_DB | 大区数据库 | 所有大区名称 | cain |
 | OPEN_CHANNEL | 开启的频道 | 支持配置范围,配置之间用逗号分隔,例如:1-11,12,22-25,51-55 | '11,52' |
 | DNF_DB_ROOT_PASSWORD | DNF数据库root密码[当使用独立数据库时,root密码用于初始化数据以及game账号自动化创建、授权] |  | '' |
 | DNF_DB_GAME_PASSWORD | DNF数据库game密码[必须8位] |  | '' |
@@ -97,7 +97,7 @@
 | 环境变量名称 | 描述 | 可选参数 | 默认值 |
 | ------- | ------- | ------- | ------- |
 | SERVER_GROUP | 大区编号 | 1-6范围的数字 | 3 |
-| SERVER_GROUP_DB | 大区数据库 | 所有大区名称 | '' |
+| SERVER_GROUP_DB | 大区数据库 | 所有大区名称 | cain |
 | MAIN_BRIDGE_IP | 主大区 BRIDGE_IP | 主大区的PUBLIC_IP地址 | 127.0.0.1 |
 | MAIN_MYSQL_HOST | 主数据库IP地址 |  | '' |
 | MAIN_MYSQL_PORT | 主数据库端口号 |  | '' |
