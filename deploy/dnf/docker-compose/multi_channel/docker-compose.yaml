@@ -31,8 +31,8 @@ services:
       - 881:881/tcp               # 统一网关
       - 7001:7001/tcp             # df_channel_r
       - 7001:7001/udp             # df_channel_r
-      - 7200:7200/tcp             # df_relay_r
-      - 7200:7200/udp             # df_relay_r
+      - 7300:7300/tcp             # df_relay_r
+      - 7300:7300/udp             # df_relay_r
       - 30001:30001/tcp           # df_game_r[ch.01]
       - 31001:31001/udp           # df_game_r[ch.01]
       - 30006:30006/tcp           # df_game_r[ch.06]
