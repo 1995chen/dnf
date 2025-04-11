@@ -54,6 +54,14 @@ do
   old_ip=$(cat /data/monitor_ip/MONITOR_PUBLIC_IP 2>/dev/null || true)
   nslookup_output=$(nslookup -debug $DDNS_DOMAIN 2>/dev/null || true)
   ddns_ip=$(echo "$nslookup_output" | awk '/^Address: / { print $2 }')
+  # 判断ddns_ip是否为空
+  if [ -z "$ddns_ip" ]; then
+    echo "ddns ip is empty, wait $wait_time second"
+    # 等待
+    sleep $wait_time
+    continue
+  fi
+  # 判断ddns_ip是否发生变化
   if [ "$ddns_ip" != "$old_ip" ] ; then
     echo "domain ip changed, old ip is $old_ip, new ip is $ddns_ip"
     # 通知其他进程[写入文件]
@@ -76,6 +84,14 @@ while [ -z "$MONITOR_PUBLIC_IP" ] && [ "$DDNS_ENABLE" = true ];
 do
   old_ip=$(cat /data/monitor_ip/MONITOR_PUBLIC_IP 2>/dev/null || true)
   ddns_ip=$(/data/monitor_ip/get_ddns_ip.sh 2>/dev/null || true)
+  # 判断ddns_ip是否为空
+  if [ -z "$ddns_ip" ]; then
+    echo "ddns ip is empty, wait $wait_time second"
+    # 等待
+    sleep $wait_time
+    continue
+  fi
+  # 判断ddns_ip是否发生变化
   if [ "$ddns_ip" != "$old_ip" ] ; then
     echo "net ip changed, old ip is $old_ip, new ip is $ddns_ip"
     # 通知其他进程[写入文件]
