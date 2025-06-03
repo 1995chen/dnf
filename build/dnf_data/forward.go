@@ -39,8 +39,8 @@ func main() {
     for _, p := range proxies {
         wg.Add(1)
         go func(p Proxy) {
+            defer wg.Done()
             proxy_port(p.Protocol, p.Addr, p.TargetProtocol, p.TargetAddr)
-            wg.Done()
         }(p)
     }
     wg.Wait()
@@ -51,21 +51,23 @@ func proxy_port(protocol string, addr string, target_protocol string, target_add
     listen, err := net.Listen(protocol, addr)
     if err != nil {
         log.Fatalf("Failed to set up listener: %v", err)
+        return
     }
-
+    defer listen.Close()
     for {
         conn, err := listen.Accept()
         if err != nil {
             log.Printf("Failed to accept connection: %v", err)
             continue
         }
-
-        go handleConnection(conn, target_protocol, target_addr)
+        go func(conn net.Conn) {
+			defer conn.Close()
+			handleConnection(conn, target_protocol, target_addr)
+		}(conn)
     }
 }
 
 func handleConnection(src net.Conn, target_protocol string, target_addr string) {
-    defer src.Close()
     dst, err := net.Dial(target_protocol, target_addr)
     if err != nil {
         log.Printf("Failed to connect to destination: %v", err)
@@ -93,5 +95,6 @@ func copyData(dst net.Conn, src net.Conn) {
     if err != nil {
         log.Printf("Failed to copy data: %v", err)
     }
+    // Close `dst` to ensure that the other direction exits properly
+	_ = dst.Close()
 }
-
