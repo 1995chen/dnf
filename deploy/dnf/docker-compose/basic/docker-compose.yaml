@@ -32,6 +32,7 @@ services:
       # 开启DDNS[可选配置]
       # - DDNS_ENABLE=true
       # - DDNS_DOMAIN=''
+      # - CLIENT_POOL_SIZE=10 # 服务端启动时分配的客户端缓冲池大小，此配置项影响df_bridge_r和df_channel_r的内存占用，请按需求设置，默认为10
     # shm_size: 8g【不可删除】，docker默认为64M较小，需要增加才能保证运行
     shm_size: 8g
     memswap_limit: -1

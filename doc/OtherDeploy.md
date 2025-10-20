@@ -81,6 +81,7 @@
 | OPEN_CHANNEL | 开启的频道 | 支持配置范围,配置之间用逗号分隔,例如:1-11,12,22-25,51-55 | '11,52' |
 | DNF_DB_ROOT_PASSWORD | DNF数据库root密码[当使用独立数据库时,root密码用于初始化数据以及game账号自动化创建、授权] |  | '' |
 | DNF_DB_GAME_PASSWORD | DNF数据库game密码[必须8位] |  | '' |
+| CLIENT_POOL_SIZE | 服务端启动时分配的客户端缓冲池大小，此配置项影响df_bridge_r和df_channel_r的内存占用 | 3-1000 | 10 |
 
 ### 进程监控管理页面配置
 

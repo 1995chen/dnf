@@ -38,6 +38,7 @@ export DDNS_DOMAIN=$(echo $DDNS_DOMAIN | sed "s/[\'\"]//g")
 export DDNS_INTERVAL=$(echo $DDNS_INTERVAL | sed "s/[\'\"]//g")
 export NB_SETUP_KEY=$(echo $NB_SETUP_KEY | sed "s/[\'\"]//g")
 export NB_MANAGEMENT_URL=$(echo $NB_MANAGEMENT_URL | sed "s/[\'\"]//g")
+export CLIENT_POOL_SIZE="$(echo "${CLIENT_POOL_SIZE:-10}" | sed "s/[\'\"]//g")"
 # 校验用户选择的大区
 SERVER_GROUP_NAME_VAR="SERVER_GROUP_NAME_$SERVER_GROUP"
 if [ "$SERVER_GROUP" -ge 1 ] && [ "$SERVER_GROUP" -le 6 ]; then

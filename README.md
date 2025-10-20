@@ -13,7 +13,7 @@
 ## 3.0.0 Release Plan 
 ```
 1. 支持假人
-2. 通过插件支持几款登陆器
+2. 通过插件支持几款登录器
 ```
 
 ## 2025年计划
@@ -58,10 +58,11 @@ mkdir -p /data/log /data/mysql /data/data
 # DNF_DB_ROOT_PASSWORD 为 mysql root 密码，容器启动时会自动将 root 用户的密码修改为此值
 # WEB_USER 为 supervisor web 管理页面用户名
 # WEB_PASS 为 supervisor web 管理页面密码（可以访问 PUBLIC_IP:2000 来访问进程管理页面）
+# CLIENT_POOL_SIZE 为 服务端启动是分配的客户端池大小，若单人使用可设置为3，多人使用请按需求增加，最大可分配1000
 # --shm-size=8g【不可删除】，docker默认为64M较小，需要增加才能保证运行
 # 注意，最后的 1995chen/dnf:centos5-2.1.5 部分中的 centos5，你在上一步(环境配置)拉取得哪个版本，则应替换为哪个版本
 # tailscale需要额外映射设备: --device /dev/net/tun:/dev/net/tun
-docker run -d -e PUBLIC_IP=x.x.x.x -e WEB_USER=root -e WEB_PASS=123456 -e DNF_DB_ROOT_PASSWORD=88888888 -e GM_ACCOUNT=gmuser -e GM_PASSWORD=gmpass -v /data/log:/home/neople/game/log -v /data/mysql:/var/lib/mysql -v /data/data:/data -p 2000:180 -p 3000:3306/tcp -p 7600:7600/tcp -p 881:881/tcp -p 7001:7001/tcp -p 7001:7001/udp -p 30011:30011/tcp -p 31011:31011/udp -p 30052:30052/tcp -p 31052:31052/udp -p 7300:7300/tcp -p 7300:7300/udp -p 2311-2313:2311-2313/udp --cap-add=NET_ADMIN --hostname=dnf --cpus=1 --memory=1g --memory-swap=-1 --shm-size=8g --name=dnf 1995chen/dnf:centos5-2.1.9.fix1
+docker run -d -e PUBLIC_IP=x.x.x.x -e WEB_USER=root -e WEB_PASS=123456 -e DNF_DB_ROOT_PASSWORD=88888888 -e GM_ACCOUNT=gmuser -e GM_PASSWORD=gmpass -e CLIENT_POOL_SIZE=10 -v /data/log:/home/neople/game/log -v /data/mysql:/var/lib/mysql -v /data/data:/data -p 2000:180 -p 3000:3306/tcp -p 7600:7600/tcp -p 881:881/tcp -p 7001:7001/tcp -p 7001:7001/udp -p 30011:30011/tcp -p 31011:31011/udp -p 30052:30052/tcp -p 31052:31052/udp -p 7300:7300/tcp -p 7300:7300/udp -p 2311-2313:2311-2313/udp --cap-add=NET_ADMIN --hostname=dnf --cpus=1 --memory=1g --memory-swap=-1 --shm-size=8g --name=dnf 1995chen/dnf:centos5-2.1.9.fix1
 ```
 
 ## 如何确认已经成功启动
@@ -287,7 +288,8 @@ QQ 6群：933010289
 
 XanderYe站库分离镜像：[XanderYe/dnf](https://github.com/XanderYe/dnf)
 
-`libhook.so`优化CPU占用源码：https://godbolt.org/z/EKsYGh5dv
+`libhook.so`优化CPU占用源码：[https://godbolt.org/z/EKsYGh5dv](https://godbolt.org/z/EKsYGh5dv)  
+`bridge_hook.so`和`channel_hook.so`优化服务端内存占用源码：[https://github.com/llnut/DofSlim](https://github.com/llnut/DofSlim)
 
 ## 申明
 ```
