@@ -214,6 +214,10 @@ docker restart dnf
 * A: 内存或者swap不足，可以将swap设置为10g或更大(对应docker run参数`--shm-size=10g`同时调整)
 * A: swap占用为0，通过free -m查看swap使用率，通过sysctl -p查看设置是否正确，设置正确依旧swap占用为0，需要重启服务器。参考 [这里](./doc/PrepareLinux.md#%E9%85%8D%E7%BD%AE%E4%BA%A4%E6%8D%A2%E7%A9%BA%E9%97%B4%E8%8B%A5%E5%86%85%E5%AD%98%E4%B8%8D%E8%B6%B3-8gb) 进行设置
 
+18. 配置了CLIENT_POOL_SIZE之后发现服务端内存占用依然为1.3GB
+
+    A: 若您是从旧版本升级而来，请先删除docker挂载目录中的`/data/run/start_bridge.sh`和`/data/run/start_channel.sh`，之后重启服务端即可生效。
+
 ## 高级部署
 
 [点击查看更多部署方式](doc/OtherDeploy.md)
