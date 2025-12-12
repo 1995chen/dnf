@@ -51,12 +51,23 @@
 
 #### Netbird配置
 
-最低优先级，会使用Netbird虚拟IP作为外网IP，缺点是所有客户端均需要加入Netbird虚拟网络。
+次低优先级，会使用Netbird虚拟IP作为外网IP，缺点是所有客户端均需要加入Netbird虚拟网络。
 
 | 环境变量名称 | 描述 | 可选参数 | 默认值 |
 | ------- | ------- | ------- | ------- |
 | NB_MANAGEMENT_URL | Netbird服务器地址 |  | '' |
 | NB_SETUP_KEY | Netbird初始化KEY |  | '' |
+
+
+#### Tailscale配置
+
+最低优先级，会使用Tailscale虚拟IP作为外网IP，缺点是所有客户端均需要加入Tailscale虚拟
+网络。
+
+| 环境变量名称 | 描述 | 可选参数 | 默认值 |
+| ------- | ------- | ------- | ------- |
+| TS_LOGIN_SERVER | Tailscale服务器地址 |  | 'https://controlplane.tailscale.com' |
+| TS_AUTH_KEY | Tailscale初始化KEY |  | '' |
 
 
 ### 基本配置
