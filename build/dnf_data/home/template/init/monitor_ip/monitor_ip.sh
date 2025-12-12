@@ -46,6 +46,27 @@ do
   fi
 done
 
+# Tailscale获取内网IP
+while [ -z "$MONITOR_PUBLIC_IP" ] && [ -n "$TS_AUTH_KEY" ] && [ -n "$TS_LOGIN_SERVER" ];
+do
+  echo "check private ip from $TS_LOGIN_SERVER"
+  # 检查是否连接成功并拿到内网IP
+  ts_status=$(/usr/bin/tailscale --socket=/data/tailscale/tailscaled.sock status --json 2>/dev/null | sed -e 's/.*"Self":{//' -e 's/}.*//' | grep -o '"Online":[^,]*' | head -n1 | grep -q ': true$' && echo true || echo false)
+  ts_ip=$(/usr/bin/tailscale --socket=/data/tailscale/tailscaled.sock ip --4)
+  # 连接成功
+  if [ -n "$ts_ip" ] && [ "$ts_status" = "true" ]; then
+    echo "connected to tailscale with ip $ts_ip"
+    MONITOR_PUBLIC_IP=$ts_ip
+    # 通知其他进程[写入文件]
+    echo $MONITOR_PUBLIC_IP > /data/monitor_ip/MONITOR_PUBLIC_IP
+    break
+  else
+    echo "connect failed, ts_ip is $ts_ip, ts_status is $ts_status, retry"
+    # 等待5秒钟
+    sleep 5
+  fi
+done
+
 # DDNS等待时间
 wait_time=${DDNS_INTERVAL:-10}
 # DDNS-域名

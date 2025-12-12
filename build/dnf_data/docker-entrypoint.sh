@@ -127,12 +127,14 @@ ln -s /data/dp /dp2
 # 创建日志目录
 mkdir -p /data/log
 mkdir -p /data/log/netbird
+mkdir -p /data/log/tailscale
 # 创建ip监控目录
 mkdir -p /data/monitor_ip
 # 创建daily_job目录
 mkdir -p /data/daily_job
-# 创建netbird目录
+# 创建netbird, tailscale目录
 mkdir -p /data/netbird
+mkdir -p /data/tailscale
 # 创建run脚本目录
 mkdir -p /data/run
 # 初始化数据

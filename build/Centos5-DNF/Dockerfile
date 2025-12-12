@@ -84,6 +84,9 @@ ENV DDNS_INTERVAL=10
 # netbird
 ENV NB_SETUP_KEY=''
 ENV NB_MANAGEMENT_URL=''
+# tailscale
+ENV TS_AUTH_KEY=''
+ENV TS_LOGIN_SERVER='https://controlplane.tailscale.com'
 
 # 覆盖添加目录
 COPY build/dnf_data/ /
