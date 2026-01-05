@@ -8,7 +8,7 @@
 
 该项目是将地下城与勇士(毒奶粉、DNF、DOF)整合成一个 Docker 镜像的项目，本项目使用官方 `CentOS-5/6/7`为基础镜像，通过增加环境变量以及初始化脚本实现 应用的快速部署。
 
-如果觉得本项目和[XanderYe/dnf](https://github.com/XanderYe/dnf)对你有帮助，可以点一下 Star 支持下我们，谢谢。
+如果觉得本项目和[XanderYe/dnf](https://github.com/XanderYe/dnf)以及[llnut/dnf](https://github.com/llnut/dnf)对你有帮助，可以点一下 Star 支持下我们，谢谢。
 
 ## 3.0.0 Release Plan 
 ```
@@ -289,10 +289,12 @@ QQ 6群：933010289
 ## 社区
 
 
-XanderYe站库分离镜像：[XanderYe/dnf](https://github.com/XanderYe/dnf)
+XanderYe站库分离镜像：[XanderYe/dnf](https://github.com/XanderYe/dnf)  
+llnut清风1031镜像：[llnut/dnf](https://github.com/llnut/dnf)
 
 `libhook.so`优化CPU占用源码：[https://godbolt.org/z/EKsYGh5dv](https://godbolt.org/z/EKsYGh5dv)  
-`bridge_hook.so`和`channel_hook.so`优化服务端内存占用源码：[https://github.com/llnut/DofSlim](https://github.com/llnut/DofSlim)
+`DofSlim`优化服务端内存占用源码：[https://github.com/llnut/DofSlim](https://github.com/llnut/DofSlim)  
+`Sorahk`多功能高性能连发程序: [https://github.com/llnut/Sorahk](https://github.com/llnut/Sorahk)
 
 ## 申明
 ```

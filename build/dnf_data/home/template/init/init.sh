@@ -144,6 +144,10 @@ else
   echo "get_ddns_ip.sh have already inited, do nothing!"
 fi
 
+# 旧版本启用DofSlim需要先删除start_bridge.sh和start_channel.sh
+[ -f "/data/run/start_bridge.sh" ] && ! grep -q -e "^LD_PRELOAD=.*/home/template/init/bridge_hook.so" "/data/run/start_bridge.sh" && rm -f "/data/run/start_bridge.sh"
+[ -f "/data/run/start_channel.sh" ] && ! grep -q -e "^LD_PRELOAD=.*/home/template/init/channel_hook.so" "/data/run/start_channel.sh" && rm -f "/data/run/start_channel.sh"
+
 # 初始化所有run脚本
 for fp in "/home/template/init/run"/*.sh
 do
