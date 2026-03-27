@@ -11,7 +11,7 @@ services:
       ports:
         - "3000:3306"
       volumes:
-        - ./mysql:/var/lib/mysql
+        - ./mysql:/var/lib/mysql:Z
       restart: always
 
   dnf-1:
@@ -58,5 +58,5 @@ services:
       - 11052:11052/udp           # df_game_r[ch.52]
       - 2111-2113:2111-2113/udp   # df_stun_r
     volumes:
-      - ./data:/data
-      - ./log:/home/neople/game/log
+      - ./data:/data:Z
+      - ./log:/home/neople/game/log:Z

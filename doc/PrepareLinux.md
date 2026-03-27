@@ -36,12 +36,6 @@ systemctl disable firewalld
 systemctl stop firewalld
 ```
 
-关闭 selinux
-
-```shell
-sudo sed -i 's/SELINUX=enforcing/SELINUX=disabled/' /etc/selinux/config
-```
-
 ## 配置交换空间（若内存不足 8GB）
 
 创建 Swap 文件

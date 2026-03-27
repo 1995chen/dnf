@@ -43,5 +43,5 @@ services:
       - 21052:21052/udp           # df_game_r[ch.52]
       - 2211-2213:2211-2213/udp   # df_stun_r
     volumes:
-      - ./data:/data
-      - ./log:/home/neople/game/log
+      - ./data:/data:Z
+      - ./log:/home/neople/game/log:Z

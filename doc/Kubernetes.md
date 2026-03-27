@@ -1,5 +1,9 @@
 # Kubernetes 部署DNF
 
+> 注意：Kubernetes 的 `volumeMounts` 不支持 Docker `-v` / Docker Compose 那种 `:Z` 挂载语法。
+>
+> 因此，Docker / Docker Compose 部署可以通过 `:Z` 兼容 SELinux，而 Kubernetes 部署需要依赖集群自身的存储类型、节点 SELinux 策略或 Pod `securityContext` 做适配；本项目文档不再要求为了部署 DNF 而全局关闭宿主机 SELinux。
+
 ## Yaml
 
 ```

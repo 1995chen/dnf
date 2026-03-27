@@ -42,6 +42,6 @@ services:
       - 31007:31007/udp           # df_game_r[ch.07]
       - 2311-2313:2311-2313/udp   # df_stun_r
     volumes:
-      - ./data:/data
-      - ./mysql:/var/lib/mysql
-      - ./log:/home/neople/game/log
+      - ./data:/data:Z
+      - ./mysql:/var/lib/mysql:Z
+      - ./log:/home/neople/game/log:Z

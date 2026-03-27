@@ -11,7 +11,7 @@ services:
       ports:
         - "3001:3306"
       volumes:
-        - ./mysql_cain:/var/lib/mysql
+        - ./mysql_cain:/var/lib/mysql:Z
       restart: always
 
   mysql-diregie:
@@ -23,7 +23,7 @@ services:
       ports:
         - "3002:3306"
       volumes:
-        - ./mysql_diregie:/var/lib/mysql
+        - ./mysql_diregie:/var/lib/mysql:Z
       restart: always
 
   mysql-siroco:
@@ -35,7 +35,7 @@ services:
       ports:
         - "3003:3306"
       volumes:
-        - ./mysql_siroco:/var/lib/mysql
+        - ./mysql_siroco:/var/lib/mysql:Z
       restart: always
 
   dnf-cain:
@@ -79,8 +79,8 @@ services:
       - 11011:11011/udp           # df_game_r[ch.11]
       - 2111-2113:2111-2113/udp   # df_stun_r
     volumes:
-      - ./data_1:/data
-      - ./log_1:/home/neople/game/log
+      - ./data_1:/data:Z
+      - ./log_1:/home/neople/game/log:Z
 
   dnf-diregie:
     image: 1995chen/dnf:centos5-2.1.9.fix1
@@ -122,8 +122,8 @@ services:
       - 21012:21012/udp           # df_game_r[ch.12]
       - 2211-2213:2211-2213/udp   # df_stun_r
     volumes:
-      - ./data_2:/data
-      - ./log_2:/home/neople/game/log
+      - ./data_2:/data:Z
+      - ./log_2:/home/neople/game/log:Z
 
   dnf-siroco:
     image: 1995chen/dnf:centos5-2.1.9.fix1
@@ -164,5 +164,5 @@ services:
       - 31052:31052/udp           # df_game_r[ch.52]
       - 2311-2313:2311-2313/udp   # df_stun_r
     volumes:
-      - ./data_3:/data
-      - ./log_3:/home/neople/game/log
+      - ./data_3:/data:Z
+      - ./log_3:/home/neople/game/log:Z
