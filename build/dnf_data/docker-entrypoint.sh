@@ -1,4 +1,6 @@
-#! /bin/bash
+#!/bin/bash
+
+source /home/template/init/lib/common.sh
 
 # 大区对应名称
 # 1 : 卡恩, 2 :狄瑞吉, 3 : 希洛克, 4 : 普雷prey, 5 : 凱西亞斯casillas, 6 : 赫爾德hilder , 99 : first server  first , 98 : 開發server
@@ -12,58 +14,37 @@ export SERVER_GROUP_NAME_4="prey"
 export SERVER_GROUP_NAME_5="casillas"
 export SERVER_GROUP_NAME_6="hilder"
 # 去除环境变量前后的单双引号
-export MAIN_BRIDGE_IP=$(echo $MAIN_BRIDGE_IP | sed "s/[\'\"]//g")
-export SERVER_GROUP_DB=$(echo $SERVER_GROUP_DB | sed "s/[\'\"]//g")
-export SERVER_GROUP=$(echo $SERVER_GROUP | sed "s/[\'\"]//g")
-export MAIN_MYSQL_HOST=$(echo $MAIN_MYSQL_HOST | sed "s/[\'\"]//g")
-export MAIN_MYSQL_PORT=$(echo $MAIN_MYSQL_PORT | sed "s/[\'\"]//g")
-export MAIN_MYSQL_ROOT_PASSWORD=$(echo $MAIN_MYSQL_ROOT_PASSWORD | sed "s/[\'\"]//g")
-export MAIN_MYSQL_GAME_ALLOW_IP=$(echo $MAIN_MYSQL_GAME_ALLOW_IP | sed "s/[\'\"]//g")
-export MYSQL_HOST=$(echo $MYSQL_HOST | sed "s/[\'\"]//g")
-export MYSQL_PORT=$(echo $MYSQL_PORT | sed "s/[\'\"]//g")
-export MYSQL_GAME_ALLOW_IP=$(echo $MYSQL_GAME_ALLOW_IP | sed "s/[\'\"]//g")
-export AUTO_PUBLIC_IP=$(echo $AUTO_PUBLIC_IP | sed "s/[\'\"]//g")
-export PUBLIC_IP=$(echo $PUBLIC_IP | sed "s/[\'\"]//g")
-export GM_ACCOUNT=$(echo $GM_ACCOUNT | sed "s/[\'\"]//g")
-export GM_PASSWORD=$(echo $GM_PASSWORD | sed "s/[\'\"]//g")
-export GM_CONNECT_KEY=$(echo $GM_CONNECT_KEY | sed "s/[\'\"]//g")
-export GM_LANDER_VERSION=$(echo $GM_LANDER_VERSION | sed "s/[\'\"]//g")
-export DNF_DB_ROOT_PASSWORD=$(echo $DNF_DB_ROOT_PASSWORD | sed "s/[\'\"]//g")
-export DNF_DB_GAME_PASSWORD=$(echo $DNF_DB_GAME_PASSWORD | sed "s/[\'\"]//g")
-export WEB_USER=$(echo $WEB_USER | sed "s/[\'\"]//g")
-export WEB_PASS=$(echo $WEB_PASS | sed "s/[\'\"]//g")
-export OPEN_CHANNEL=$(echo $OPEN_CHANNEL | sed "s/[\'\"]//g")
-export DDNS_ENABLE=$(echo $DDNS_ENABLE | sed "s/[\'\"]//g")
-export DDNS_DOMAIN=$(echo $DDNS_DOMAIN | sed "s/[\'\"]//g")
-export DDNS_INTERVAL=$(echo $DDNS_INTERVAL | sed "s/[\'\"]//g")
-export NB_SETUP_KEY=$(echo $NB_SETUP_KEY | sed "s/[\'\"]//g")
-export NB_MANAGEMENT_URL=$(echo $NB_MANAGEMENT_URL | sed "s/[\'\"]//g")
-export CLIENT_POOL_SIZE="$(echo "${CLIENT_POOL_SIZE:-10}" | sed "s/[\'\"]//g")"
-export DB_USER=$(echo $DB_USER | sed "s/[\'\"]//g")
-export DB_NAME=$(echo $DB_NAME | sed "s/[\'\"]//g")
-export GATE_AES_KEY=$(echo $GATE_AES_KEY | sed "s/[\'\"]//g")
-export GATE_BIND_ADDRESS=$(echo $GATE_BIND_ADDRESS | sed "s/[\'\"]//g")
-export GATE_RUST_LOG=$(echo $GATE_RUST_LOG | sed "s/[\'\"]//g")
-export RSA_PRIVATE_KEY_PATH=$(echo $RSA_PRIVATE_KEY_PATH | sed "s/[\'\"]//g")
-export INITIAL_CERA=$(echo $INITIAL_CERA | sed "s/[\'\"]//g")
-export INITIAL_CERA_POINT=$(echo $INITIAL_CERA_POINT | sed "s/[\'\"]//g")
-export GATE_TLS_CERT_PATH=$(echo $GATE_TLS_CERT_PATH | sed "s/[\'\"]//g")
-export GATE_TLS_KEY_PATH=$(echo $GATE_TLS_KEY_PATH | sed "s/[\'\"]//g")
-export GATE_TLS_BIND_ADDRESS=$(echo $GATE_TLS_BIND_ADDRESS | sed "s/[\'\"]//g")
-export GATE_TLS_ONLY=$(echo $GATE_TLS_ONLY | sed "s/[\'\"]//g")
-export GAME_SERVER_IP=$(echo $GAME_SERVER_IP | sed "s/[\'\"]//g")
+strip_quotes \
+    MAIN_BRIDGE_IP SERVER_GROUP_DB SERVER_GROUP \
+    MAIN_MYSQL_HOST MAIN_MYSQL_PORT MAIN_MYSQL_ROOT_PASSWORD MAIN_MYSQL_GAME_ALLOW_IP \
+    MYSQL_HOST MYSQL_PORT MYSQL_GAME_ALLOW_IP \
+    AUTO_PUBLIC_IP PUBLIC_IP \
+    GM_ACCOUNT GM_PASSWORD GM_CONNECT_KEY GM_LANDER_VERSION \
+    DNF_DB_ROOT_PASSWORD DNF_DB_GAME_PASSWORD \
+    WEB_USER WEB_PASS OPEN_CHANNEL \
+    DDNS_ENABLE DDNS_DOMAIN DDNS_INTERVAL \
+    NB_SETUP_KEY NB_MANAGEMENT_URL \
+    DB_USER DB_NAME \
+    GATE_AES_KEY GATE_BIND_ADDRESS GATE_RUST_LOG RSA_PRIVATE_KEY_PATH \
+    INITIAL_CERA INITIAL_CERA_POINT \
+    GATE_TLS_CERT_PATH GATE_TLS_KEY_PATH GATE_TLS_BIND_ADDRESS GATE_TLS_ONLY \
+    GAME_SERVER_IP
+
+export CLIENT_POOL_SIZE="${CLIENT_POOL_SIZE:-10}"
+strip_quotes CLIENT_POOL_SIZE
+
 # 校验用户选择的大区
 SERVER_GROUP_NAME_VAR="SERVER_GROUP_NAME_$SERVER_GROUP"
 if [ "$SERVER_GROUP" -ge 1 ] && [ "$SERVER_GROUP" -le 6 ]; then
-  export SERVER_GROUP_NAME=${!SERVER_GROUP_NAME_VAR}
-  echo "server group is $SERVER_GROUP, server group name is $SERVER_GROUP_NAME"
+    export SERVER_GROUP_NAME=${!SERVER_GROUP_NAME_VAR}
+    echo "server group is $SERVER_GROUP, server group name is $SERVER_GROUP_NAME"
 else
-  echo "invalid server group: $SERVER_GROUP"
-  exit -1
+    echo "invalid server group: $SERVER_GROUP"
+    exit 1
 fi
 # 大区使用的数据库[不同大区可以共有数据库]
 if [ -z "$SERVER_GROUP_DB" ]; then
-  export SERVER_GROUP_DB=$SERVER_GROUP_NAME
+    export SERVER_GROUP_DB=$SERVER_GROUP_NAME
 fi
 # 定义主数据库局部变量
 CUR_MAIN_DB_HOST=$MAIN_MYSQL_HOST
@@ -72,11 +53,11 @@ CUR_MAIN_DB_ROOT_PASSWORD=$MAIN_MYSQL_ROOT_PASSWORD
 CUR_MAIN_DB_GAME_ALLOW_IP=$MAIN_MYSQL_GAME_ALLOW_IP
 
 # 本地数据库地址配置
-if [ -z "$MAIN_MYSQL_HOST" ] && [ -z "$MAIN_MYSQL_PORT" ] && [ -z "$MYSQL_HOST" ] && [ -z "$MYSQL_PORT" ];then
-  CUR_MAIN_DB_HOST=127.0.0.1
-  CUR_MAIN_DB_PORT=4000
-  CUR_MAIN_DB_ROOT_PASSWORD=$DNF_DB_ROOT_PASSWORD
-  CUR_MAIN_DB_GAME_ALLOW_IP=127.0.0.1
+if [ -z "$MAIN_MYSQL_HOST" ] && [ -z "$MAIN_MYSQL_PORT" ] && [ -z "$MYSQL_HOST" ] && [ -z "$MYSQL_PORT" ]; then
+    CUR_MAIN_DB_HOST=127.0.0.1
+    CUR_MAIN_DB_PORT=4000
+    CUR_MAIN_DB_ROOT_PASSWORD=$DNF_DB_ROOT_PASSWORD
+    CUR_MAIN_DB_GAME_ALLOW_IP=127.0.0.1
 fi
 
 # 导出环境变量
@@ -93,10 +74,10 @@ CUR_SG_DB_ROOT_PASSWORD=$DNF_DB_ROOT_PASSWORD
 CUR_SG_DB_GAME_ALLOW_IP=$MYSQL_GAME_ALLOW_IP
 
 # 本地数据库地址配置
-if [ -z "$MAIN_MYSQL_HOST" ] && [ -z "$MAIN_MYSQL_PORT" ] && [ -z "$MYSQL_HOST" ] && [ -z "$MYSQL_PORT" ];then
-  CUR_SG_DB_HOST=127.0.0.1
-  CUR_SG_DB_PORT=4000
-  CUR_SG_DB_GAME_ALLOW_IP=127.0.0.1
+if [ -z "$MAIN_MYSQL_HOST" ] && [ -z "$MAIN_MYSQL_PORT" ] && [ -z "$MYSQL_HOST" ] && [ -z "$MYSQL_PORT" ]; then
+    CUR_SG_DB_HOST=127.0.0.1
+    CUR_SG_DB_PORT=4000
+    CUR_SG_DB_GAME_ALLOW_IP=127.0.0.1
 fi
 
 # 导出环境变量
@@ -109,15 +90,18 @@ echo "will use server group: $SERVER_GROUP_NAME"
 # TODO进行一些强校验,提前退出
 
 # 加密GAME密码
-chmod 777 -R /tmp
+chmod 1777 /tmp
 chmod +x /TeaEncrypt
 export DNF_DB_GAME_PASSWORD=${DNF_DB_GAME_PASSWORD:0:8}
-export DEC_GAME_PWD=`/TeaEncrypt $DNF_DB_GAME_PASSWORD`
-echo "game password: $DNF_DB_GAME_PASSWORD"
-echo "game pwd key: $DEC_GAME_PWD"
+DEC_GAME_PWD=$(/TeaEncrypt "$DNF_DB_GAME_PASSWORD")
+export DEC_GAME_PWD
+echo "game pwd key: ${DEC_GAME_PWD:0:4}..."
 
 # 清风版本需要额外的数据库用户
-export DNF_DB_USER_EXTENDED_QF="$(sed "s/[\'\"]//g" <<<"${DNF_DB_USER_EXTENDED_QF:-"supergod,chhappy,cash"}")"
+DNF_DB_USER_EXTENDED_QF="${DNF_DB_USER_EXTENDED_QF:-supergod,chhappy,cash}"
+DNF_DB_USER_EXTENDED_QF="${DNF_DB_USER_EXTENDED_QF//\'/}"
+DNF_DB_USER_EXTENDED_QF="${DNF_DB_USER_EXTENDED_QF//\"/}"
+export DNF_DB_USER_EXTENDED_QF
 
 # 清除mysql sock以及pid文件
 rm -rf /var/lib/mysql/mysql.sock
@@ -127,9 +111,9 @@ rm -rf /var/lib/mysql/*.err
 rm -rf /data/monitor_ip/MONITOR_PUBLIC_IP
 # 清理日志
 for i in {1..52}; do
-    rm -rf /home/neople/game/log/diregie$(printf "%02d" $i)/*
-    rm -rf /home/neople/game/log/cain$(printf "%02d" $i)/*
-    rm -rf /home/neople/game/log/siroco$(printf "%02d" $i)/*
+    rm -rf "/home/neople/game/log/diregie$(printf "%02d" "$i")"/*
+    rm -rf "/home/neople/game/log/cain$(printf "%02d" "$i")"/*
+    rm -rf "/home/neople/game/log/siroco$(printf "%02d" "$i")"/*
 done
 # 启动时清理日志
 rm -rf /data/log/*
@@ -157,16 +141,16 @@ mkdir -p /data/run
 # 初始化数据
 bash /home/template/init/init.sh
 error_code=$?
-if [ ! $error_code -eq 0 ]; then
-  echo "init failed!!!!!"
-  exit -1
+if [ "$error_code" -ne 0 ]; then
+    echo "init failed"
+    exit 1
 fi
 # 赋予权限
-if [ $(find /data/conf.d -name "*.conf" | wc -l) -gt 0 ]; then
-  echo "Add permissions to the extension configuration."
-  chmod 777 /data/conf.d/*.conf
+if [ "$(find /data/conf.d -name "*.conf" | wc -l)" -gt 0 ]; then
+    echo "Add permissions to the extension configuration."
+    chmod 644 /data/conf.d/*.conf
 else
-  echo "Extension configuration not set up."
+    echo "Extension configuration not set up."
 fi
 # 删除无用文件
 rm -rf /home/template/neople-tmp
@@ -175,27 +159,31 @@ mkdir -p /home/neople
 # 复制待使用文件
 cp -r /home/template/neople /home/template/neople-tmp
 # 修改配置文件
-find /home/template/neople-tmp -type f -name "*.cfg" -print0 | xargs -0 sed -i "s/GAME_PASSWORD/$DNF_DB_GAME_PASSWORD/g"
-find /home/template/neople-tmp -type f -name "*.cfg" -print0 | xargs -0 sed -i "s/DEC_GAME_PWD/$DEC_GAME_PWD/g"
-find /home/template/neople-tmp -type f -name "*.cfg" -print0 | xargs -0 sed -i "s/SERVER_GROUP_NAME/$SERVER_GROUP_NAME/g"
-find /home/template/neople-tmp -type f -name "*.cfg" -print0 | xargs -0 sed -i "s/SERVER_GROUP_DB/$SERVER_GROUP_DB/g"
-find /home/template/neople-tmp -type f -name "*.cfg" -print0 | xargs -0 sed -i "s/SERVER_GROUP/$SERVER_GROUP/g"
-find /home/template/neople-tmp -type f -name "*.tbl" -print0 | xargs -0 sed -i "s/SERVER_GROUP/$SERVER_GROUP/g"
+while IFS= read -r -d '' cfg_file; do
+    safe_sed "GAME_PASSWORD" "$DNF_DB_GAME_PASSWORD" "$cfg_file"
+    safe_sed "DEC_GAME_PWD" "$DEC_GAME_PWD" "$cfg_file"
+    safe_sed "SERVER_GROUP_NAME" "$SERVER_GROUP_NAME" "$cfg_file"
+    safe_sed "SERVER_GROUP_DB" "$SERVER_GROUP_DB" "$cfg_file"
+    safe_sed "SERVER_GROUP" "$SERVER_GROUP" "$cfg_file"
+done < <(find /home/template/neople-tmp -type f -name "*.cfg" -print0)
+while IFS= read -r -d '' tbl_file; do
+    safe_sed "SERVER_GROUP" "$SERVER_GROUP" "$tbl_file"
+done < <(find /home/template/neople-tmp -type f -name "*.tbl" -print0)
 
 # 将结果文件拷贝到对应目录[这里是为了保住日志文件目录,将日志文件挂载到宿主机外,因此采用复制而不是mv]
 cp -rf /home/template/neople-tmp/* /home/neople
 # 清理log, pid, core文件
-find /home/neople/ -name '*.log' -type f -print -exec rm -f {} \;
-find /home/neople/ -name '*.pid' -type f -print -exec rm -f {} \;
-find /home/neople/ -name 'core.*' -type f -print -exec rm -f {} \;
-chmod 777 -R /home/neople
+find /home/neople/ -name '*.log' -type f -delete
+find /home/neople/ -name '*.pid' -type f -delete
+find /home/neople/ -name 'core.*' -type f -delete
+chmod 755 -R /home/neople
 rm -rf /home/template/neople-tmp
 # 复制版本文件
 cp /data/Script.pvf /home/neople/game/Script.pvf
-chmod 777 /home/neople/game/Script.pvf
+chmod 644 /home/neople/game/Script.pvf
 # 复制等级文件
 cp /data/df_game_r /home/neople/game/df_game_r
-chmod 777 /home/neople/game/df_game_r
+chmod 755 /home/neople/game/df_game_r
 # 复制通讯私钥文件
 cp /data/publickey.pem /home/neople/game/
 # 为DP目录赋予权限[为了支持更多未知场景, 这里直接给整个目录777权限]
@@ -215,5 +203,5 @@ GATE_ENV="${GATE_ENV//%/%%}"
 GATE_ENV=$(printf '%s' "$GATE_ENV" | sed 's/[\\&]/\\&/g')
 sed -i "s|^environment=.*|environment=$GATE_ENV|" /etc/supervisor/conf.d/gate.conf
 # 切换到主目录
-cd /root
+cd /root || exit
 supervisord -c /etc/supervisord.conf

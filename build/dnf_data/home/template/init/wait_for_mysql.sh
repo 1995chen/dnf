@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Usage: wait_for_mysql.sh [host] [port] [password] [max_retries] [retry_interval]
+# 用法: wait_for_mysql.sh [host] [port] [password] [max_retries] [retry_interval]
 
 MYSQL_HOST="${1:-${CUR_MAIN_DB_HOST:-127.0.0.1}}"
 MYSQL_PORT="${2:-${CUR_MAIN_DB_PORT:-4000}}"
@@ -20,5 +20,5 @@ for i in $(seq 1 "$MAX_RETRIES"); do
     sleep "$RETRY_INTERVAL"
 done
 
-echo "ERROR: mysql at ${MYSQL_HOST}:${MYSQL_PORT} did not become ready within $(($MAX_RETRIES * $RETRY_INTERVAL))s."
+echo "ERROR: mysql at ${MYSQL_HOST}:${MYSQL_PORT} did not become ready within $((MAX_RETRIES * RETRY_INTERVAL))s."
 exit 1

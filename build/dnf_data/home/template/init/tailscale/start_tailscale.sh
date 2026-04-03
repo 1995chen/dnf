@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/bin/bash
 
 # 检查PUBLIC IP
 if [ -z "$PUBLIC_IP" ] && [ -n "$TS_AUTH_KEY" ] && [ -n "$TS_LOGIN_SERVER" ]; then
