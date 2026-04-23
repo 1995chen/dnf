@@ -61,7 +61,6 @@ jobs:
         os: [debian13, ubuntu26, alma9, centos7]
     steps:
       - uses: actions/checkout@v5
-      - uses: docker/setup-buildx-action@v4
 
       - name: Login to Docker Hub
         uses: docker/login-action@v4
@@ -86,6 +85,8 @@ jobs:
           registry: ${{ secrets.ACR_REGISTRY }}
           username: ${{ secrets.ACR_USERNAME }}
           password: ${{ secrets.ACR_PASSWORD }}
+
+      - uses: docker/setup-buildx-action@v4
 
       - name: Compute tags
         id: tags
@@ -131,7 +132,6 @@ jobs:
         os: [debian13, ubuntu26, alma9, centos7]
     steps:
       - uses: actions/checkout@v5
-      - uses: docker/setup-buildx-action@v4
 
       - name: Login to Docker Hub
         uses: docker/login-action@v4
@@ -156,6 +156,8 @@ jobs:
           registry: ${{ secrets.ACR_REGISTRY }}
           username: ${{ secrets.ACR_USERNAME }}
           password: ${{ secrets.ACR_PASSWORD }}
+
+      - uses: docker/setup-buildx-action@v4
 
       - name: Compute tags
         id: tags
@@ -205,7 +207,6 @@ jobs:
         os: [debian13, ubuntu26, alma9, centos7]
     steps:
       - uses: actions/checkout@v5
-      - uses: docker/setup-buildx-action@v4
 
       - name: Login to Docker Hub
         uses: docker/login-action@v4
@@ -230,6 +231,8 @@ jobs:
           registry: ${{ secrets.ACR_REGISTRY }}
           username: ${{ secrets.ACR_USERNAME }}
           password: ${{ secrets.ACR_PASSWORD }}
+
+      - uses: docker/setup-buildx-action@v4
 
       - name: Compute tags
         id: tags
@@ -279,7 +282,6 @@ jobs:
         os: [debian13, ubuntu26, alma9, centos7]
     steps:
       - uses: actions/checkout@v5
-      - uses: docker/setup-buildx-action@v4
 
       - name: Login to Docker Hub
         uses: docker/login-action@v4
@@ -304,6 +306,8 @@ jobs:
           registry: ${{ secrets.ACR_REGISTRY }}
           username: ${{ secrets.ACR_USERNAME }}
           password: ${{ secrets.ACR_PASSWORD }}
+
+      - uses: docker/setup-buildx-action@v4
 
       - name: Compute tags
         id: tags
