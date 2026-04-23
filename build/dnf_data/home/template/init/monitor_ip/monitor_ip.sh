@@ -1,5 +1,7 @@
 #!/bin/bash
 
+source /home/template/init/lib/common.sh
+
 # IP变更后重启服务
 # 参数: NEW_IP SOURCE_DESC INTERVAL
 # 返回: 0=IP有效, 1=IP为空
@@ -17,11 +19,18 @@ handle_ip_change() {
         echo "${source_desc} ip changed, old ip is ${old_ip}, new ip is ${new_ip}"
         # 通知其他进程[写入文件]
         echo "$new_ip" >/data/monitor_ip/MONITOR_PUBLIC_IP
-        # 重启bridge proxy
-        [ -n "$MAIN_BRIDGE_IP" ] && supervisorctl restart dnf:bridge
-        # 重启所有频道服务
-        supervisorctl restart dnf_channel:*
-        # 重启dnf-gate-server
+        supervisorctl stop dnf_channel:*
+        if [ -n "$MAIN_BRIDGE_IP" ]; then
+            supervisorctl stop dnf:bridge
+        fi
+        kill_graceful 3 df_bridge_r df_channel_r
+        killall -9 df_game_r 2>/dev/null || true
+        sleep 1
+        if [ -n "$MAIN_BRIDGE_IP" ]; then
+            supervisorctl start dnf:bridge
+            wait_for_port "$MAIN_BRIDGE_IP" 7000 30 || true
+        fi
+        supervisorctl start dnf_channel:*
         supervisorctl restart llnut_gate
     else
         echo "${source_desc} ip not change, ip is ${new_ip}, wait ${interval} second"
@@ -97,8 +106,18 @@ done
 wait_time=${DDNS_INTERVAL:-10}
 # DDNS-域名
 while [ -z "$MONITOR_PUBLIC_IP" ] && [ "$DDNS_ENABLE" = true ] && [ -n "$DDNS_DOMAIN" ]; do
-    ddns_ip=$(getent ahostsv4 "$DDNS_DOMAIN" 2>/dev/null \
-        | awk '$1 ~ /^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$/ {print $1; exit}')
+    # 拿到本次解析到的全部IPv4,守卫格式,去重排序
+    ddns_ips=$(getent ahostsv4 "$DDNS_DOMAIN" 2>/dev/null |
+        awk '$1 ~ /^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$/ {print $1}' |
+        sort -u)
+    # 多A记录域名每次解析返回的子集可能不同,取首个会抖动,
+    # 因此优先沿用旧IP(只要它仍在新集合里),否则才挑首个
+    old_ip=$(cat /data/monitor_ip/MONITOR_PUBLIC_IP 2>/dev/null || true)
+    if [ -n "$old_ip" ] && printf '%s\n' "$ddns_ips" | grep -qxF "$old_ip"; then
+        ddns_ip="$old_ip"
+    else
+        ddns_ip=$(printf '%s\n' "$ddns_ips" | head -n1)
+    fi
     handle_ip_change "$ddns_ip" "domain" "$wait_time"
     # 等待
     sleep "$wait_time"

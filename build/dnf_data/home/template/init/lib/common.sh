@@ -57,6 +57,33 @@ safe_sed() {
     sed -i "s/${pattern}/${replacement}/g" "$file"
 }
 
+# 优雅终止进程,超时后强行杀死
+# 用法: kill_graceful TIMEOUT PROC_NAME [PROC_NAME ...]
+kill_graceful() {
+    local timeout="$1"
+    shift
+    local names=("$@")
+    [ "${#names[@]}" -eq 0 ] && return 0
+    killall -15 "${names[@]}" 2>/dev/null || true
+    local waited=0 name alive
+    while [ "$waited" -lt "$timeout" ]; do
+        alive=0
+        for name in "${names[@]}"; do
+            if pgrep -x "$name" >/dev/null 2>&1; then
+                alive=1
+                break
+            fi
+        done
+        [ "$alive" -eq 0 ] && return 0
+        sleep 1
+        waited=$((waited + 1))
+    done
+    echo "kill_graceful: timeout after ${timeout}s, sending SIGKILL to ${names[*]}"
+    killall -9 "${names[@]}" 2>/dev/null || true
+    sleep 1
+    return 0
+}
+
 # 用法: run_or_exit "description" command arg1 arg2 ...
 run_or_exit() {
     local desc="$1"
