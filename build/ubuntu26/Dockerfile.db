@@ -1,4 +1,5 @@
 # check=skip=SecretsUsedInArgOrEnv
+ARG BASE_TAG=ubuntu26-base
 
 # 下载MySQL 5.7
 FROM ubuntu:resolute AS mysql-builder
@@ -26,7 +27,6 @@ RUN MYSQL=mysql-5.7.44-linux-glibc2.12-x86_64 && \
     (cp ${MYSQL}/share/*.sql ${MYSQL}/share/errmsg-utf8.txt /mysql/share/ 2>/dev/null; true) && \
     rm -rf /tmp/*
 
-ARG BASE_TAG=ubuntu26-base
 FROM llnut/dnf:${BASE_TAG}
 
 ENV DNF_DB_ROOT_PASSWORD=88888888 \

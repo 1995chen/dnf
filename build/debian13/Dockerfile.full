@@ -1,4 +1,5 @@
 # check=skip=SecretsUsedInArgOrEnv
+ARG DB_TAG=debian13-db
 
 FROM debian:stable-slim AS builder
 
@@ -23,7 +24,6 @@ ARG DNF_COMPAT_LAYER_VERSION="0.1.0"
 RUN git clone --branch ${DNF_COMPAT_LAYER_VERSION} --depth 1 https://github.com/llnut/dnf-compat-layer.git /src \
     && cd /src && cargo build --workspace --release --target i686-unknown-linux-gnu
 
-ARG DB_TAG=debian13-db
 FROM llnut/dnf:${DB_TAG}
 
 COPY --from=builder /usr/local/share/GeoIP /usr/local/share/GeoIP

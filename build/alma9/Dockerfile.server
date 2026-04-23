@@ -1,4 +1,5 @@
 # check=skip=SecretsUsedInArgOrEnv
+ARG BASE_TAG=alma9-base
 
 FROM almalinux:9.7-minimal AS builder
 
@@ -37,7 +38,6 @@ RUN MYSQL=mysql-5.7.44-linux-glibc2.12-x86_64 && \
     strip --strip-unneeded /mysql/lib/*.so* && \
     rm -rf /tmp/*
 
-ARG BASE_TAG=alma9-base
 FROM llnut/dnf:${BASE_TAG}
 
 COPY --from=builder /usr/local/share/GeoIP /usr/local/share/GeoIP
