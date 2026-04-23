@@ -83,14 +83,31 @@ sysctl -p
 
 ## 镜像 Tag 说明
 
-| 类型 | 格式 | 示例 |
+镜像按 4 层架构发布，每层都有独立的 tag：
+
+| 层级 | 内容 | 用途 |
 |------|------|------|
-| Release Latest | `<os>-qf1031-latest` | `debian13-qf1031-latest` |
-| Release | `<os>-qf1031-<日期>` | `debian13-qf1031-20260331` |
-| Dev Latest | `<os>-qf1031-dev-latest` | `debian13-qf1031-dev-latest` |
-| Dev | `<os>-qf1031-dev-<commit id>` | `debian13-qf1031-dev-a1b2c3d` |
+| base | 基础系统依赖 | 基础镜像，无法直接使用 |
+| db | MySQL 5.7，CentOS 7 为 MySQL 5.0.95 | 站库分离部署中的数据库镜像 |
+| server | 游戏服务端 + MySQL 客户端，不含 MySQL 服务端 | 站库分离部署中的服务端镜像，需连接外部 MySQL |
+| full | 完整版镜像，游戏服务端 + 内置 MySQL | 单容器部署 |
+
+各层级的 tag 格式：
+
+| 层级 | Release Latest | Release | Dev Latest | Dev |
+|------|---------------|---------|-----------|-----|
+| base | `<os>-base-latest` | `<os>-base-<日期>` | `<os>-base-dev-latest` | `<os>-base-dev-<commit>` |
+| db | `<os>-db-latest` | `<os>-db-<日期>` | `<os>-db-dev-latest` | `<os>-db-dev-<commit>` |
+| server | `<os>-server-qf1031-latest` | `<os>-server-qf1031-<日期>` | `<os>-server-qf1031-dev-latest` | `<os>-server-qf1031-dev-<commit>` |
+| full | `<os>-qf1031-latest` | `<os>-qf1031-<日期>` | `<os>-qf1031-dev-latest` | `<os>-qf1031-dev-<commit>` |
 
 其中 `<os>` 为 `debian13`、`alma9`、`ubuntu26`、`centos7` 之一。开发版镜像在每次 push 到 main 分支时生成。
+
+full 镜像提供一组别名 tag：`<os>-full-qf1031-latest`、`<os>-full-qf1031-<日期>`、`<os>-full-qf1031-dev-latest`、`<os>-full-qf1031-dev-<commit>`，别名与主 tag 指向同一镜像。
+
+普通用户只需拉取 full 镜像即可，站库分离场景拉取 server + db 镜像。
+
+以下示例仅列出 full 层 latest tag，其他层级或版本按上表替换 tag 即可。例如：`llnut/dnf:debian13-db-latest`、`llnut/dnf:debian13-server-qf1031-latest`。
 
 ### 阿里云 ACR (国内拉取加速)
 
@@ -126,4 +143,13 @@ docker pull quay.io/llnut/dnf:debian13-qf1031-latest
 docker pull quay.io/llnut/dnf:alma9-qf1031-latest
 docker pull quay.io/llnut/dnf:ubuntu26-qf1031-latest
 docker pull quay.io/llnut/dnf:centos7-qf1031-latest
+```
+
+### 站库分离场景示例
+
+以 Debian 13 为例，需要分别拉取 server 层和 db 层：
+
+```shell
+docker pull llnut/dnf:debian13-server-qf1031-latest
+docker pull llnut/dnf:debian13-db-latest
 ```

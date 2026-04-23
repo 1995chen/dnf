@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: dnf-server-new
-          image: llnut/dnf:debian13-qf1031-latest
+          image: llnut/dnf:debian13-server-qf1031-latest
           resources:
             requests:
               memory: "8Gi"
@@ -25,8 +25,6 @@ spec:
               cpu: "2"
           ports:
             - containerPort: 180
-              protocol: TCP
-            - containerPort: 3306
               protocol: TCP
             - containerPort: 5505
               protocol: TCP
@@ -59,7 +57,7 @@ spec:
             - name: MYSQL_HOST
               value: "dnf-mysql-server-new.dnf-server"
             - name: MYSQL_PORT
-              value: "3306"
+              value: "4000"
             - name: MYSQL_GAME_ALLOW_IP
               value: "%"
             - name: DNF_DB_ROOT_PASSWORD

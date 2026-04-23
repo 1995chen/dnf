@@ -1,0 +1,88 @@
+# check=skip=SecretsUsedInArgOrEnv
+
+# 下载MySQL 5.7
+FROM debian:stable-slim AS mysql-builder
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    wget ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN MYSQL=mysql-5.7.44-linux-glibc2.12-x86_64 && \
+    cd /tmp && \
+    wget -q https://downloads.mysql.com/archives/get/p/23/file/${MYSQL}.tar.gz && \
+    tar -zxf ${MYSQL}.tar.gz && \
+    mkdir -p /mysql/bin /mysql/lib /mysql/share && \
+    cp ${MYSQL}/bin/mysql ${MYSQL}/bin/mysqld ${MYSQL}/bin/mysqld_safe \
+       ${MYSQL}/bin/mysqladmin ${MYSQL}/bin/mysqldump ${MYSQL}/bin/my_print_defaults \
+       ${MYSQL}/bin/mysql_ssl_rsa_setup ${MYSQL}/bin/resolveip /mysql/bin/ && \
+    strip /mysql/bin/mysql /mysql/bin/mysqld /mysql/bin/mysqladmin \
+          /mysql/bin/mysqldump /mysql/bin/my_print_defaults \
+          /mysql/bin/mysql_ssl_rsa_setup /mysql/bin/resolveip && \
+    cp -a ${MYSQL}/lib/*.so* /mysql/lib/ && \
+    strip --strip-unneeded /mysql/lib/*.so* && \
+    cp -r ${MYSQL}/share/english ${MYSQL}/share/charsets /mysql/share/ && \
+    (cp ${MYSQL}/share/*.sql ${MYSQL}/share/errmsg-utf8.txt /mysql/share/ 2>/dev/null; true) && \
+    rm -rf /tmp/*
+
+ARG BASE_TAG=debian13-base
+FROM llnut/dnf:${BASE_TAG}
+
+ENV DNF_DB_ROOT_PASSWORD=88888888 \
+    PATH="/usr/local/mysql/bin:${PATH}"
+
+COPY --from=mysql-builder /mysql/bin/ /usr/local/mysql/bin/
+COPY --from=mysql-builder /mysql/lib/ /usr/local/mysql/lib/
+COPY --from=mysql-builder /mysql/share/ /usr/local/mysql/share/
+
+# 安装MySQL 5.7依赖
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libaio1t64 libnuma1 \
+    && ln -sf /usr/lib/x86_64-linux-gnu/libaio.so.1t64 /usr/lib/x86_64-linux-gnu/libaio.so.1 \
+    && groupadd mysql && useradd -r -g mysql -s /bin/false mysql \
+    && mkdir -p /var/lib/mysql /var/run/mysqld /var/log/mysql \
+    && chown -R mysql:mysql /var/lib/mysql /var/run/mysqld /var/log/mysql \
+    && chmod 750 /var/lib/mysql /var/run/mysqld \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# MySQL符号链接和初始化脚本
+RUN for bin in mysql mysqld_safe mysqladmin mysqldump my_print_defaults; do \
+        ln -sf /usr/local/mysql/bin/$bin /usr/bin/$bin; \
+    done \
+    && ln -sf /usr/local/mysql/bin/mysqld /usr/sbin/mysqld \
+    && echo '/usr/local/mysql/lib' > /etc/ld.so.conf.d/mysql.conf && ldconfig \
+    && mkdir -p /etc/init.d \
+    && printf '#!/bin/bash\nexport PATH=/usr/local/mysql/bin:$PATH\ncase "$1" in\n  start)\n    shift\n    mkdir -p /var/run/mysqld /var/log/mysql\n    chown mysql:mysql /var/run/mysqld /var/log/mysql /var/lib/mysql\n    chmod 750 /var/run/mysqld\n    /usr/local/mysql/bin/mysqld_safe --defaults-file=/etc/my.cnf "$@" &\n    for i in $(seq 1 30); do\n      if mysqladmin ping --socket=/var/lib/mysql/mysql.sock 2>/dev/null | grep -q alive; then break; fi\n      sleep 2\n    done\n    ;;\n  stop)\n    /usr/local/mysql/bin/mysqladmin -u root shutdown 2>/dev/null || killall mysqld 2>/dev/null || true\n    sleep 2\n    ;;\n  restart)\n    $0 stop; $0 start "$@"\n    ;;\nesac\n' > /etc/init.d/mysql \
+    && chmod +x /etc/init.d/mysql \
+    && printf '#!/bin/bash\nif [ "$1" = "mysql" ]; then shift; /etc/init.d/mysql "$@"; else echo "Unknown service: $1"; exit 1; fi\n' > /usr/sbin/service \
+    && chmod +x /usr/sbin/service \
+    && printf '#!/bin/bash\nmkdir -p /var/lib/mysql /var/run/mysqld /var/log/mysql\nchown -R mysql:mysql /var/lib/mysql /var/run/mysqld /var/log/mysql\nchmod 750 /var/lib/mysql /var/run/mysqld\nrm -rf /var/lib/mysql/*\n/usr/local/mysql/bin/mysqld --defaults-file=/etc/my.cnf --initialize-insecure --user=mysql --basedir=/usr/local/mysql --datadir=/var/lib/mysql --explicit_defaults_for_timestamp\n' > /usr/bin/mysql_install_db \
+    && chmod +x /usr/bin/mysql_install_db
+
+# MySQL 5.7配置
+COPY build/dnf_data/etc/my.cnf /etc/
+RUN sed -i 's/skip-locking/#skip-locking/g; s/skip-federated/#skip-federated/g' /etc/my.cnf \
+    && sed -i 's/^key_buffer =/key_buffer_size =/g; s/^table_cache =/table_open_cache =/g' /etc/my.cnf \
+    && sed -i 's/^thread_concurrency/#thread_concurrency/g' /etc/my.cnf \
+    && sed -i 's/^query_cache_size/query_cache_type = 1\nquery_cache_size/g' /etc/my.cnf \
+    && sed -i 's/max_connections = 819200/max_connections = 100000/g' /etc/my.cnf \
+    && sed -i '/\[mysqld\]/a bind-address=0.0.0.0' /etc/my.cnf \
+    && sed -i '/\[mysqld\]/a character-set-server=utf8' /etc/my.cnf \
+    && sed -i '/\[mysqld\]/a collation-server=utf8_general_ci' /etc/my.cnf \
+    && sed -i '/\[mysqld\]/a basedir=/usr/local/mysql' /etc/my.cnf \
+    && sed -i '/\[mysqld\]/a datadir=/var/lib/mysql' /etc/my.cnf \
+    && sed -i '/\[mysqld\]/a user=mysql' /etc/my.cnf \
+    && sed -i '/\[mysqld\]/a pid-file=/var/run/mysqld/mysqld.pid' /etc/my.cnf \
+    && sed -i '/\[mysqld\]/a log-error=/var/log/mysql/error.log' /etc/my.cnf \
+    && sed -i '/\[mysqld\]/a symbolic-links=0' /etc/my.cnf \
+    && sed -i '/\[mysqld\]/a explicit_defaults_for_timestamp=1' /etc/my.cnf \
+    && sed -i '/\[mysqld\]/a sql_mode=NO_ENGINE_SUBSTITUTION' /etc/my.cnf \
+    && rm -rf /tmp/* /var/tmp/*
+
+COPY build/shared/docker-entrypoint-db.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
+
+VOLUME /var/lib/mysql
+EXPOSE 4000
+CMD ["/bin/bash", "/docker-entrypoint.sh"]

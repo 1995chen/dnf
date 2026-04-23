@@ -3,43 +3,43 @@ version: "2.3"
 services:
 
   mysql-cain:
-      image: 1995chen/mysql:7-5.0.95
+      image: llnut/dnf:debian13-db-latest
       mem_limit: 1g
       environment:
         - DNF_DB_ROOT_PASSWORD=88888888
         - TZ=Asia/Shanghai
       ports:
-        - "3001:3306"
+        - "3001:4000"
       volumes:
         - ./mysql_cain:/var/lib/mysql
       restart: always
 
   mysql-diregie:
-      image: 1995chen/mysql:7-5.0.95
+      image: llnut/dnf:debian13-db-latest
       mem_limit: 1g
       environment:
         - DNF_DB_ROOT_PASSWORD=88888888
         - TZ=Asia/Shanghai
       ports:
-        - "3002:3306"
+        - "3002:4000"
       volumes:
         - ./mysql_diregie:/var/lib/mysql
       restart: always
 
   mysql-siroco:
-      image: 1995chen/mysql:7-5.0.95
+      image: llnut/dnf:debian13-db-latest
       mem_limit: 1g
       environment:
         - DNF_DB_ROOT_PASSWORD=88888888
         - TZ=Asia/Shanghai
       ports:
-        - "3003:3306"
+        - "3003:4000"
       volumes:
         - ./mysql_siroco:/var/lib/mysql
       restart: always
 
   dnf-cain:
-    image: llnut/dnf:debian13-qf1031-latest
+    image: llnut/dnf:debian13-server-qf1031-latest
     environment:
       - TZ=Asia/Shanghai
       - SERVER_GROUP=1
@@ -86,7 +86,7 @@ services:
       - ./log_1:/home/neople/game/log
 
   dnf-diregie:
-    image: llnut/dnf:debian13-qf1031-latest
+    image: llnut/dnf:debian13-server-qf1031-latest
     environment:
       - TZ=Asia/Shanghai
       - SERVER_GROUP=2
@@ -127,7 +127,7 @@ services:
       - ./log_2:/home/neople/game/log
 
   dnf-siroco:
-    image: llnut/dnf:debian13-qf1031-latest
+    image: llnut/dnf:debian13-server-qf1031-latest
     environment:
       - TZ=Asia/Shanghai
       - SERVER_GROUP=3

@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: dnf-mysql-new
-          image: 1995chen/mysql:7-5.0.95
+          image: llnut/dnf:debian13-db-latest
           env:
             - name: DNF_DB_ROOT_PASSWORD
               value: "88888888"
@@ -24,7 +24,7 @@ spec:
               value: "Asia/Shanghai"
           ports:
             - name: mysql
-              containerPort: 3306
+              containerPort: 4000
           volumeMounts:
             - name: mysql-persistent-storage-new
               mountPath: /var/lib/mysql
@@ -51,7 +51,8 @@ metadata:
 spec:
   ports:
     - name: dnf-mysql-server-new-port
-      port: 3306
+      port: 4000
+      targetPort: 4000
   selector:
     app: dnf-mysql-new
   clusterIP: None
@@ -67,9 +68,9 @@ metadata:
 spec:
   ports:
     - name: ext-dnf-mysql-server-new-port
-      port: 3306
-      targetPort: 3306
-      nodePort: 30036
+      port: 4000
+      targetPort: 4000
+      nodePort: 30400
   selector:
     app: dnf-mysql-new
   type: NodePort

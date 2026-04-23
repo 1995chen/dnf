@@ -3,20 +3,22 @@ version: "2.3"
 services:
 
   mysql:
-      image: 1995chen/mysql:7-5.0.95
-      mem_limit: 1g
-      environment:
-        - DNF_DB_ROOT_PASSWORD=88888888
-        - TZ=Asia/Shanghai
-      ports:
-        - "3000:3306"
-      volumes:
-        - ./mysql:/var/lib/mysql
-      restart: always
+    image: llnut/dnf:debian13-db-latest
+    mem_limit: 1g
+    environment:
+      - DNF_DB_ROOT_PASSWORD=88888888
+      - TZ=Asia/Shanghai
+    ports:
+      - "3000:4000"
+    volumes:
+      - ./mysql:/var/lib/mysql
+    restart: always
 
-  dnf-1:
-    hostname: dnf-1
-    image: llnut/dnf:debian13-qf1031-latest
+  dnf-server:
+    hostname: dnf-server
+    image: llnut/dnf:debian13-server-qf1031-latest
+    depends_on:
+      - mysql
     environment:
       - TZ=Asia/Shanghai
       - SERVER_GROUP=3
@@ -24,10 +26,9 @@ services:
       - OPEN_CHANNEL='11,52'
       # 手动指定对外IP
       - PUBLIC_IP=192.168.31.100
-      # 远程mysql的IP地址[这里以192.168.31.100为例]
-      - MYSQL_HOST=192.168.31.100
-      # 远程mysql的端口号[这里以3000为例]
-      - MYSQL_PORT=3000
+      # 远程mysql的地址[同一compose网络使用服务名mysql]
+      - MYSQL_HOST=mysql
+      - MYSQL_PORT=4000
       # 远程数据库root密码
       - DNF_DB_ROOT_PASSWORD=88888888
       # dnf-gate-server配置

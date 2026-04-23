@@ -21,6 +21,8 @@ handle_ip_change() {
         [ -n "$MAIN_BRIDGE_IP" ] && supervisorctl restart dnf:bridge
         # 重启所有频道服务
         supervisorctl restart dnf_channel:*
+        # 重启dnf-gate-server
+        supervisorctl restart llnut_gate
     else
         echo "${source_desc} ip not change, ip is ${new_ip}, wait ${interval} second"
     fi
@@ -95,8 +97,8 @@ done
 wait_time=${DDNS_INTERVAL:-10}
 # DDNS-域名
 while [ -z "$MONITOR_PUBLIC_IP" ] && [ "$DDNS_ENABLE" = true ] && [ -n "$DDNS_DOMAIN" ]; do
-    nslookup_output=$(nslookup -debug "$DDNS_DOMAIN" 2>/dev/null || true)
-    ddns_ip=$(echo "$nslookup_output" | awk '/^Address: / { print $2 }')
+    ddns_ip=$(getent ahostsv4 "$DDNS_DOMAIN" 2>/dev/null \
+        | awk '$1 ~ /^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$/ {print $1; exit}')
     handle_ip_change "$ddns_ip" "domain" "$wait_time"
     # 等待
     sleep "$wait_time"

@@ -11,10 +11,6 @@ spec:
       port: 180
       targetPort: 180
       protocol: TCP
-    - name: tcp-3306
-      port: 3306
-      targetPort: 3306
-      protocol: TCP
     - name: tcp-5505
       port: 5505
       targetPort: 5505

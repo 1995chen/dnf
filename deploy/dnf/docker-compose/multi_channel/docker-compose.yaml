@@ -30,7 +30,7 @@ services:
     restart: always
     ports:
       - 2000:180/tcp              # supervisor web
-      - 3000:3306/tcp             # mysql
+      - 3000:4000/tcp             # mysql
       - 5505:5505/tcp             # dnf-gate-server http
       # - 5504:5504/tcp           # dnf-gate-server https（启用TLS后开放）
       - 7001:7001/tcp             # df_channel_r

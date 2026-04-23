@@ -1,0 +1,28 @@
+# check=skip=SecretsUsedInArgOrEnv,LegacyKeyValueFormat
+
+ARG BASE_TAG=centos7-base
+FROM llnut/dnf:${BASE_TAG}
+
+ENV DNF_DB_ROOT_PASSWORD=88888888
+
+# 安装MySQL 5.0.95
+RUN cd /tmp && \
+    curl -o MySQL-shared-compat-5.0.95-1.rhel5.x86_64.rpm https://raw.githubusercontent.com/llnut/dnf_util/refs/heads/main/common_pkgs/MySQL-shared-compat-5.0.95-1.rhel5.x86_64.rpm && \
+    curl -o MySQL-devel-community-5.0.95-1.rhel5.x86_64.rpm https://raw.githubusercontent.com/llnut/dnf_util/refs/heads/main/common_pkgs/MySQL-devel-community-5.0.95-1.rhel5.x86_64.rpm && \
+    curl -o MySQL-client-community-5.0.95-1.rhel5.x86_64.rpm https://raw.githubusercontent.com/llnut/dnf_util/refs/heads/main/common_pkgs/MySQL-client-community-5.0.95-1.rhel5.x86_64.rpm && \
+    curl -o MySQL-server-community-5.0.95-1.rhel5.x86_64.rpm https://raw.githubusercontent.com/llnut/dnf_util/refs/heads/main/common_pkgs/MySQL-server-community-5.0.95-1.rhel5.x86_64.rpm && \
+    rpm -ivh /tmp/MySQL-shared-compat-5.0.95-1.rhel5.x86_64.rpm && \
+    rpm -ivh /tmp/MySQL-devel-community-5.0.95-1.rhel5.x86_64.rpm && \
+    rpm -ivh /tmp/MySQL-client-community-5.0.95-1.rhel5.x86_64.rpm && \
+    rpm -ivh /tmp/MySQL-server-community-5.0.95-1.rhel5.x86_64.rpm && \
+    service mysql stop && rm -rf /var/lib/mysql/* && \
+    test -x /usr/sbin/mysqld || ln -sf "$(which mysqld)" /usr/sbin/mysqld && \
+    rm -rf /tmp/*
+
+COPY build/dnf_data/etc/my.cnf /etc/
+COPY build/centos7/docker-entrypoint-db.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
+
+VOLUME /var/lib/mysql
+EXPOSE 4000
+CMD ["/bin/bash", "/docker-entrypoint.sh"]

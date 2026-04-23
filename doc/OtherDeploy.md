@@ -134,6 +134,8 @@
 
 ### 站库分离
 
+游戏服务端与MySQL分别部署在独立容器中。服务端使用`llnut/dnf:<distro>-server-qf1031-latest`，不含MySQL。数据库使用`llnut/dnf:<distro>-db-latest`，为独立MySQL 5.7，监听端口4000。
+
 [点击查看部署文件](../deploy/dnf/docker-compose/standalone_mysql/docker-compose.yaml)
 
 ### 多大区部署

@@ -1,0 +1,148 @@
+# check=skip=SecretsUsedInArgOrEnv
+
+FROM ubuntu:resolute AS builder
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    wget ca-certificates curl gcc-multilib git \
+    && rm -rf /var/lib/apt/lists/*
+
+# 安装Rust
+ENV RUSTUP_HOME=/usr/local/rustup CARGO_HOME=/usr/local/cargo PATH="/usr/local/cargo/bin:${PATH}"
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable --profile minimal \
+    && rustup target add i686-unknown-linux-gnu
+
+# 下载GeoIP数据库
+RUN mkdir -p /usr/local/share/GeoIP && \
+    wget -q -O /usr/local/share/GeoIP/GeoIP.dat.gz https://mailfud.org/geoip-legacy/GeoIP.dat.gz && \
+    gunzip /usr/local/share/GeoIP/GeoIP.dat.gz
+
+# 编译dnf-compat-layer
+ARG DNF_COMPAT_LAYER_VERSION="0.1.0"
+RUN git clone --branch ${DNF_COMPAT_LAYER_VERSION} --depth 1 https://github.com/llnut/dnf-compat-layer.git /src \
+    && cd /src && cargo build --workspace --release --target i686-unknown-linux-gnu
+
+ARG DB_TAG=ubuntu26-db
+FROM llnut/dnf:${DB_TAG}
+
+COPY --from=builder /usr/local/share/GeoIP /usr/local/share/GeoIP
+COPY --from=builder /src/target/i686-unknown-linux-gnu/release/libglibc_compat.so /usr/lib/libglibc_compat.so
+COPY --from=builder /src/target/i686-unknown-linux-gnu/release/libgeoip_compat.so /lib/i386-linux-gnu/libGeoIP.so.1
+
+# 安装服务端依赖
+RUN dpkg --add-architecture i386 && \
+    apt-get update && apt-get install -y --no-install-recommends \
+    net-tools \
+    libc6:i386 libstdc++6:i386 zlib1g:i386 \
+    # i386字体渲染
+    libfreetype6:i386 libfontconfig1:i386 \
+    libssl3t64:i386 \
+    python3 python3-pip \
+    socat \
+    && pip3 install --no-cache-dir --break-system-packages 'setuptools>=69.5,<70' supervisor==4.2.5 \
+    # i386 SSL符号链接
+    && ln -sf /usr/lib/i386-linux-gnu/libssl.so.3 /lib/i386-linux-gnu/libssl.so.6 2>/dev/null || true \
+    && ln -sf /usr/lib/i386-linux-gnu/libcrypto.so.3 /lib/i386-linux-gnu/libcrypto.so.6 2>/dev/null || true \
+    && apt-get clean && rm -rf /var/lib/apt/lists/* /root/.cache /tmp/*
+
+# 安装i386共享库，下载dnf-gate-server
+ARG GATE_VERSION="0.3.0"
+RUN apt-get update && apt-get install -y --no-install-recommends wget ca-certificates \
+    && cd /tmp \
+    && wget -q https://raw.githubusercontent.com/llnut/dnf_util/refs/heads/main/common_pkgs/lib.tgz \
+    && tar -zxf lib.tgz \
+    && rm -f /tmp/libGeoIP* \
+    && (mv /tmp/*.so /lib/i386-linux-gnu/ 2>/dev/null; true) \
+    && (mv /tmp/*.so.1 /lib/i386-linux-gnu/ 2>/dev/null; true) \
+    && rm -rf /tmp/* \
+    && GATE_REPO="llnut/dnf-login" && GATE_TARGET="x86_64-unknown-linux-musl" && \
+    if [ -z "${GATE_VERSION}" ]; then \
+        GATE_VERSION=$(wget -qO- "https://api.github.com/repos/${GATE_REPO}/releases/latest" | grep '"tag_name"' | head -1 | sed 's/.*"tag_name": *"\(.*\)".*/\1/'); \
+    fi && \
+    [ -n "$GATE_VERSION" ] || { echo "ERROR: failed to fetch latest dnf-gate-server version" >&2; exit 1; } && \
+    GATE_ASSET="dnf-gate-server-${GATE_VERSION}-${GATE_TARGET}.tar.gz" && \
+    GATE_URL="https://github.com/${GATE_REPO}/releases/download/${GATE_VERSION}/${GATE_ASSET}" && \
+    wget -q -O "/tmp/${GATE_ASSET}" "${GATE_URL}" && \
+    wget -q -O "/tmp/${GATE_ASSET}.sha256" "${GATE_URL}.sha256" && \
+    EXPECTED=$(awk '{print $1}' "/tmp/${GATE_ASSET}.sha256") && \
+    ACTUAL=$(sha256sum "/tmp/${GATE_ASSET}" | awk '{print $1}') && \
+    [ "$EXPECTED" = "$ACTUAL" ] || { echo "ERROR: checksum mismatch for ${GATE_ASSET}" >&2; exit 1; } && \
+    tar -xzf "/tmp/${GATE_ASSET}" --strip-components=1 -C /usr/bin "dnf-gate-server-${GATE_VERSION}-${GATE_TARGET}/dnf-gate-server" && \
+    rm -f "/tmp/${GATE_ASSET}" "/tmp/${GATE_ASSET}.sha256" && \
+    apt-get purge -y wget && \
+    apt-get autoremove -y && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+ENV MAIN_BRIDGE_IP='127.0.0.1' \
+    SERVER_GROUP_DB='cain' \
+    SERVER_GROUP=3 \
+    MAIN_MYSQL_HOST='' \
+    MAIN_MYSQL_PORT='' \
+    MAIN_MYSQL_ROOT_PASSWORD=88888888 \
+    MAIN_MYSQL_GAME_ALLOW_IP='' \
+    MYSQL_HOST='' \
+    MYSQL_PORT='' \
+    MYSQL_GAME_ALLOW_IP='' \
+    AUTO_PUBLIC_IP=false \
+    PUBLIC_IP='' \
+    DNF_DB_ROOT_PASSWORD=88888888 \
+    DNF_DB_GAME_PASSWORD='uu5!^%jg' \
+    WEB_USER=root \
+    WEB_PASS=123456 \
+    OPEN_CHANNEL='11,52' \
+    DDNS_ENABLE=false \
+    DDNS_DOMAIN='' \
+    DDNS_INTERVAL=10 \
+    NB_SETUP_KEY='' \
+    NB_MANAGEMENT_URL='' \
+    TS_AUTH_KEY='' \
+    TS_LOGIN_SERVER='https://controlplane.tailscale.com' \
+    DB_USER=game \
+    DB_NAME=d_taiwan \
+    GATE_AES_KEY='' \
+    GATE_BIND_ADDRESS='0.0.0.0:5505' \
+    GATE_RUST_LOG='info,dnf_gate_server=debug' \
+    RSA_PRIVATE_KEY_PATH='/data/privatekey.pem' \
+    INITIAL_CERA=1000 \
+    INITIAL_CERA_POINT=0 \
+    GATE_TLS_CERT_PATH='' \
+    GATE_TLS_KEY_PATH='' \
+    GATE_TLS_BIND_ADDRESS='0.0.0.0:5504' \
+    GATE_TLS_ONLY=false \
+    GAME_SERVER_IP='' \
+    CLIENT_POOL_SIZE=10
+
+COPY build/dnf_data/ /
+
+# 重新适配my.cnf，COPY会覆盖数据库层的版本
+RUN sed -i 's/skip-locking/#skip-locking/g; s/skip-federated/#skip-federated/g' /etc/my.cnf \
+    && sed -i 's/^key_buffer =/key_buffer_size =/g; s/^table_cache =/table_open_cache =/g' /etc/my.cnf \
+    && sed -i 's/^thread_concurrency/#thread_concurrency/g' /etc/my.cnf \
+    && sed -i 's/^query_cache_size/query_cache_type = 1\nquery_cache_size/g' /etc/my.cnf \
+    && sed -i 's/max_connections = 819200/max_connections = 100000/g' /etc/my.cnf \
+    && sed -i '/\[mysqld\]/a bind-address=0.0.0.0' /etc/my.cnf \
+    && sed -i '/\[mysqld\]/a character-set-server=utf8' /etc/my.cnf \
+    && sed -i '/\[mysqld\]/a collation-server=utf8_general_ci' /etc/my.cnf \
+    && sed -i '/\[mysqld\]/a basedir=/usr/local/mysql' /etc/my.cnf \
+    && sed -i '/\[mysqld\]/a datadir=/var/lib/mysql' /etc/my.cnf \
+    && sed -i '/\[mysqld\]/a user=mysql' /etc/my.cnf \
+    && sed -i '/\[mysqld\]/a pid-file=/var/run/mysqld/mysqld.pid' /etc/my.cnf \
+    && sed -i '/\[mysqld\]/a log-error=/var/log/mysql/error.log' /etc/my.cnf \
+    && sed -i '/\[mysqld\]/a symbolic-links=0' /etc/my.cnf \
+    && sed -i '/\[mysqld\]/a explicit_defaults_for_timestamp=1' /etc/my.cnf \
+    && sed -i '/\[mysqld\]/a sql_mode=NO_ENGINE_SUBSTITUTION' /etc/my.cnf \
+    && sed -i 's/awk \x27{print \$2}\x27/grep -oP "ERROR \\\\K[0-9]+"/g' /home/template/init/init_main_db.sh \
+    && sed -i 's/awk \x27{print \$2}\x27/grep -oP "ERROR \\\\K[0-9]+"/g' /home/template/init/init_server_group_db.sh \
+    && rm -rf /home/template/neople/game/history \
+    && sed -i 's|LD_PRELOAD=/home/template/init/channel_hook.so:/dp2/libhook.so ./df_channel_r|LD_PRELOAD=/usr/lib/libglibc_compat.so:/home/template/init/channel_hook.so:/dp2/libhook.so ./df_channel_r|g' /home/template/init/run/start_channel.sh \
+    && sed -i 's|cat pid/\*\.pid .*|tail --pid=\$(cat pid/channel.pid) -f /dev/null|g' /home/template/init/run/start_channel.sh \
+    && sed -i 's|LD_PRELOAD=/home/template/init/bridge_hook.so:/home/template/init/libhook.so ./df_bridge_r|LD_PRELOAD=/usr/lib/libglibc_compat.so:/home/template/init/bridge_hook.so:/home/template/init/libhook.so ./df_bridge_r|g' /home/template/init/run/start_bridge.sh \
+    && sed -i 's|\./secagent|LD_PRELOAD=/usr/lib/libglibc_compat.so ./secagent|g' /home/template/init/run/start_zergsvr_secagent.sh \
+    && sed -i 's|\./zergsvr|LD_PRELOAD=/usr/lib/libglibc_compat.so ./zergsvr|g' /home/template/init/run/start_zergsvr.sh \
+    && sed -i 's|\./gunnersvr|LD_PRELOAD=/usr/lib/libglibc_compat.so ./gunnersvr|g' /home/template/init/run/start_gunnersvr.sh \
+    && sed -i 's|LD_PRELOAD="/dp2/libhook.so:/home/neople/game/frida.so" \./df_game_r|LD_PRELOAD="/usr/lib/libglibc_compat.so:/dp2/libhook.so:/home/neople/game/frida.so" ./df_game_r|g' /home/template/init/run/start_game.sh \
+    && rm -rf /tmp/* /var/tmp/* /root/.cache
+
+WORKDIR /root
+CMD ["/bin/bash", "/docker-entrypoint.sh"]

@@ -1,0 +1,15 @@
+FROM almalinux:9.7-minimal
+
+LABEL maintainer="llnut"
+
+ENV TZ=Asia/Shanghai
+
+RUN microdnf install -y \
+    procps-ng psmisc \
+    ncurses-libs \
+    && ln -sf /usr/lib64/libncurses.so.6 /usr/lib64/libncurses.so.5 \
+    && ln -sf /usr/lib64/libtinfo.so.6 /usr/lib64/libtinfo.so.5 \
+    && ln -sf /usr/lib64/libssl.so.3 /usr/lib64/libssl.so.6 \
+    && ln -sf /usr/lib64/libcrypto.so.3 /usr/lib64/libcrypto.so.6 \
+    && ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
+    && microdnf clean all && rm -rf /root/.cache /tmp/*

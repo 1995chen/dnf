@@ -12,7 +12,10 @@ echo "prepare to start ch.$channel_no, process_sequence is $process_sequence"
 # 等待bridge启动,最多等待30秒
 wait_for_port "$MAIN_BRIDGE_IP" 7000 30
 # 等待MONITOR_PUBLIC_IP设置
-MONITOR_PUBLIC_IP=$(wait_for_monitor_ip)
+if ! MONITOR_PUBLIC_IP=$(wait_for_monitor_ip); then
+    echo "ERROR: timeout waiting for MONITOR_PUBLIC_IP, cannot start game" >&2
+    exit 1
+fi
 echo "MONITOR_PUBLIC_IP is $MONITOR_PUBLIC_IP"
 # 生成配置文件
 rm -rf "/tmp/${channel_name}.cfg"

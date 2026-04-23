@@ -4,7 +4,7 @@ services:
 
   dnf-1:
     hostname: dnf-1
-    image: llnut/dnf:debian13-qf1031-latest
+    image: llnut/dnf:debian13-server-qf1031-latest
     environment:
       - TZ=Asia/Shanghai
       - SERVER_GROUP=2
