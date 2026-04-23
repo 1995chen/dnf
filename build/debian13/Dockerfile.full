@@ -6,7 +6,7 @@ FROM debian:stable-slim AS builder
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    wget ca-certificates curl gcc-multilib git \
+    wget ca-certificates curl gcc-multilib binutils git \
     && rm -rf /var/lib/apt/lists/*
 
 # 安装Rust

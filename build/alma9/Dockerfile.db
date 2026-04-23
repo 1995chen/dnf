@@ -4,7 +4,7 @@ ARG BASE_TAG=alma9-base
 # 下载MySQL 5.7
 FROM almalinux:9.7-minimal AS mysql-builder
 
-RUN microdnf install -y wget tar gzip && microdnf clean all
+RUN microdnf install -y wget tar gzip binutils && microdnf clean all
 
 RUN MYSQL=mysql-5.7.44-linux-glibc2.12-x86_64 && \
     cd /tmp && \

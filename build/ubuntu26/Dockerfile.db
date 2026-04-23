@@ -7,7 +7,7 @@ FROM ubuntu:resolute AS mysql-builder
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    wget ca-certificates \
+    wget ca-certificates binutils \
     && rm -rf /var/lib/apt/lists/*
 
 RUN MYSQL=mysql-5.7.44-linux-glibc2.12-x86_64 && \

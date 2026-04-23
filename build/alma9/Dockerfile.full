@@ -5,7 +5,7 @@ FROM almalinux:9.7-minimal AS builder
 
 RUN microdnf install -y dnf && \
     dnf install -y --allowerasing --setopt=install_weak_deps=False \
-    gcc gcc-c++ wget ca-certificates curl git tar gzip \
+    gcc gcc-c++ wget ca-certificates curl git tar gzip binutils \
     glibc-devel.i686 libstdc++-devel.i686 \
     && dnf clean all
 
