@@ -55,25 +55,8 @@ RUN for bin in mysql mysqld_safe mysqladmin mysqldump my_print_defaults; do \
     && printf '#!/bin/bash\nmkdir -p /var/lib/mysql /var/run/mysqld /var/log/mysql\nchown -R mysql:mysql /var/lib/mysql /var/run/mysqld /var/log/mysql\nchmod 750 /var/lib/mysql /var/run/mysqld\nrm -rf /var/lib/mysql/*\n/usr/local/mysql/bin/mysqld --defaults-file=/etc/my.cnf --initialize-insecure --user=mysql --basedir=/usr/local/mysql --datadir=/var/lib/mysql --explicit_defaults_for_timestamp\n' > /usr/bin/mysql_install_db \
     && chmod +x /usr/bin/mysql_install_db
 
-# MySQL 5.7配置
 COPY build/dnf_data/etc/my.cnf /etc/
-RUN sed -i 's/skip-locking/#skip-locking/g; s/skip-federated/#skip-federated/g' /etc/my.cnf \
-    && sed -i 's/^key_buffer =/key_buffer_size =/g; s/^table_cache =/table_open_cache =/g' /etc/my.cnf \
-    && sed -i 's/^thread_concurrency/#thread_concurrency/g' /etc/my.cnf \
-    && sed -i 's/^query_cache_size/query_cache_type = 1\nquery_cache_size/g' /etc/my.cnf \
-    && sed -i 's/max_connections = 819200/max_connections = 100000/g' /etc/my.cnf \
-    && sed -i '/\[mysqld\]/a bind-address=0.0.0.0' /etc/my.cnf \
-    && sed -i '/\[mysqld\]/a character-set-server=utf8' /etc/my.cnf \
-    && sed -i '/\[mysqld\]/a collation-server=utf8_general_ci' /etc/my.cnf \
-    && sed -i '/\[mysqld\]/a basedir=/usr/local/mysql' /etc/my.cnf \
-    && sed -i '/\[mysqld\]/a datadir=/var/lib/mysql' /etc/my.cnf \
-    && sed -i '/\[mysqld\]/a user=mysql' /etc/my.cnf \
-    && sed -i '/\[mysqld\]/a pid-file=/var/run/mysqld/mysqld.pid' /etc/my.cnf \
-    && sed -i '/\[mysqld\]/a log-error=/var/log/mysql/error.log' /etc/my.cnf \
-    && sed -i '/\[mysqld\]/a symbolic-links=0' /etc/my.cnf \
-    && sed -i '/\[mysqld\]/a explicit_defaults_for_timestamp=1' /etc/my.cnf \
-    && sed -i '/\[mysqld\]/a sql_mode=NO_ENGINE_SUBSTITUTION' /etc/my.cnf \
-    && rm -rf /tmp/* /var/tmp/*
+RUN rm -rf /tmp/* /var/tmp/*
 
 COPY build/shared/docker-entrypoint-db.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh

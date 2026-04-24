@@ -20,6 +20,17 @@ RUN cd /tmp && \
     rm -rf /tmp/*
 
 COPY build/dnf_data/etc/my.cnf /etc/
+
+RUN sed -i 's|^#skip-locking$|skip-locking|g; \
+            s|^#skip-federated$|skip-federated|g; \
+            s|^#thread_concurrency |thread_concurrency |g; \
+            s|^table_open_cache |table_cache |g; \
+            s|^max_connections = 100000$|max_connections = 819200|g; \
+            /^basedir=/d; \
+            /^explicit_defaults_for_timestamp=/d; \
+            /^log-error=/d; \
+            /^pid-file=/d' /etc/my.cnf
+
 COPY build/centos7/docker-entrypoint-db.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
 

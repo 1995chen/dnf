@@ -46,44 +46,58 @@ RUN GATE_REPO="llnut/dnf-login" && GATE_TARGET="x86_64-unknown-linux-musl" && \
     tar -xzf "/tmp/${GATE_ASSET}" --strip-components=1 -C /usr/bin "dnf-gate-server-${GATE_VERSION}-${GATE_TARGET}/dnf-gate-server" && \
     rm -f "/tmp/${GATE_ASSET}" "/tmp/${GATE_ASSET}.sha256"
 
-ENV MAIN_BRIDGE_IP='127.0.0.1'
-ENV SERVER_GROUP_DB='cain'
-ENV SERVER_GROUP=3
-ENV MAIN_MYSQL_HOST=''
-ENV MAIN_MYSQL_PORT=''
-ENV MAIN_MYSQL_ROOT_PASSWORD=88888888
-ENV MAIN_MYSQL_GAME_ALLOW_IP=''
-ENV MYSQL_HOST=''
-ENV MYSQL_PORT=''
-ENV MYSQL_GAME_ALLOW_IP=''
-ENV AUTO_PUBLIC_IP=false
-ENV PUBLIC_IP=''
-ENV DNF_DB_GAME_PASSWORD=uu5!^%jg
-ENV WEB_USER=root
-ENV WEB_PASS=123456
-ENV OPEN_CHANNEL='11,52'
-ENV DDNS_ENABLE=false
-ENV DDNS_DOMAIN=''
-ENV DDNS_INTERVAL=10
-ENV NB_SETUP_KEY=''
-ENV NB_MANAGEMENT_URL=''
-ENV TS_AUTH_KEY=''
-ENV TS_LOGIN_SERVER='https://controlplane.tailscale.com'
-ENV DB_USER=game
-ENV DB_NAME=d_taiwan
-ENV GATE_AES_KEY=''
-ENV GATE_BIND_ADDRESS='0.0.0.0:5505'
-ENV GATE_RUST_LOG='info,dnf_gate_server=debug'
-ENV RSA_PRIVATE_KEY_PATH='/data/privatekey.pem'
-ENV INITIAL_CERA=1000
-ENV INITIAL_CERA_POINT=0
-ENV GATE_TLS_CERT_PATH=''
-ENV GATE_TLS_KEY_PATH=''
-ENV GATE_TLS_BIND_ADDRESS='0.0.0.0:5504'
-ENV GATE_TLS_ONLY=false
-ENV GAME_SERVER_IP=''
-ENV CLIENT_POOL_SIZE=10
+ENV MAIN_BRIDGE_IP='127.0.0.1' \
+    SERVER_GROUP_DB='cain' \
+    SERVER_GROUP=3 \
+    MAIN_MYSQL_HOST='' \
+    MAIN_MYSQL_PORT='' \
+    MAIN_MYSQL_ROOT_PASSWORD=88888888 \
+    MAIN_MYSQL_GAME_ALLOW_IP='' \
+    MYSQL_HOST='' \
+    MYSQL_PORT='' \
+    MYSQL_GAME_ALLOW_IP='' \
+    AUTO_PUBLIC_IP=false \
+    PUBLIC_IP='' \
+    DNF_DB_ROOT_PASSWORD=88888888 \
+    DNF_DB_GAME_PASSWORD='uu5!^%jg' \
+    WEB_USER=root \
+    WEB_PASS=123456 \
+    OPEN_CHANNEL='11,52' \
+    DDNS_ENABLE=false \
+    DDNS_DOMAIN='' \
+    DDNS_INTERVAL=10 \
+    NB_SETUP_KEY='' \
+    NB_MANAGEMENT_URL='' \
+    TS_AUTH_KEY='' \
+    TS_LOGIN_SERVER='https://controlplane.tailscale.com' \
+    DB_USER=game \
+    DB_NAME=d_taiwan \
+    GATE_AES_KEY='' \
+    GATE_BIND_ADDRESS='0.0.0.0:5505' \
+    GATE_RUST_LOG='info,dnf_gate_server=debug' \
+    RSA_PRIVATE_KEY_PATH='/data/privatekey.pem' \
+    INITIAL_CERA=1000 \
+    INITIAL_CERA_POINT=0 \
+    GATE_TLS_CERT_PATH='' \
+    GATE_TLS_KEY_PATH='' \
+    GATE_TLS_BIND_ADDRESS='0.0.0.0:5504' \
+    GATE_TLS_ONLY=false \
+    GAME_SERVER_IP='' \
+    CLIENT_POOL_SIZE=10
 
 COPY build/dnf_data/ /
+
+RUN sed -i 's|^#skip-locking$|skip-locking|g; \
+            s|^#skip-federated$|skip-federated|g; \
+            s|^#thread_concurrency |thread_concurrency |g; \
+            s|^table_open_cache |table_cache |g; \
+            s|^max_connections = 100000$|max_connections = 819200|g; \
+            /^basedir=/d; \
+            /^explicit_defaults_for_timestamp=/d; \
+            /^log-error=/d; \
+            /^pid-file=/d' /etc/my.cnf \
+    && sed -i 's|/usr/lib/libglibc_compat.so:||g; \
+               s|LD_PRELOAD=/usr/lib/libglibc_compat.so ||g' /home/template/init/run/*.sh
+
 WORKDIR /root
 CMD ["/bin/bash", "/docker-entrypoint.sh"]

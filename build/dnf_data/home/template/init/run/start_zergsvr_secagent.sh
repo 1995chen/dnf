@@ -15,4 +15,4 @@ while [ "$counter" -lt 60 ]; do
     ((counter++))
 done
 
-./secagent
+LD_PRELOAD=/usr/lib/libglibc_compat.so ./secagent

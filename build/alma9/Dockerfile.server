@@ -136,13 +136,7 @@ ENV MAIN_BRIDGE_IP='127.0.0.1' \
 COPY build/dnf_data/ /
 
 RUN rm -rf /home/template/neople/game/history \
-    && sed -i 's|LD_PRELOAD=/home/template/init/channel_hook.so:/dp2/libhook.so ./df_channel_r|LD_PRELOAD=/usr/lib/libglibc_compat.so:/home/template/init/channel_hook.so:/dp2/libhook.so ./df_channel_r|g' /home/template/init/run/start_channel.sh \
     && sed -i 's|cat pid/\*\.pid .*|tail --pid=\$(cat pid/channel.pid) -f /dev/null|g' /home/template/init/run/start_channel.sh \
-    && sed -i 's|LD_PRELOAD=/home/template/init/bridge_hook.so:/home/template/init/libhook.so ./df_bridge_r|LD_PRELOAD=/usr/lib/libglibc_compat.so:/home/template/init/bridge_hook.so:/home/template/init/libhook.so ./df_bridge_r|g' /home/template/init/run/start_bridge.sh \
-    && sed -i 's|\./secagent|LD_PRELOAD=/usr/lib/libglibc_compat.so ./secagent|g' /home/template/init/run/start_zergsvr_secagent.sh \
-    && sed -i 's|\./zergsvr|LD_PRELOAD=/usr/lib/libglibc_compat.so ./zergsvr|g' /home/template/init/run/start_zergsvr.sh \
-    && sed -i 's|\./gunnersvr|LD_PRELOAD=/usr/lib/libglibc_compat.so ./gunnersvr|g' /home/template/init/run/start_gunnersvr.sh \
-    && sed -i 's|LD_PRELOAD="/dp2/libhook.so:/home/neople/game/frida.so" \./df_game_r|LD_PRELOAD="/usr/lib/libglibc_compat.so:/dp2/libhook.so:/home/neople/game/frida.so" ./df_game_r|g' /home/template/init/run/start_game.sh \
     && rm -rf /tmp/* /var/tmp/* /root/.cache
 
 WORKDIR /root
