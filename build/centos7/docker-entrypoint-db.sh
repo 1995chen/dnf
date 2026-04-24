@@ -1,8 +1,9 @@
 #!/bin/bash
 set -eo pipefail
 
-# 清除残留的运行时文件
+# 清理残留的运行时文件
 rm -f /var/lib/mysql/mysql.sock
+rm -f /var/lib/mysql/mysql.sock.lock
 rm -f /var/lib/mysql/*.pid
 rm -f /var/lib/mysql/*.err
 
@@ -17,8 +18,6 @@ else
     echo "local mysql data already initialized."
 fi
 
-# 每次启动都重置root账号，支持通过环境变量更新密码
-# sysv init脚本不会把--skip-grant-tables透传给mysqld，必须直接调用mysqld_safe
 echo "configuring root user..."
 /usr/bin/mysqld_safe --user=mysql --datadir=/var/lib/mysql \
     --socket="$SOCKET" --skip-grant-tables --skip-networking &
@@ -39,12 +38,12 @@ mysql -u root --socket="$SOCKET" <<EOF
 DELETE FROM mysql.user;
 FLUSH PRIVILEGES;
 GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY '$DNF_DB_ROOT_PASSWORD' WITH GRANT OPTION;
+GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' IDENTIFIED BY '$DNF_DB_ROOT_PASSWORD' WITH GRANT OPTION;
 FLUSH PRIVILEGES;
 EOF
 
-# 等待socket文件消失，确认关闭完成
-/usr/bin/mysqladmin --socket="$SOCKET" shutdown 2>/dev/null
-for _ in $(seq 1 15); do
+/usr/bin/mysqladmin -u root -p"$DNF_DB_ROOT_PASSWORD" --socket="$SOCKET" shutdown
+for _ in $(seq 1 30); do
     [ ! -S "$SOCKET" ] && break
     sleep 1
 done

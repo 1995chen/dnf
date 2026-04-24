@@ -1,10 +1,13 @@
 #!/bin/bash
 set -eo pipefail
 
-# 清除残留的运行时文件
 rm -f /var/lib/mysql/mysql.sock
+rm -f /var/lib/mysql/mysql.sock.lock
 rm -f /var/lib/mysql/*.pid
 rm -f /var/lib/mysql/*.err
+rm -f /var/run/mysqld/mysqld.sock
+rm -f /var/run/mysqld/mysqld.sock.lock
+rm -f /var/run/mysqld/*.pid
 
 # 确保目录存在且权限正确
 mkdir -p /var/lib/mysql /var/run/mysqld /var/log/mysql
@@ -30,7 +33,8 @@ fi
 
 # 每次启动都重置root账号，支持通过环境变量更新密码
 echo "configuring root user..."
-/usr/local/mysql/bin/mysqld_safe --defaults-file=/etc/my.cnf --skip-grant-tables &
+# 只绑定 unix socket，避免与之后的重启产生竞态
+/usr/local/mysql/bin/mysqld_safe --defaults-file=/etc/my.cnf --skip-grant-tables --skip-networking &
 
 for _ in $(seq 1 30); do
     if /usr/local/mysql/bin/mysqladmin ping \
@@ -50,11 +54,11 @@ fi
 DELETE FROM mysql.user;
 FLUSH PRIVILEGES;
 GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY '$DNF_DB_ROOT_PASSWORD' WITH GRANT OPTION;
+GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' IDENTIFIED BY '$DNF_DB_ROOT_PASSWORD' WITH GRANT OPTION;
 FLUSH PRIVILEGES;
 EOF
 
-# 等待socket文件消失，确认关闭完成
-/usr/local/mysql/bin/mysqladmin --socket="$SOCKET" shutdown 2>/dev/null
+/usr/local/mysql/bin/mysqladmin -u root -p"$DNF_DB_ROOT_PASSWORD" --socket="$SOCKET" shutdown
 for _ in $(seq 1 15); do
     [ ! -S "$SOCKET" ] && break
     sleep 1

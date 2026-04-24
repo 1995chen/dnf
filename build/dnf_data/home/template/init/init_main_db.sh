@@ -1,14 +1,11 @@
 #!/bin/bash
 
-# 试图自动获取CUR_MAIN_DB_GAME_ALLOW_IP
 if [ -z "$CUR_MAIN_DB_GAME_ALLOW_IP" ]; then
-    CUR_MAIN_DB_GAME_ALLOW_IP=$(ip route | awk '/default/ { print $3 }')
-    # 尝试连接mysql自动配置ALLOW_IP
     check_result=$(mysql --connect_timeout=2 -h "$CUR_MAIN_DB_HOST" -P "$CUR_MAIN_DB_PORT" -u game 2>&1)
     error_code=$?
     if [ "$error_code" -ne 0 ]; then
         echo "try to get game allow ip....."
-        mysql_error_code=$(echo "$check_result" | awk '{print $2}')
+        mysql_error_code=$(echo "$check_result" | grep -oP "ERROR \K[0-9]+" | head -1)
         if [ "$mysql_error_code" == "1045" ]; then
             CUR_MAIN_DB_GAME_ALLOW_IP=$(echo "$check_result" | awk -F"'" '{print $4}')
             echo "set CUR_MAIN_DB_GAME_ALLOW_IP=$CUR_MAIN_DB_GAME_ALLOW_IP"
@@ -27,7 +24,7 @@ for db_name in "${MAIN_DB_LIST[@]}"; do
     if [ "$error_code" -eq 0 ]; then
         echo "main db: $db_name already inited."
     else
-        mysql_error_code=$(echo "$check_result" | awk '{print $2}')
+        mysql_error_code=$(echo "$check_result" | grep -oP "ERROR \K[0-9]+" | head -1)
         if [ "$mysql_error_code" == "1049" ]; then
             echo "main db: prepare to init remote mysql service dnf data."
             mysql -h "$CUR_MAIN_DB_HOST" -P "$CUR_MAIN_DB_PORT" -u root -p"$CUR_MAIN_DB_ROOT_PASSWORD" <<EOF
@@ -47,8 +44,10 @@ done
 # 配置game账户权限
 echo "main db: flush privileges....."
 mysql -h "$CUR_MAIN_DB_HOST" -P "$CUR_MAIN_DB_PORT" -u root -p"$CUR_MAIN_DB_ROOT_PASSWORD" <<EOF
-delete from mysql.user where user='game' and host='$CUR_MAIN_DB_GAME_ALLOW_IP';
+delete from mysql.user where user='game' and host not in ('127.0.0.1', 'localhost');
 flush privileges;
+grant all privileges on *.* to 'game'@'127.0.0.1' identified by '$DNF_DB_GAME_PASSWORD';
+grant all privileges on *.* to 'game'@'localhost' identified by '$DNF_DB_GAME_PASSWORD';
 grant all privileges on *.* to 'game'@'$CUR_MAIN_DB_GAME_ALLOW_IP' identified by '$DNF_DB_GAME_PASSWORD';
 flush privileges;
 EOF
@@ -59,8 +58,10 @@ IFS=$',' read -ra EXTENDED_USERS <<<"$DNF_DB_USER_EXTENDED_QF"
 for db_user_extended in "${EXTENDED_USERS[@]}"; do
     echo "main db: extended user ${db_user_extended}, flush privileges....."
     mysql -h "$CUR_MAIN_DB_HOST" -P "$CUR_MAIN_DB_PORT" -u root -p"$CUR_MAIN_DB_ROOT_PASSWORD" <<EOF
-delete from mysql.user where user='$db_user_extended' and host='$CUR_MAIN_DB_GAME_ALLOW_IP';
+delete from mysql.user where user='$db_user_extended' and host not in ('127.0.0.1', 'localhost');
 flush privileges;
+grant all privileges on *.* to '$db_user_extended'@'127.0.0.1' identified by '$DNF_DB_GAME_PASSWORD';
+grant all privileges on *.* to '$db_user_extended'@'localhost' identified by '$DNF_DB_GAME_PASSWORD';
 grant all privileges on *.* to '$db_user_extended'@'$CUR_MAIN_DB_GAME_ALLOW_IP' identified by '$DNF_DB_GAME_PASSWORD';
 flush privileges;
 EOF

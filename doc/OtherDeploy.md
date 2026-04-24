@@ -122,6 +122,8 @@
 
 默认情况下，系统会创建并连接到相应大区的数据库。若需要连接到其他大区的数据库，需设置环境变量SERVER_GROUP_DB为相应大区的名称（例如cain/diregie/siroco）。在这种情况下，服务内部也会连接到 taiwan_cain/taiwan_diregie/taiwan_siroco 等大区的数据库。
 
+`MAIN_MYSQL_GAME_ALLOW_IP` 和 `MYSQL_GAME_ALLOW_IP` 不设置时，启动脚本从 mysql 的拒绝连接回包里解析 `game` 账号的授权地址。db 镜像的 my.cnf 默认开启 `skip-name-resolve`，解析到的始终是 IP。手动填写时也请使用 IP，不要用主机名。
+
 ## docker-compose部署[群晖推荐]
 
 ### 基本部署

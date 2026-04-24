@@ -22,18 +22,25 @@ if [ -z "$MAIN_MYSQL_HOST" ] && [ -z "$MAIN_MYSQL_PORT" ] && [ -z "$MYSQL_HOST" 
 
     chown -R mysql:mysql /var/lib/mysql
 
-    # 修改创建root账号
+    SOCKET=/var/lib/mysql/mysql.sock
+
+    # 先用 --skip-grant-tables 启动 root 账号，再以正常模式重启
     service mysql start --skip-grant-tables
     bash /home/template/init/wait_for_mysql.sh
-    mysql -u root <<EOF
+    mysql -u root --socket="$SOCKET" <<EOF
     delete from mysql.user;
     flush privileges;
     grant all privileges on *.* to 'root'@'%' identified by '$DNF_DB_ROOT_PASSWORD' WITH GRANT OPTION;
+    grant all privileges on *.* to 'root'@'localhost' identified by '$DNF_DB_ROOT_PASSWORD' WITH GRANT OPTION;
     flush privileges;
 EOF
     echo "update root password done."
-    # 关闭服务
-    service mysql stop
+    # FLUSH PRIVILEGES 之后mysql重新启用鉴权
+    mysqladmin -u root -p"$DNF_DB_ROOT_PASSWORD" --socket="$SOCKET" shutdown
+    for _ in $(seq 1 30); do
+        [ ! -S "$SOCKET" ] && break
+        sleep 1
+    done
     echo "start local mysql...."
     service mysql start
     bash /home/template/init/wait_for_mysql.sh

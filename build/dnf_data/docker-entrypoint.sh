@@ -113,10 +113,14 @@ DNF_DB_USER_EXTENDED_QF="${DNF_DB_USER_EXTENDED_QF//\'/}"
 DNF_DB_USER_EXTENDED_QF="${DNF_DB_USER_EXTENDED_QF//\"/}"
 export DNF_DB_USER_EXTENDED_QF
 
-# 清除mysql sock以及pid文件
-rm -rf /var/lib/mysql/mysql.sock
-rm -rf /var/lib/mysql/*.pid
-rm -rf /var/lib/mysql/*.err
+# 清理残留的运行时文件
+rm -f /var/lib/mysql/mysql.sock
+rm -f /var/lib/mysql/mysql.sock.lock
+rm -f /var/lib/mysql/*.pid
+rm -f /var/lib/mysql/*.err
+rm -f /var/run/mysqld/mysqld.sock
+rm -f /var/run/mysqld/mysqld.sock.lock
+rm -f /var/run/mysqld/*.pid
 # 清除MONITOR_PUBLIC_IP文件
 rm -rf /data/monitor_ip/MONITOR_PUBLIC_IP
 # 清理日志

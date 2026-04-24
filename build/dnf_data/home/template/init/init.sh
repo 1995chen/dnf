@@ -12,8 +12,17 @@ else
 fi
 # 初始化本地数据库
 run_or_exit "init local db" bash /home/template/init/init_local_db.sh
+# 先等主数据库可连接再执行 GRANT
+# standalone 部署时防止与 mysql 启动过程的竞态
+run_or_exit "wait for main db" bash /home/template/init/wait_for_mysql.sh \
+    "$CUR_MAIN_DB_HOST" "$CUR_MAIN_DB_PORT" "$CUR_MAIN_DB_ROOT_PASSWORD"
 # 初始化主数据库
 run_or_exit "init main db" bash /home/template/init/init_main_db.sh
+# 大区数据库部署在不同 host 或端口时同样需要等待
+if [ "$CUR_SG_DB_HOST:$CUR_SG_DB_PORT" != "$CUR_MAIN_DB_HOST:$CUR_MAIN_DB_PORT" ]; then
+    run_or_exit "wait for server group db" bash /home/template/init/wait_for_mysql.sh \
+        "$CUR_SG_DB_HOST" "$CUR_SG_DB_PORT" "$CUR_SG_DB_ROOT_PASSWORD"
+fi
 # 初始化大区数据库
 run_or_exit "init server group db" bash /home/template/init/init_server_group_db.sh
 
@@ -128,8 +137,8 @@ else
 fi
 
 # 旧版本启用DofSlim需要先删除start_bridge.sh和start_channel.sh
-[ -f "/data/run/start_bridge.sh" ] && ! grep -q -e "^LD_PRELOAD=.*/home/template/init/bridge_hook.so" "/data/run/start_bridge.sh" && rm -f "/data/run/start_bridge.sh"
-[ -f "/data/run/start_channel.sh" ] && ! grep -q -e "^LD_PRELOAD=.*/home/template/init/channel_hook.so" "/data/run/start_channel.sh" && rm -f "/data/run/start_channel.sh"
+[ -f "/data/run/start_bridge.sh" ] && ! grep -q -e "^LD_PRELOAD=.*/home/template/init/libdofslim.so" "/data/run/start_bridge.sh" && rm -f "/data/run/start_bridge.sh"
+[ -f "/data/run/start_channel.sh" ] && ! grep -q -e "^LD_PRELOAD=.*/home/template/init/libdofslim.so" "/data/run/start_channel.sh" && rm -f "/data/run/start_channel.sh"
 
 # 初始化所有run脚本
 for fp in "/home/template/init/run"/*.sh; do

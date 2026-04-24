@@ -1,0 +1,11 @@
+.git
+.github
+.gitignore
+.gitattributes
+.dockerignore
+*.md
+LICENSE
+deploy
+doc
+other
+plugin

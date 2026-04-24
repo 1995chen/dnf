@@ -132,8 +132,6 @@ RUN sed -i 's/skip-locking/#skip-locking/g; s/skip-federated/#skip-federated/g' 
     && sed -i '/\[mysqld\]/a symbolic-links=0' /etc/my.cnf \
     && sed -i '/\[mysqld\]/a explicit_defaults_for_timestamp=1' /etc/my.cnf \
     && sed -i '/\[mysqld\]/a sql_mode=NO_ENGINE_SUBSTITUTION' /etc/my.cnf \
-    && sed -i 's/awk \x27{print \$2}\x27/grep -oP "ERROR \\\\K[0-9]+"/g' /home/template/init/init_main_db.sh \
-    && sed -i 's/awk \x27{print \$2}\x27/grep -oP "ERROR \\\\K[0-9]+"/g' /home/template/init/init_server_group_db.sh \
     && rm -rf /home/template/neople/game/history \
     && sed -i 's|LD_PRELOAD=/home/template/init/channel_hook.so:/dp2/libhook.so ./df_channel_r|LD_PRELOAD=/usr/lib/libglibc_compat.so:/home/template/init/channel_hook.so:/dp2/libhook.so ./df_channel_r|g' /home/template/init/run/start_channel.sh \
     && sed -i 's|cat pid/\*\.pid .*|tail --pid=\$(cat pid/channel.pid) -f /dev/null|g' /home/template/init/run/start_channel.sh \
