@@ -48,6 +48,7 @@
 | ------- | ------- | ------- | ------- |
 | DDNS_ENABLE | DDNS开关 | true/false | false |
 | DDNS_DOMAIN | DDNS域名 |  | '' |
+| DDNS_INTERVAL | DDNS 解析间隔，单位秒 |  | 10 |
 
 #### Netbird配置
 
@@ -72,16 +73,16 @@
 
 ### 基本配置
 
-在这里配置当前大区的数据库root账号以及game账号密码。在没有配置主数据库以及大区数据库的情况下，会自动使用容器内部MYSQL数据库。
+在这里配置当前大区的数据库root账号以及game账号密码。若未设置主/大区数据库地址，一体镜像会回退到容器内 `127.0.0.1:4000` 的本地 MySQL；server-only 镜像因没有本地 mysqld，启动会直接报错退出并提示设置 `MYSQL_HOST` 和 `MYSQL_PORT`。
 
 | 环境变量名称 | 描述 | 可选参数 | 默认值 |
 | ------- | ------- | ------- | ------- |
 | SERVER_GROUP | 大区编号 | 1-6范围的数字 | 3 |
 | SERVER_GROUP_DB | 大区数据库 | 所有大区名称 | cain |
 | OPEN_CHANNEL | 开启的频道 | 支持配置范围,配置之间用逗号分隔,例如:1-11,12,22-25,51-55 | '11,52' |
-| DNF_DB_ROOT_PASSWORD | DNF数据库root密码[当使用独立数据库时,root密码用于初始化数据以及game账号自动化创建、授权] |  | '' |
-| DNF_DB_GAME_PASSWORD | DNF数据库game密码[必须8位] |  | '' |
-| DNF_DB_USER_EXTENDED_QF | 清风版本DNF数据库额外的账号,密码不可设置, 与game保持一致 |  | '' |
+| DNF_DB_ROOT_PASSWORD | DNF数据库root密码[当使用独立数据库时,root密码用于初始化数据以及game账号自动化创建、授权] |  | 88888888 |
+| DNF_DB_GAME_PASSWORD | DNF数据库game密码，超过 8 位时启动脚本会截断为前 8 位 |  | uu5!^%jg |
+| DNF_DB_USER_EXTENDED_QF | 清风版本DNF数据库额外的账号,密码不可设置, 与game保持一致 | 逗号分隔 | supergod,chhappy,cash |
 | CLIENT_POOL_SIZE | 服务端启动时分配的客户端缓冲池大小，此配置项影响df_bridge_r和df_channel_r的内存占用 | 3-1000 | 10 |
 
 ### 进程监控管理页面配置
@@ -94,14 +95,26 @@
 | WEB_PASS | supervisor web页面密码 |  | 123456 |
 
 
-### 统一网关配置
+### 网关配置
+
+`dnf-gate-server` 登录网关相关的环境变量。
 
 | 环境变量名称 | 描述 | 可选参数 | 默认值 |
 | ------- | ------- | ------- | ------- |
-| GM_ACCOUNT | GM管理员账号 | 不能有特殊字符 | gmuser |
-| GM_PASSWORD | GM管理员密码 | 不能有特殊字符 | gmpass |
-| GM_CONNECT_KEY | GM连接KEY[自定以密钥请使用网关生成的密钥，因为密钥有格式限制，不符合格式的密钥会导致登录器一致卡在网关连接那里] |  | 763WXRBW3PFTC3IXPFWH |
-| GM_LANDER_VERSION | GM登录器版本 |  | 20180307 |
+| GATE_AES_KEY | dnf-gate-server AES 通讯密钥，需与登录器配置一致 |  | '' |
+| GATE_BIND_ADDRESS | dnf-gate-server HTTP 监听地址 |  | 0.0.0.0:5505 |
+| GATE_RUST_LOG | dnf-gate-server 日志级别 |  | info,dnf_gate_server=debug |
+| GATE_TLS_CERT_PATH | TLS 证书路径，与 `GATE_TLS_KEY_PATH` 同时设置时启用 HTTPS |  | '' |
+| GATE_TLS_KEY_PATH | TLS 私钥路径 |  | '' |
+| GATE_TLS_BIND_ADDRESS | dnf-gate-server HTTPS 监听地址 |  | 0.0.0.0:5504 |
+| GATE_TLS_ONLY | 启用后仅允许 HTTPS 连接，拒绝 HTTP 请求 | true/false | false |
+| RSA_PRIVATE_KEY_PATH | RSA 私钥路径 |  | /data/privatekey.pem |
+| GAME_SERVER_IP | 游戏服务器 IP，当网关与游戏服务端不在同一台机器时需单独配置 |  | PUBLIC_IP 的值 |
+| INITIAL_CERA | 新账号初始点券 |  | 1000 |
+| INITIAL_CERA_POINT | 新账号初始代币券 |  | 0 |
+| DB_USER | 网关访问数据库的用户名 |  | game |
+| DB_NAME | 网关访问的主数据库名 |  | d_taiwan |
+
 
 ### 大区扩展配置
 
@@ -114,7 +127,7 @@
 | MAIN_BRIDGE_IP | 主大区 BRIDGE_IP | 主大区的PUBLIC_IP地址 | 127.0.0.1 |
 | MAIN_MYSQL_HOST | 主数据库IP地址 |  | '' |
 | MAIN_MYSQL_PORT | 主数据库端口号 |  | '' |
-| MAIN_MYSQL_ROOT_PASSWORD | 主数据库ROOT账号密码 |  | '' |
+| MAIN_MYSQL_ROOT_PASSWORD | 主数据库ROOT账号密码 |  | 88888888 |
 | MAIN_MYSQL_GAME_ALLOW_IP | 主数据库GAME账号ALLOW IP |  | '' |
 | MYSQL_HOST | 大区数据库的IP地址 |  | '' |
 | MYSQL_PORT | 大区数据库的端口号 |  | '' |
@@ -123,6 +136,17 @@
 默认情况下，系统会创建并连接到相应大区的数据库。若需要连接到其他大区的数据库，需设置环境变量SERVER_GROUP_DB为相应大区的名称（例如cain/diregie/siroco）。在这种情况下，服务内部也会连接到 taiwan_cain/taiwan_diregie/taiwan_siroco 等大区的数据库。
 
 `MAIN_MYSQL_GAME_ALLOW_IP` 和 `MYSQL_GAME_ALLOW_IP` 不设置时，启动脚本从 mysql 的拒绝连接回包里解析 `game` 账号的授权地址。db 镜像的 my.cnf 默认开启 `skip-name-resolve`，解析到的始终是 IP。手动填写时也请使用 IP，不要用主机名。
+
+### 等待 MySQL 启动就绪
+
+使用远程数据库时，启动脚本会调用 `wait_for_mysql.sh` 轮询 MySQL，直到可连通再做 `GRANT` 和库初始化。以下环境变量控制等待策略。
+
+| 环境变量名称 | 描述 | 可选参数 | 默认值 |
+| ------- | ------- | ------- | ------- |
+| WAIT_FOR_MYSQL_MAX_RETRIES | 探活最大重试次数 |  | 60 |
+| WAIT_FOR_MYSQL_RETRY_INTERVAL | 每次重试间隔秒数 |  | 2 |
+
+默认 60 × 2 = 120 秒总超时，覆盖冷启动 mysqld 初始化 datadir 较慢的场景。
 
 ## docker-compose部署[群晖推荐]
 
@@ -134,10 +158,11 @@
 
 [点击查看部署文件](../deploy/dnf/docker-compose/multi_channel/docker-compose.yaml)
 
-### 站库分离
+### 端库分离
 
-游戏服务端与MySQL分别部署在独立容器中。服务端使用`llnut/dnf:<distro>-server-qf1031-latest`，不含MySQL。数据库使用`llnut/dnf:<distro>-db-latest`，为独立MySQL 5.7，监听端口4000。
+游戏服务端与MySQL分别部署在独立容器中。
 
+[点击查看镜像 tag 说明](./PrepareLinux.md#镜像-tag-说明)  
 [点击查看部署文件](../deploy/dnf/docker-compose/standalone_mysql/docker-compose.yaml)
 
 ### 多大区部署

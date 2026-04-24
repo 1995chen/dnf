@@ -88,8 +88,8 @@ sysctl -p
 | 层级 | 内容 | 用途 |
 |------|------|------|
 | base | 基础系统依赖 | 基础镜像，无法直接使用 |
-| db | MySQL 5.7，CentOS 7 为 MySQL 5.0.95 | 站库分离部署中的数据库镜像 |
-| server | 游戏服务端 + MySQL 客户端，不含 MySQL 服务端 | 站库分离部署中的服务端镜像，需连接外部 MySQL |
+| db | MySQL 5.7，CentOS 7 为 MySQL 5.0.95 | 端库分离部署中的数据库镜像 |
+| server | 游戏服务端 + MySQL 客户端，不含 MySQL 服务端 | 端库分离部署中的服务端镜像，需连接外部 MySQL |
 | full | 完整版镜像，游戏服务端 + 内置 MySQL | 单容器部署 |
 
 各层级的 tag 格式：
@@ -105,11 +105,11 @@ sysctl -p
 
 full 镜像提供一组别名 tag：`<os>-full-qf1031-latest`、`<os>-full-qf1031-<日期>`、`<os>-full-qf1031-dev-latest`、`<os>-full-qf1031-dev-<commit>`，别名与主 tag 指向同一镜像。
 
-普通用户只需拉取 full 镜像即可，站库分离场景拉取 server + db 镜像。
+普通用户只需拉取 full 镜像即可，端库分离场景拉取 server + db 镜像。
 
 以下示例仅列出 full 层 latest tag，其他层级或版本按上表替换 tag 即可。例如：`llnut/dnf:debian13-db-latest`、`llnut/dnf:debian13-server-qf1031-latest`。
 
-### 阿里云 ACR (国内拉取加速)
+### 阿里云 ACR (中国大陆拉取加速)
 
 ```shell
 docker pull crpi-0ghho6wxim378ik8.cn-hangzhou.personal.cr.aliyuncs.com/llnut/dnf:debian13-qf1031-latest
@@ -145,7 +145,7 @@ docker pull quay.io/llnut/dnf:ubuntu26-qf1031-latest
 docker pull quay.io/llnut/dnf:centos7-qf1031-latest
 ```
 
-### 站库分离场景示例
+### 端库分离场景示例
 
 以 Debian 13 为例，需要分别拉取 server 层和 db 层：
 

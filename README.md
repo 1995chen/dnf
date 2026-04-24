@@ -9,7 +9,7 @@
 
 ## 概述
 
-本项目基于 [1995chen/dnf](https://github.com/1995chen/dnf) 适配 **清风-1031** 版本，将地下城与勇士（毒奶粉、DNF、DOF）打包为 Docker 镜像，支持 `Debian 13`、`Almalinux 9`、`Ubuntu 26`、`CentOS 7` 四种基础镜像，通过环境变量和初始化脚本实现快速部署。
+本项目基于 [1995chen/dnf](https://github.com/1995chen/dnf) 适配 **清风-1031** 版本，将地下城与勇士（毒奶粉、DNF、DOF）打包为 Docker 镜像，支持单镜像部署和[端库分离](#高级部署)部署，支持 `Debian 13`、`Almalinux 9`、`Ubuntu 26`、`CentOS 7` 四种基础镜像，通过环境变量和初始化脚本实现快速部署。
 
 > **注意**：本项目使用 [llnut 登录器](https://github.com/llnut/dnf-login)，环境变量和端口与 1995chen 版本不同（[详细区别](#vs-1995chen-dep)），请使用本仓库的配置文件部署。统一网关用户请拉取 `tongyigate` 后缀的镜像，该镜像后续不再维护。
 
@@ -190,9 +190,14 @@ docker restart dnf
 
 ## 高级部署
 
-**此部分文档与 [1995chen/dnf](https://github.com/1995chen/dnf) 一致，请手动替换 Docker 镜像为本仓库提供的清风版本**
+项目支持以下部署模式：
 
-[点击查看更多部署方式](doc/OtherDeploy.md)
+- 一体部署：单容器包含游戏服务端和数据库，参考[快速开始](#quick-start)。
+- 端库分离：游戏服务端与数据库 分别部署在独立容器中，便于数据库独立管理、备份和资源隔离。
+- 多频道 / 多大区：单容器开多个频道，或在单台/多台服务器上同时运行多个大区。
+- Kubernetes：基于 K8s 部署服务端。
+
+[点击查看详细文档](doc/OtherDeploy.md)
 
 ---
 
