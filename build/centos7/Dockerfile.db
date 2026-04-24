@@ -15,7 +15,7 @@ RUN cd /tmp && \
     rpm -ivh /tmp/MySQL-devel-community-5.0.95-1.rhel5.x86_64.rpm && \
     rpm -ivh /tmp/MySQL-client-community-5.0.95-1.rhel5.x86_64.rpm && \
     rpm -ivh /tmp/MySQL-server-community-5.0.95-1.rhel5.x86_64.rpm && \
-    service mysql stop && rm -rf /var/lib/mysql/* && \
+    /etc/init.d/mysql stop && rm -rf /var/lib/mysql/* && \
     test -x /usr/sbin/mysqld || ln -sf "$(which mysqld)" /usr/sbin/mysqld && \
     rm -rf /tmp/*
 
@@ -31,8 +31,7 @@ RUN sed -i 's|^#skip-locking$|skip-locking|g; \
             /^log-error=/d; \
             /^pid-file=/d' /etc/my.cnf
 
-COPY build/centos7/docker-entrypoint-db.sh /docker-entrypoint.sh
-RUN chmod +x /docker-entrypoint.sh
+COPY --chmod=0755 build/centos7/docker-entrypoint-db.sh /docker-entrypoint.sh
 
 VOLUME /var/lib/mysql
 EXPOSE 4000

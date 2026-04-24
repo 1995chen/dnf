@@ -47,19 +47,15 @@ RUN for bin in mysql mysqld_safe mysqladmin mysqldump my_print_defaults; do \
     done \
     && ln -sf /usr/local/mysql/bin/mysqld /usr/sbin/mysqld \
     && echo '/usr/local/mysql/lib' > /etc/ld.so.conf.d/mysql.conf && ldconfig \
-    && mkdir -p /etc/init.d \
-    && printf '#!/bin/bash\nexport PATH=/usr/local/mysql/bin:$PATH\ncase "$1" in\n  start)\n    shift\n    mkdir -p /var/run/mysqld /var/log/mysql\n    chown mysql:mysql /var/run/mysqld /var/log/mysql /var/lib/mysql\n    chmod 750 /var/run/mysqld\n    /usr/local/mysql/bin/mysqld_safe --defaults-file=/etc/my.cnf "$@" &\n    for i in $(seq 1 30); do\n      if mysqladmin ping --socket=/var/lib/mysql/mysql.sock 2>/dev/null | grep -q alive; then break; fi\n      sleep 2\n    done\n    ;;\n  stop)\n    /usr/local/mysql/bin/mysqladmin -u root shutdown 2>/dev/null || killall mysqld 2>/dev/null || true\n    sleep 2\n    ;;\n  restart)\n    $0 stop; $0 start "$@"\n    ;;\nesac\n' > /etc/init.d/mysql \
-    && chmod +x /etc/init.d/mysql \
-    && printf '#!/bin/bash\nif [ "$1" = "mysql" ]; then shift; /etc/init.d/mysql "$@"; else echo "Unknown service: $1"; exit 1; fi\n' > /usr/sbin/service \
-    && chmod +x /usr/sbin/service \
-    && printf '#!/bin/bash\nmkdir -p /var/lib/mysql /var/run/mysqld /var/log/mysql\nchown -R mysql:mysql /var/lib/mysql /var/run/mysqld /var/log/mysql\nchmod 750 /var/lib/mysql /var/run/mysqld\nrm -rf /var/lib/mysql/*\n/usr/local/mysql/bin/mysqld --defaults-file=/etc/my.cnf --initialize-insecure --user=mysql --basedir=/usr/local/mysql --datadir=/var/lib/mysql --explicit_defaults_for_timestamp\n' > /usr/bin/mysql_install_db \
-    && chmod +x /usr/bin/mysql_install_db
+    && rm -rf /tmp/* /var/tmp/*
+
+COPY --chmod=0755 build/shared/service-wrapper.sh /usr/sbin/service
+COPY --chmod=0755 build/shared/mysql-install-db.sh /usr/bin/mysql_install_db
+COPY --chmod=0755 build/shared/mysql-initd.sh /etc/init.d/mysql
 
 COPY build/dnf_data/etc/my.cnf /etc/
-RUN rm -rf /tmp/* /var/tmp/*
 
-COPY build/shared/docker-entrypoint-db.sh /docker-entrypoint.sh
-RUN chmod +x /docker-entrypoint.sh
+COPY --chmod=0755 build/shared/docker-entrypoint-db.sh /docker-entrypoint.sh
 
 VOLUME /var/lib/mysql
 EXPOSE 4000

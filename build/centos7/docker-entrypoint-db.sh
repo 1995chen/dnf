@@ -49,4 +49,4 @@ for _ in $(seq 1 30); do
 done
 
 chown -R mysql:mysql /var/lib/mysql
-exec /usr/bin/mysqld_safe --datadir=/var/lib/mysql --pid-file=/var/lib/mysql/$(hostname).pid
+exec /usr/bin/mysqld_safe --datadir=/var/lib/mysql --pid-file="/var/lib/mysql/$(hostname).pid"

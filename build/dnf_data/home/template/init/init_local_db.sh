@@ -25,7 +25,8 @@ if [ -z "$MAIN_MYSQL_HOST" ] && [ -z "$MAIN_MYSQL_PORT" ] && [ -z "$MYSQL_HOST" 
     SOCKET=/var/lib/mysql/mysql.sock
 
     # 先用 --skip-grant-tables 启动 root 账号，再以正常模式重启
-    service mysql start --skip-grant-tables
+    # 直接调用 init.d 脚本，跳过 service 命令对 systemd/D-Bus 的探测
+    /etc/init.d/mysql start --skip-grant-tables
     bash /home/template/init/wait_for_mysql.sh
     mysql -u root --socket="$SOCKET" <<EOF
     delete from mysql.user;
@@ -42,6 +43,6 @@ EOF
         sleep 1
     done
     echo "start local mysql...."
-    service mysql start
+    /etc/init.d/mysql start
     bash /home/template/init/wait_for_mysql.sh
 fi
