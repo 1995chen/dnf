@@ -40,6 +40,19 @@ if [ -n "$old_pid" ]; then
 fi
 rm -rf "pid/${channel_name}.pid"
 
+# 等待secagent创建TSS反作弊shm。
+counter=0
+while [ "$counter" -lt 60 ]; do
+    if ls /dev/shm/sec/tss_sdk_bus_* >/dev/null 2>&1 ||
+        ls /dev/shm/sec_tss_sdk_bus_* >/dev/null 2>&1; then
+        echo "tss_sdk_bus shm ready"
+        break
+    fi
+    echo "waiting for tss_sdk_bus shm... $counter"
+    sleep 2
+    ((counter++))
+done
+
 # 加载DP并启动[确保DP路径已经被正确映射]
 LD_PRELOAD="/usr/lib/libglibc_compat.so:/dp2/libhook.so:/home/neople/game/frida.so" ./df_game_r "$channel_name" start
 sleep 2

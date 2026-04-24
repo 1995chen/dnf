@@ -139,6 +139,10 @@ fi
 # 旧版本启用DofSlim需要先删除start_bridge.sh和start_channel.sh
 [ -f "/data/run/start_bridge.sh" ] && ! grep -q -e "^LD_PRELOAD=.*/home/template/init/libdofslim.so" "/data/run/start_bridge.sh" && rm -f "/data/run/start_bridge.sh"
 [ -f "/data/run/start_channel.sh" ] && ! grep -q -e "^LD_PRELOAD=.*/home/template/init/libdofslim.so" "/data/run/start_channel.sh" && rm -f "/data/run/start_channel.sh"
+# 旧版本start_game.sh未等待TSS反作弊shm，启动df_game_r后会触发SIGSEGV
+[ -f "/data/run/start_game.sh" ] && ! grep -q -e "waiting for tss_sdk_bus shm" "/data/run/start_game.sh" && rm -f "/data/run/start_game.sh"
+# 旧版本start_zergsvr_secagent.sh基于shm等待，在未加载libglibc_compat.so的发行版上会死锁
+[ -f "/data/run/start_zergsvr_secagent.sh" ] && ! grep -q -e "waiting for zergsvr.pid" "/data/run/start_zergsvr_secagent.sh" && rm -f "/data/run/start_zergsvr_secagent.sh"
 
 # 初始化所有run脚本
 for fp in "/home/template/init/run"/*.sh; do
