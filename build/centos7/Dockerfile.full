@@ -30,7 +30,7 @@ RUN yum install -y vim iptables \
     rm -rf /tmp/*
 
 # 下载dnf-gate-server
-ARG GATE_VERSION="0.3.0"
+ARG GATE_VERSION="0.4.0"
 RUN GATE_REPO="llnut/dnf-login" && GATE_TARGET="x86_64-unknown-linux-musl" && \
     if [ -z "${GATE_VERSION}" ]; then \
         GATE_VERSION=$(curl -fsSL "https://api.github.com/repos/${GATE_REPO}/releases/latest" | grep '"tag_name"' | head -1 | sed 's/.*"tag_name": *"\(.*\)".*/\1/'); \

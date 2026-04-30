@@ -47,7 +47,7 @@ RUN microdnf install -y dnf && \
     && dnf clean all && rm -rf /root/.cache /tmp/*
 
 # 安装i386共享库，下载dnf-gate-server
-ARG GATE_VERSION="0.3.0"
+ARG GATE_VERSION="0.4.0"
 RUN dnf install -y --setopt=install_weak_deps=False wget tar gzip \
     && cd /tmp \
     && wget -q https://raw.githubusercontent.com/llnut/dnf_util/refs/heads/main/common_pkgs/lib.tgz \
