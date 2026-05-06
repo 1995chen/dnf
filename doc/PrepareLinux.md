@@ -1,6 +1,6 @@
 # 准备部署环境
 
-本指南包含 Docker 安装、交换空间配置和防火墙关闭三个部分。如果已完成这些配置，可以跳过。
+本指南包含 Docker 安装、seccomp 兼容配置、交换空间配置和防火墙关闭几个部分。如果已完成这些配置，可以跳过。
 
 ## 安装 Docker
 
@@ -28,6 +28,24 @@ sudo sh get-docker.sh
 ```shell
 systemctl enable docker
 systemctl restart docker
+```
+
+<a id="seccomp-profile"></a>
+检测 Docker 版本并按需下载 seccomp 兼容配置
+
+Docker 29 及之后版本的默认 seccomp 策略会导致服务端报错 `Could not create a UDP socket : 38`。如果检测到 Docker 主版本大于等于 29，建议提前下载兼容配置文件；低版本 Docker 不需要执行此操作。
+
+```shell
+DOCKER_MAJOR_VERSION="$(docker version --format '{{.Server.Version}}' | sed 's/\..*//')"
+
+if [ "$DOCKER_MAJOR_VERSION" -ge 29 ] 2>/dev/null; then
+  echo "检测到 Docker ${DOCKER_MAJOR_VERSION}.x，下载 seccomp 兼容配置..."
+  mkdir -p /etc/docker
+  curl -fsSL https://raw.githubusercontent.com/moby/profiles/refs/tags/seccomp/v0.2.1/seccomp/default.json \
+    -o /etc/docker/seccomp-profile-v0.2.1.json
+else
+  echo "Docker 主版本低于 29，无需下载 seccomp 兼容配置。"
+fi
 ```
 
 关闭防火墙
@@ -77,6 +95,7 @@ sed -i '$a vm.swappiness = 100' /etc/sysctl.conf
 sysctl -p
 ```
 
+<a id="pull-image"></a>
 ## 拉取镜像
 
 镜像同时发布到以下仓库，内容完全一致，选择速度最快的即可。
@@ -109,6 +128,7 @@ full 镜像提供一组别名 tag：`<os>-full-qf1031-latest`、`<os>-full-qf103
 
 以下示例仅列出 full 层 latest tag，其他层级或版本按上表替换 tag 即可。例如：`llnut/dnf:debian13-db-latest`、`llnut/dnf:debian13-server-qf1031-latest`。
 
+<a id="acr-image"></a>
 ### 阿里云 ACR (中国大陆拉取加速)
 
 ```shell
@@ -118,6 +138,7 @@ docker pull crpi-0ghho6wxim378ik8.cn-hangzhou.personal.cr.aliyuncs.com/llnut/dnf
 docker pull crpi-0ghho6wxim378ik8.cn-hangzhou.personal.cr.aliyuncs.com/llnut/dnf:centos7-qf1031-latest
 ```
 
+<a id="docker-hub-image"></a>
 ### Docker Hub
 
 ```shell
@@ -127,6 +148,7 @@ docker pull llnut/dnf:ubuntu26-qf1031-latest
 docker pull llnut/dnf:centos7-qf1031-latest
 ```
 
+<a id="ghcr-image"></a>
 ### ghcr.io
 
 ```shell
@@ -136,6 +158,7 @@ docker pull ghcr.io/llnut/dnf:ubuntu26-qf1031-latest
 docker pull ghcr.io/llnut/dnf:centos7-qf1031-latest
 ```
 
+<a id="quay-image"></a>
 ### quay.io
 
 ```shell

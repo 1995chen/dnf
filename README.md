@@ -72,6 +72,10 @@ docker run -d \
   llnut/dnf:debian13-qf1031-latest
 ```
 
+> **注意**：
+> 中国大陆用户若拉取失败，可使用[阿里云ACR](doc/PrepareLinux.md#acr-image)镜像
+> 若 Docker 版本大于等于29，请[配置docker seccomp兼容规则](doc/PrepareLinux.md#seccomp-profile)，并参照[此方法](./README.md#qa-seccomp-profile)启动容器，否则服务端会启动失败。
+
 ### 第三步：确认服务端启动成功
 
 **1. 查看日志**
@@ -285,6 +289,20 @@ docker restart dnf
 
 20.使用3.26及之后的客户端版本，使用补丁大合集无法启动游戏
 * A: 按照补丁大合集文档中标注的正确安装方式进行安装，即：拷贝 DNF.exe 与 DNF.toml 到游戏目录，删除游戏目录中除了补丁大合集本体、文件夹、audio.xml、Script.pvf、登录器以外的所有文件。
+
+<a id="qa-seccomp-profile"></a>
+21.升级 Docker (或安装最新 Docker) 后很多服务频繁重启，日志显示 `Could not create a UDP socket : 38`
+* A: Docker 29 版本默认 seccomp 策略变更导致服务端创建 UDP socket 失败。可使用 `seccomp=unconfined` 快速解决(安全隐患大，不建议使用)。推荐使用 v0.2.1 版本的seccomp profile 启动容器，先在宿主机下载兼容版 profile：
+```bash
+sudo curl -fsSL https://raw.githubusercontent.com/moby/profiles/refs/tags/seccomp/v0.2.1/seccomp/default.json \
+  -o /etc/docker/seccomp-profile-v0.2.1.json
+```
+如果使用 docker compose，在 dnf 服务中加入以下配置，然后重新启动容器：
+```yaml
+security_opt:
+  - seccomp=/etc/docker/seccomp-profile-v0.2.1.json
+```
+如果使用 docker run，启动参数中加入 `--security-opt seccomp=/etc/docker/seccomp-profile-v0.2.1.json` 后启动容器即可。
 
 ---
 
