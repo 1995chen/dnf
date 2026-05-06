@@ -11,14 +11,18 @@
 
 本项目基于 [1995chen/dnf](https://github.com/1995chen/dnf) 适配 **清风-1031** 版本，将地下城与勇士（毒奶粉、DNF、DOF）打包为 Docker 镜像，支持单镜像部署和[端库分离](#高级部署)部署，支持 `Debian 13`、`Almalinux 9`、`Ubuntu 26`、`CentOS 7` 四种基础镜像，通过环境变量和初始化脚本实现快速部署。
 
-> **注意**：本项目使用 [llnut 登录器](https://github.com/llnut/dnf-login)，环境变量和端口与 1995chen 版本不同（[详细区别](#vs-1995chen-dep)），请使用本仓库的配置文件部署。统一网关用户请拉取 `tongyigate` 后缀的镜像，该镜像后续不再维护。
+## 部署前须知
+
+- 本项目使用 [llnut 登录器](https://github.com/llnut/dnf-login)，环境变量和端口与 1995chen 版本不同，请使用本仓库的配置文件部署。详细区别见[与 1995chen/dnf 的环境变量和端口区别](#vs-1995chen-dep)。
+- 若您需要从旧版本升级，请先阅读[从旧版本升级](#upgrade)。
+- Docker 29 及以上版本需要先[配置 Docker seccomp 兼容规则](doc/PrepareLinux.md#seccomp-profile)，并按照[常见问题中的说明](#qa-seccomp-profile)调整启动配置，否则服务端会启动失败。
+- 中国大陆用户若镜像拉取失败，可使用[阿里云 ACR 镜像](doc/PrepareLinux.md#acr-image)。
+- 统一网关用户请拉取 `tongyigate` 后缀的镜像，该镜像后续不再维护。
 
 ---
 
 <a id="quick-start"></a>
 ## 快速开始
-
-> 若您需要从旧版本升级，请先阅读[从旧版本升级](#upgrade)。
 
 ### 第一步：准备 Linux 环境
 
@@ -71,10 +75,6 @@ docker run -d \
   --name=dnf \
   llnut/dnf:debian13-qf1031-latest
 ```
-
-> **注意**：
-> 中国大陆用户若拉取失败，可使用[阿里云ACR](doc/PrepareLinux.md#acr-image)镜像
-> 若 Docker 版本大于等于29，请[配置docker seccomp兼容规则](doc/PrepareLinux.md#seccomp-profile)，并参照[此方法](./README.md#qa-seccomp-profile)启动容器，否则服务端会启动失败。
 
 ### 第三步：确认服务端启动成功
 
@@ -159,36 +159,29 @@ docker restart dnf
 <a id="upgrade"></a>
 ## 从旧版本升级
 
-> **升级到包含 DofSlim 的版本（镜像发布时间 2025.10.20）**
->
-> 删除以下两个脚本后重启服务端（只需删除一次），否则内存占用可能不会降低：
-> ```bash
-> /data/run/start_bridge.sh
-> /data/run/start_channel.sh
-> ```
+### 升级到替换了 llnut 登录器 0.2.1 的版本（镜像发布时间 2026.3.8）
 
-> **升级到替换了 llnut 登录器 0.2.1 的版本（镜像发布时间 2026.3.8）**
->
-> 拉取并重启最新镜像后，需重新下载本仓库提供的 20260308 版本客户端并完成[登录器设置](#第四步配置客户端)。
+拉取并重启最新镜像后，需重新下载本仓库提供的 20260308 版本客户端并完成[登录器设置](#第四步配置客户端)。
 
-> **升级到 llnut 登录器 0.3.0 的版本（镜像发布时间 2026.3.26）**
->
-> 拉取并重启最新镜像后，可通过以下任一方式更新客户端：
-> - 重新下载本仓库提供的 20260326 版本客户端
-> - 下载 `20260308-to-20260326-升级补丁.7z`，解压并覆盖到 20260308 版本的客户端目录中
->
-> 新版客户端不再需要手动配置 `mlpz.ini`，游戏服务器 IP 由登录器自动从服务端获取。
+### 升级到 llnut 登录器 0.3.0 的版本（镜像发布时间 2026.3.26）
 
-> **从 CentOS 7 切换到 Debian 13 / Alma 9 / Ubuntu 26 镜像**
->
-> Debian 13、Alma 9、Ubuntu 26 三种镜像之间可以直接切换，无需清理数据。**但 CentOS 7 与这三种镜像互不兼容**，切换前必须清除所有挂载目录数据：
->
-> ```bash
-> docker stop dnf && docker rm dnf
-> rm -rf /data/log/* /data/mysql/* /data/data/* # 路径按实际情况填写
-> ```
->
-> **清除后数据不可恢复，请提前备份。** 若不想清理数据，也可用数据库备份工具将旧库数据导入到新库。
+拉取并重启最新镜像后，可通过以下任一方式更新客户端：
+
+- 重新下载本仓库提供的 20260326 版本客户端
+- 下载 `20260308-to-20260326-升级补丁.7z`，解压并覆盖到 20260308 版本的客户端目录中
+
+新版客户端不再需要手动配置 `mlpz.ini`，游戏服务器 IP 由登录器自动从服务端获取。
+
+### 从 CentOS 7 切换到 Debian 13 / Alma 9 / Ubuntu 26 镜像
+
+Debian 13、Alma 9、Ubuntu 26 三种镜像之间可以直接切换，无需清理数据。**但 CentOS 7 与这三种镜像互不兼容**，切换前必须清除所有挂载目录数据：
+
+```bash
+docker stop dnf && docker rm dnf
+rm -rf /data/log/* /data/mysql/* /data/data/* # 路径按实际情况填写
+```
+
+**清除后数据不可恢复，请提前备份。** 若不想清理数据，也可用数据库备份工具将旧库数据导入到新库。
 
 ---
 
@@ -292,7 +285,7 @@ docker restart dnf
 
 <a id="qa-seccomp-profile"></a>
 21.升级 Docker (或安装最新 Docker) 后很多服务频繁重启，日志显示 `Could not create a UDP socket : 38`
-* A: Docker 29 版本默认 seccomp 策略变更导致服务端创建 UDP socket 失败。可使用 `seccomp=unconfined` 快速解决(安全隐患大，不建议使用)。推荐使用 v0.2.1 版本的seccomp profile 启动容器，先在宿主机下载兼容版 profile：
+* A: Docker 29 版本默认 seccomp 策略变更导致服务端创建 UDP socket 失败。可使用 `seccomp=unconfined` 快速解决(安全隐患大，不建议使用)。推荐使用 v0.2.1 版本的seccomp profile 启动容器，在宿主机下载兼容版 profile：
 ```bash
 sudo curl -fsSL https://raw.githubusercontent.com/moby/profiles/refs/tags/seccomp/v0.2.1/seccomp/default.json \
   -o /etc/docker/seccomp-profile-v0.2.1.json
@@ -343,9 +336,9 @@ security_opt:
 
 ---
 
-## DNF台服架构图
+## DNF 台服架构图
 
-[点击查看DNF台服架构图](doc/ArchitectureDiagram.md)
+[点击查看 DNF 台服架构图](doc/ArchitectureDiagram.md)
 
 ---
 
@@ -393,4 +386,3 @@ QQ 7群：971177373
 在未来的道路上，我将继续努力改进和完善这个项目，以回报您的支持与信任。希望我们能够继续保持联系，共同见证这个项目的成长与发展。
 
 再次感谢您的支持与帮助！
-
