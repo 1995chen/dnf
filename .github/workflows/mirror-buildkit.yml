@@ -13,30 +13,34 @@ jobs:
   mirror:
     runs-on: ubuntu-latest
     steps:
-      - name: Login to Docker Hub
-        uses: docker/login-action@v4
+      - uses: actions/checkout@v6.0.2
+
+      - uses: ./.github/actions/registry-login
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Login to ghcr.io
-        uses: docker/login-action@v4
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          dockerhub-username: ${{ secrets.DOCKERHUB_USERNAME }}
+          dockerhub-token: ${{ secrets.DOCKERHUB_TOKEN }}
+          ghcr-token: ${{ secrets.GITHUB_TOKEN }}
+          ghcr-actor: ${{ github.actor }}
+
       - name: Mirror buildkit image to ghcr.io
-        # rolling tag用于默认拉取,日期tag作为不可变快照以便回滚
+        # The rolling tag serves the default pull. The dated tag is an immutable
+        # snapshot for rollback. One create call writes both tags atomically, so
+        # the rolling tag is never updated while the dated tag is still missing.
         run: |
-          DATE=$(date +%Y%m%d)
+          set -euo pipefail
+          DATE=$(date -u +%Y%m%d)
+          CREATED=$(date -u +%Y-%m-%dT%H:%M:%SZ)
           DST="ghcr.io/${{ github.repository_owner }}/buildkit"
-          for i in 1 2 3; do
+
+          for attempt in 1 2 3; do
             if docker buildx imagetools create \
+                --annotation "index:org.opencontainers.image.created=${CREATED}" \
                 --tag "${DST}:buildx-stable-1" \
                 --tag "${DST}:buildx-stable-1-${DATE}" \
                 moby/buildkit:buildx-stable-1; then
               exit 0
             fi
-            echo "attempt $i failed, retrying in 30s..."
+            echo "attempt ${attempt} failed, retrying in 30s..."
             sleep 30
           done
           exit 1

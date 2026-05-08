@@ -8,17 +8,23 @@ on:
   workflow_dispatch:
     inputs:
       tags:
-        description: 'Tag to run the workflow on'
+        description: 'Tag to build'
         required: true
         type: string
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event.inputs.tags || '' }}
+  # Skip cancellation for release runs. A partially-promoted release would leave
+  # :latest pointing to a mix of new db / server tags and an old full tag.
+  cancel-in-progress: ${{ github.event_name != 'release' }}
 
 permissions:
   contents: read
   packages: write
+
+env:
+  ACR_REGISTRY: ${{ secrets.ACR_REGISTRY }}
+  IMAGE_PATH: llnut/dnf
 
 jobs:
   metadata:
@@ -26,370 +32,281 @@ jobs:
     outputs:
       tag_suffix: ${{ steps.meta.outputs.tag_suffix }}
       latest_suffix: ${{ steps.meta.outputs.latest_suffix }}
-      is_release: ${{ steps.meta.outputs.is_release }}
+      checkout_ref: ${{ steps.meta.outputs.checkout_ref }}
+      cache_slug: ${{ steps.meta.outputs.cache_slug }}
+      cache_fallback_slug: ${{ steps.meta.outputs.cache_fallback_slug }}
     steps:
-      - name: Compute tag suffix
+      - uses: actions/checkout@v6.0.2
+
+      - name: Compute build metadata
         id: meta
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          DISPATCH_TAGS: ${{ github.event.inputs.tags }}
+          EVENT_NAME: ${{ github.event_name }}
+          REF_NAME: ${{ github.ref_name }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          SHA: ${{ github.sha }}
         run: |
-          if [ "${{ github.event_name }}" == "release" ]; then
-            DATE=$(echo "${{ github.event.release.tag_name }}" | sed 's/^Release-//')
-            TAG_SUFFIX="${DATE}"
+          set -euo pipefail
+          # shellcheck source=.github/scripts/cache-slug.sh
+          . .github/scripts/cache-slug.sh
+
+          CHECKOUT_REF=""
+          if [ "$EVENT_NAME" = "release" ]; then
+            TAG_SUFFIX="${RELEASE_TAG#Release-}"
             LATEST_SUFFIX="latest"
-            IS_RELEASE=true
-          elif [ "${{ github.event_name }}" == "workflow_dispatch" ] && [ -n "${{ github.event.inputs.tags }}" ]; then
-            DATE=$(echo "${{ github.event.inputs.tags }}" | sed 's/^Release-//')
-            TAG_SUFFIX="${DATE}"
+            CHECKOUT_REF="$RELEASE_TAG"
+          elif [ "$EVENT_NAME" = "workflow_dispatch" ] && [ -n "$DISPATCH_TAGS" ]; then
+            case "$DISPATCH_TAGS" in
+              Release-*) ;;
+              *) echo "::error::workflow_dispatch input 'tags' must start with 'Release-' (got '$DISPATCH_TAGS')" >&2; exit 1 ;;
+            esac
+            TAG_SUFFIX="${DISPATCH_TAGS#Release-}"
             LATEST_SUFFIX="latest"
-            IS_RELEASE=true
+            CHECKOUT_REF="$DISPATCH_TAGS"
           else
-            SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+            SHORT_SHA="${SHA:0:7}"
             TAG_SUFFIX="dev-${SHORT_SHA}"
             LATEST_SUFFIX="dev-latest"
-            IS_RELEASE=false
           fi
-          echo "tag_suffix=${TAG_SUFFIX}" >> "$GITHUB_OUTPUT"
-          echo "latest_suffix=${LATEST_SUFFIX}" >> "$GITHUB_OUTPUT"
-          echo "is_release=${IS_RELEASE}" >> "$GITHUB_OUTPUT"
 
-  # 确保ghcr上的buildkit镜像存在,首次运行或被误删时自动创建
+          CACHE_REF="${CHECKOUT_REF:-$REF_NAME}"
+          CACHE_SLUG=$(sanitize_slug "$CACHE_REF")
+          CACHE_FALLBACK_SLUG=$(sanitize_slug "${DEFAULT_BRANCH:-main}")
+
+          {
+            echo "tag_suffix=${TAG_SUFFIX}"
+            echo "latest_suffix=${LATEST_SUFFIX}"
+            echo "checkout_ref=${CHECKOUT_REF}"
+            echo "cache_slug=${CACHE_SLUG}"
+            echo "cache_fallback_slug=${CACHE_FALLBACK_SLUG}"
+          } >> "$GITHUB_OUTPUT"
+
+  # Ensure the buildkit mirror exists on ghcr. Recreate it on first run or after deletion.
   ensure-buildkit-mirror:
     needs: metadata
     runs-on: ubuntu-latest
     steps:
       - name: Login to Docker Hub
-        uses: docker/login-action@v4
+        uses: docker/login-action@v4.1.0
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+
       - name: Login to ghcr.io
-        uses: docker/login-action@v4
+        uses: docker/login-action@v4.1.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Ensure buildkit mirror
         run: |
+          set -euo pipefail
           IMAGE="ghcr.io/${{ github.repository_owner }}/buildkit:buildx-stable-1"
           if docker buildx imagetools inspect "$IMAGE" >/dev/null 2>&1; then
             echo "mirror exists"
           else
             echo "mirror missing, creating..."
-            for i in 1 2 3; do
+            for attempt in 1 2 3; do
               if docker buildx imagetools create --tag "$IMAGE" moby/buildkit:buildx-stable-1; then
                 exit 0
               fi
+              echo "attempt ${attempt} failed, retrying in 30s..."
               sleep 30
             done
             exit 1
           fi
 
-  build-base:
+  # One job per OS runs base, then middle with db and server in parallel, then full,
+  # all on the same buildkit instance. Layers stay in the local cache between stages.
+  # The registry only sees cache-to writes for cross-run reuse and the final image push.
+  build-pipeline:
     needs: [metadata, ensure-buildkit-mirror]
-    name: build-base-${{ matrix.os }}
+    name: build-${{ matrix.os }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         os: [debian13, ubuntu26, alma9, centos7]
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6.0.2
+        with:
+          path: ci
 
-      - name: Login to Docker Hub
-        uses: docker/login-action@v4
+      - uses: actions/checkout@v6.0.2
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Login to ghcr.io
-        uses: docker/login-action@v4
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Login to quay.io
-        uses: docker/login-action@v4
-        with:
-          registry: quay.io
-          username: ${{ secrets.QUAY_USERNAME }}
-          password: ${{ secrets.QUAY_TOKEN }}
-      - name: Login to ACR
-        uses: docker/login-action@v4
-        with:
-          registry: ${{ secrets.ACR_REGISTRY }}
-          username: ${{ secrets.ACR_USERNAME }}
-          password: ${{ secrets.ACR_PASSWORD }}
+          path: src
+          ref: ${{ needs.metadata.outputs.checkout_ref }}
 
-      - uses: docker/setup-buildx-action@v4
+      - uses: ./ci/.github/actions/registry-login
+        with:
+          dockerhub-username: ${{ secrets.DOCKERHUB_USERNAME }}
+          dockerhub-token: ${{ secrets.DOCKERHUB_TOKEN }}
+          ghcr-token: ${{ secrets.GITHUB_TOKEN }}
+          ghcr-actor: ${{ github.actor }}
+          quay-username: ${{ secrets.QUAY_USERNAME }}
+          quay-token: ${{ secrets.QUAY_TOKEN }}
+          acr-registry: ${{ env.ACR_REGISTRY }}
+          acr-username: ${{ secrets.ACR_USERNAME }}
+          acr-password: ${{ secrets.ACR_PASSWORD }}
+
+      - uses: docker/setup-buildx-action@v4.0.0
         with:
           driver-opts: image=ghcr.io/${{ github.repository_owner }}/buildkit:buildx-stable-1
 
       - name: Compute tags
         id: tags
+        env:
+          TAG_SUFFIX: ${{ needs.metadata.outputs.tag_suffix }}
+          LATEST_SUFFIX: ${{ needs.metadata.outputs.latest_suffix }}
         run: |
-          BASE_TAG="${{ matrix.os }}-base-${{ needs.metadata.outputs.tag_suffix }}"
-          BASE_LATEST="${{ matrix.os }}-base-${{ needs.metadata.outputs.latest_suffix }}"
-          REGISTRIES="llnut/dnf ghcr.io/llnut/dnf quay.io/llnut/dnf ${{ secrets.ACR_REGISTRY }}/llnut/dnf"
-          TAGS=""
-          for REG in $REGISTRIES; do
-            TAGS="${TAGS}${REG}:${BASE_TAG},"
+          set -euo pipefail
+          BASE_TAG="${{ matrix.os }}-base-${TAG_SUFFIX}"
+          BASE_LATEST="${{ matrix.os }}-base-${LATEST_SUFFIX}"
+          DB_TAG="${{ matrix.os }}-db-${TAG_SUFFIX}"
+          DB_LATEST="${{ matrix.os }}-db-${LATEST_SUFFIX}"
+          SERVER_TAG="${{ matrix.os }}-server-qf1031-${TAG_SUFFIX}"
+          SERVER_LATEST="${{ matrix.os }}-server-qf1031-${LATEST_SUFFIX}"
+          FULL_TAG="${{ matrix.os }}-qf1031-${TAG_SUFFIX}"
+          FULL_LATEST="${{ matrix.os }}-qf1031-${LATEST_SUFFIX}"
+          FULL_ALIAS="${{ matrix.os }}-full-qf1031-${TAG_SUFFIX}"
+          FULL_ALIAS_LATEST="${{ matrix.os }}-full-qf1031-${LATEST_SUFFIX}"
+          REGISTRIES=("${IMAGE_PATH}" "ghcr.io/${IMAGE_PATH}" "quay.io/${IMAGE_PATH}")
+          if [ -n "$ACR_REGISTRY" ]; then
+            REGISTRIES+=("${ACR_REGISTRY}/${IMAGE_PATH}")
+          fi
+
+          BASE_TAGS=""
+          DB_TAGS=""
+          SERVER_TAGS=""
+          FULL_TAGS=""
+          for REG in "${REGISTRIES[@]}"; do
+            BASE_TAGS="${BASE_TAGS}${REG}:${BASE_TAG},"
+            DB_TAGS="${DB_TAGS}${REG}:${DB_TAG},"
+            SERVER_TAGS="${SERVER_TAGS}${REG}:${SERVER_TAG},"
+            FULL_TAGS="${FULL_TAGS}${REG}:${FULL_TAG},"
           done
-          echo "tags=${TAGS%,}" >> "$GITHUB_OUTPUT"
-          echo "primary=${BASE_TAG}" >> "$GITHUB_OUTPUT"
-          echo "latest=${BASE_LATEST}" >> "$GITHUB_OUTPUT"
+
+          {
+            echo "base_tags=${BASE_TAGS%,}"
+            echo "base_primary=${BASE_TAG}"
+            echo "base_latest=${BASE_LATEST}"
+            echo "db_tags=${DB_TAGS%,}"
+            echo "db_primary=${DB_TAG}"
+            echo "db_latest=${DB_LATEST}"
+            echo "server_tags=${SERVER_TAGS%,}"
+            echo "server_primary=${SERVER_TAG}"
+            echo "server_latest=${SERVER_LATEST}"
+            echo "full_tags=${FULL_TAGS%,}"
+            echo "full_primary=${FULL_TAG}"
+            echo "full_latest=${FULL_LATEST}"
+            echo "full_alias=${FULL_ALIAS}"
+            echo "full_alias_latest=${FULL_ALIAS_LATEST}"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Build and push base
-        uses: docker/build-push-action@v7
+        uses: docker/bake-action@v7.1.0
         env:
-          DOCKER_BUILD_SUMMARY: true
+          BASE_TAGS_CSV: ${{ steps.tags.outputs.base_tags }}
+          CACHE_FALLBACK_SLUG: ${{ needs.metadata.outputs.cache_fallback_slug }}
+          CACHE_REPO: ghcr.io/${{ github.repository_owner }}/dnf-cache
+          CACHE_SLUG: ${{ needs.metadata.outputs.cache_slug }}
+          OS: ${{ matrix.os }}
         with:
-          context: .
-          file: build/${{ matrix.os }}/Dockerfile.base
+          files: ../ci/.github/bake/docker-bake.hcl
+          source: src
+          targets: base
           push: true
-          tags: ${{ steps.tags.outputs.tags }}
-          cache-from: type=gha,scope=${{ matrix.os }}-base
-          cache-to: type=gha,mode=max,scope=${{ matrix.os }}-base
 
-      - name: Tag latest alias
+      - name: Tag base latest alias
+        env:
+          LATEST: ${{ steps.tags.outputs.base_latest }}
+          PRIMARY: ${{ steps.tags.outputs.base_primary }}
         run: |
-          PRIMARY="${{ steps.tags.outputs.primary }}"
-          LATEST="${{ steps.tags.outputs.latest }}"
-          for REG in llnut/dnf ghcr.io/llnut/dnf quay.io/llnut/dnf ${{ secrets.ACR_REGISTRY }}/llnut/dnf; do
+          set -euo pipefail
+          REGISTRIES=("${IMAGE_PATH}" "ghcr.io/${IMAGE_PATH}" "quay.io/${IMAGE_PATH}")
+          if [ -n "$ACR_REGISTRY" ]; then
+            REGISTRIES+=("${ACR_REGISTRY}/${IMAGE_PATH}")
+          fi
+
+          for REG in "${REGISTRIES[@]}"; do
             docker buildx imagetools create --tag "${REG}:${LATEST}" "${REG}:${PRIMARY}"
           done
 
-  build-db:
-    needs: [metadata, build-base]
-    name: build-db-${{ matrix.os }}
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [debian13, ubuntu26, alma9, centos7]
-    steps:
-      - uses: actions/checkout@v5
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v4
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Login to ghcr.io
-        uses: docker/login-action@v4
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Login to quay.io
-        uses: docker/login-action@v4
-        with:
-          registry: quay.io
-          username: ${{ secrets.QUAY_USERNAME }}
-          password: ${{ secrets.QUAY_TOKEN }}
-      - name: Login to ACR
-        uses: docker/login-action@v4
-        with:
-          registry: ${{ secrets.ACR_REGISTRY }}
-          username: ${{ secrets.ACR_USERNAME }}
-          password: ${{ secrets.ACR_PASSWORD }}
-
-      - uses: docker/setup-buildx-action@v4
-        with:
-          driver-opts: image=ghcr.io/${{ github.repository_owner }}/buildkit:buildx-stable-1
-
-      - name: Compute tags
-        id: tags
-        run: |
-          DB_TAG="${{ matrix.os }}-db-${{ needs.metadata.outputs.tag_suffix }}"
-          DB_LATEST="${{ matrix.os }}-db-${{ needs.metadata.outputs.latest_suffix }}"
-          BASE_TAG="${{ matrix.os }}-base-${{ needs.metadata.outputs.tag_suffix }}"
-          REGISTRIES="llnut/dnf ghcr.io/llnut/dnf quay.io/llnut/dnf ${{ secrets.ACR_REGISTRY }}/llnut/dnf"
-          TAGS=""
-          for REG in $REGISTRIES; do
-            TAGS="${TAGS}${REG}:${DB_TAG},"
-          done
-          echo "tags=${TAGS%,}" >> "$GITHUB_OUTPUT"
-          echo "primary=${DB_TAG}" >> "$GITHUB_OUTPUT"
-          echo "latest=${DB_LATEST}" >> "$GITHUB_OUTPUT"
-          echo "base_tag=${BASE_TAG}" >> "$GITHUB_OUTPUT"
-
-      - name: Build and push db
-        uses: docker/build-push-action@v7
+      # Build db and server together in one buildkit invocation via the middle group.
+      # The FROM base layers stay in the buildkit local cache from the previous step,
+      # so no layer download is needed. A manifest HEAD lookup may still resolve the
+      # tag to a digest. db is IO and network bound; server is CPU bound. The two do
+      # not contend for the same resource.
+      - name: Build and push db + server via bake
+        uses: docker/bake-action@v7.1.0
         env:
-          DOCKER_BUILD_SUMMARY: true
+          BASE_TAG: ${{ steps.tags.outputs.base_primary }}
+          CACHE_FALLBACK_SLUG: ${{ needs.metadata.outputs.cache_fallback_slug }}
+          CACHE_REPO: ghcr.io/${{ github.repository_owner }}/dnf-cache
+          CACHE_SLUG: ${{ needs.metadata.outputs.cache_slug }}
+          DB_TAGS_CSV: ${{ steps.tags.outputs.db_tags }}
+          OS: ${{ matrix.os }}
+          SERVER_TAGS_CSV: ${{ steps.tags.outputs.server_tags }}
         with:
-          context: .
-          file: build/${{ matrix.os }}/Dockerfile.db
+          files: ../ci/.github/bake/docker-bake.hcl
+          source: src
+          targets: middle
           push: true
-          tags: ${{ steps.tags.outputs.tags }}
-          build-args: |
-            BASE_TAG=${{ steps.tags.outputs.base_tag }}
-          cache-from: type=gha,scope=${{ matrix.os }}-db
-          cache-to: type=gha,mode=max,scope=${{ matrix.os }}-db
 
-      - name: Tag latest alias
-        run: |
-          PRIMARY="${{ steps.tags.outputs.primary }}"
-          LATEST="${{ steps.tags.outputs.latest }}"
-          for REG in llnut/dnf ghcr.io/llnut/dnf quay.io/llnut/dnf ${{ secrets.ACR_REGISTRY }}/llnut/dnf; do
-            docker buildx imagetools create --tag "${REG}:${LATEST}" "${REG}:${PRIMARY}"
-          done
-
-  build-server:
-    needs: [metadata, build-base]
-    name: build-server-${{ matrix.os }}
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [debian13, ubuntu26, alma9, centos7]
-    steps:
-      - uses: actions/checkout@v5
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v4
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Login to ghcr.io
-        uses: docker/login-action@v4
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Login to quay.io
-        uses: docker/login-action@v4
-        with:
-          registry: quay.io
-          username: ${{ secrets.QUAY_USERNAME }}
-          password: ${{ secrets.QUAY_TOKEN }}
-      - name: Login to ACR
-        uses: docker/login-action@v4
-        with:
-          registry: ${{ secrets.ACR_REGISTRY }}
-          username: ${{ secrets.ACR_USERNAME }}
-          password: ${{ secrets.ACR_PASSWORD }}
-
-      - uses: docker/setup-buildx-action@v4
-        with:
-          driver-opts: image=ghcr.io/${{ github.repository_owner }}/buildkit:buildx-stable-1
-
-      - name: Compute tags
-        id: tags
-        run: |
-          SERVER_TAG="${{ matrix.os }}-server-qf1031-${{ needs.metadata.outputs.tag_suffix }}"
-          SERVER_LATEST="${{ matrix.os }}-server-qf1031-${{ needs.metadata.outputs.latest_suffix }}"
-          BASE_TAG="${{ matrix.os }}-base-${{ needs.metadata.outputs.tag_suffix }}"
-          REGISTRIES="llnut/dnf ghcr.io/llnut/dnf quay.io/llnut/dnf ${{ secrets.ACR_REGISTRY }}/llnut/dnf"
-          TAGS=""
-          for REG in $REGISTRIES; do
-            TAGS="${TAGS}${REG}:${SERVER_TAG},"
-          done
-          echo "tags=${TAGS%,}" >> "$GITHUB_OUTPUT"
-          echo "primary=${SERVER_TAG}" >> "$GITHUB_OUTPUT"
-          echo "latest=${SERVER_LATEST}" >> "$GITHUB_OUTPUT"
-          echo "base_tag=${BASE_TAG}" >> "$GITHUB_OUTPUT"
-
-      - name: Build and push server
-        uses: docker/build-push-action@v7
+      - name: Tag db + server latest aliases
         env:
-          DOCKER_BUILD_SUMMARY: true
-        with:
-          context: .
-          file: build/${{ matrix.os }}/Dockerfile.server
-          push: true
-          tags: ${{ steps.tags.outputs.tags }}
-          build-args: |
-            BASE_TAG=${{ steps.tags.outputs.base_tag }}
-          cache-from: type=gha,scope=${{ matrix.os }}-server
-          cache-to: type=gha,mode=max,scope=${{ matrix.os }}-server
-
-      - name: Tag latest alias
+          DB_LATEST: ${{ steps.tags.outputs.db_latest }}
+          DB_PRIMARY: ${{ steps.tags.outputs.db_primary }}
+          SERVER_LATEST: ${{ steps.tags.outputs.server_latest }}
+          SERVER_PRIMARY: ${{ steps.tags.outputs.server_primary }}
         run: |
-          PRIMARY="${{ steps.tags.outputs.primary }}"
-          LATEST="${{ steps.tags.outputs.latest }}"
-          for REG in llnut/dnf ghcr.io/llnut/dnf quay.io/llnut/dnf ${{ secrets.ACR_REGISTRY }}/llnut/dnf; do
-            docker buildx imagetools create --tag "${REG}:${LATEST}" "${REG}:${PRIMARY}"
+          set -euo pipefail
+          REGISTRIES=("${IMAGE_PATH}" "ghcr.io/${IMAGE_PATH}" "quay.io/${IMAGE_PATH}")
+          if [ -n "$ACR_REGISTRY" ]; then
+            REGISTRIES+=("${ACR_REGISTRY}/${IMAGE_PATH}")
+          fi
+
+          for REG in "${REGISTRIES[@]}"; do
+            docker buildx imagetools create --tag "${REG}:${DB_LATEST}" "${REG}:${DB_PRIMARY}"
+            docker buildx imagetools create --tag "${REG}:${SERVER_LATEST}" "${REG}:${SERVER_PRIMARY}"
           done
 
-  build-full:
-    needs: [metadata, build-db]
-    name: build-full-${{ matrix.os }}
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [debian13, ubuntu26, alma9, centos7]
-    steps:
-      - uses: actions/checkout@v5
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v4
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Login to ghcr.io
-        uses: docker/login-action@v4
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Login to quay.io
-        uses: docker/login-action@v4
-        with:
-          registry: quay.io
-          username: ${{ secrets.QUAY_USERNAME }}
-          password: ${{ secrets.QUAY_TOKEN }}
-      - name: Login to ACR
-        uses: docker/login-action@v4
-        with:
-          registry: ${{ secrets.ACR_REGISTRY }}
-          username: ${{ secrets.ACR_USERNAME }}
-          password: ${{ secrets.ACR_PASSWORD }}
-
-      - uses: docker/setup-buildx-action@v4
-        with:
-          driver-opts: image=ghcr.io/${{ github.repository_owner }}/buildkit:buildx-stable-1
-
-      - name: Compute tags
-        id: tags
-        run: |
-          FULL_TAG="${{ matrix.os }}-qf1031-${{ needs.metadata.outputs.tag_suffix }}"
-          FULL_LATEST="${{ matrix.os }}-qf1031-${{ needs.metadata.outputs.latest_suffix }}"
-          FULL_ALIAS="${{ matrix.os }}-full-qf1031-${{ needs.metadata.outputs.tag_suffix }}"
-          FULL_ALIAS_LATEST="${{ matrix.os }}-full-qf1031-${{ needs.metadata.outputs.latest_suffix }}"
-          DB_TAG="${{ matrix.os }}-db-${{ needs.metadata.outputs.tag_suffix }}"
-          REGISTRIES="llnut/dnf ghcr.io/llnut/dnf quay.io/llnut/dnf ${{ secrets.ACR_REGISTRY }}/llnut/dnf"
-          TAGS=""
-          for REG in $REGISTRIES; do
-            TAGS="${TAGS}${REG}:${FULL_TAG},"
-          done
-          echo "tags=${TAGS%,}" >> "$GITHUB_OUTPUT"
-          echo "primary=${FULL_TAG}" >> "$GITHUB_OUTPUT"
-          echo "latest=${FULL_LATEST}" >> "$GITHUB_OUTPUT"
-          echo "alias=${FULL_ALIAS}" >> "$GITHUB_OUTPUT"
-          echo "alias_latest=${FULL_ALIAS_LATEST}" >> "$GITHUB_OUTPUT"
-          echo "db_tag=${DB_TAG}" >> "$GITHUB_OUTPUT"
-
+      # full's FROM db layers come from the middle step. The rust builder stage comes
+      # from the server build on debian13, ubuntu26, and alma9. Both stay in the
+      # buildkit local cache. The rust compile hits the cache and no layer is
+      # downloaded from the registry.
       - name: Build and push full
-        uses: docker/build-push-action@v7
+        uses: docker/bake-action@v7.1.0
         env:
-          DOCKER_BUILD_SUMMARY: true
+          CACHE_FALLBACK_SLUG: ${{ needs.metadata.outputs.cache_fallback_slug }}
+          CACHE_REPO: ghcr.io/${{ github.repository_owner }}/dnf-cache
+          CACHE_SLUG: ${{ needs.metadata.outputs.cache_slug }}
+          DB_TAG: ${{ steps.tags.outputs.db_primary }}
+          FULL_TAGS_CSV: ${{ steps.tags.outputs.full_tags }}
+          OS: ${{ matrix.os }}
         with:
-          context: .
-          file: build/${{ matrix.os }}/Dockerfile.full
+          files: ../ci/.github/bake/docker-bake.hcl
+          source: src
+          targets: full
           push: true
-          tags: ${{ steps.tags.outputs.tags }}
-          build-args: |
-            DB_TAG=${{ steps.tags.outputs.db_tag }}
-          cache-from: type=gha,scope=${{ matrix.os }}-full
-          cache-to: type=gha,mode=max,scope=${{ matrix.os }}-full
 
-      - name: Tag aliases and latest
+      - name: Tag full aliases and latest
+        env:
+          ALIAS: ${{ steps.tags.outputs.full_alias }}
+          ALIAS_LATEST: ${{ steps.tags.outputs.full_alias_latest }}
+          LATEST: ${{ steps.tags.outputs.full_latest }}
+          PRIMARY: ${{ steps.tags.outputs.full_primary }}
         run: |
-          PRIMARY="${{ steps.tags.outputs.primary }}"
-          LATEST="${{ steps.tags.outputs.latest }}"
-          ALIAS="${{ steps.tags.outputs.alias }}"
-          ALIAS_LATEST="${{ steps.tags.outputs.alias_latest }}"
-          for REG in llnut/dnf ghcr.io/llnut/dnf quay.io/llnut/dnf ${{ secrets.ACR_REGISTRY }}/llnut/dnf; do
+          set -euo pipefail
+          REGISTRIES=("${IMAGE_PATH}" "ghcr.io/${IMAGE_PATH}" "quay.io/${IMAGE_PATH}")
+          if [ -n "$ACR_REGISTRY" ]; then
+            REGISTRIES+=("${ACR_REGISTRY}/${IMAGE_PATH}")
+          fi
+
+          for REG in "${REGISTRIES[@]}"; do
             docker buildx imagetools create --tag "${REG}:${LATEST}" "${REG}:${PRIMARY}"
             docker buildx imagetools create --tag "${REG}:${ALIAS}" "${REG}:${PRIMARY}"
             docker buildx imagetools create --tag "${REG}:${ALIAS_LATEST}" "${REG}:${PRIMARY}"

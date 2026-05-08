@@ -1,0 +1,155 @@
+name: cache-cleanup
+
+on:
+  schedule:
+    - cron: '0 4 * * 0'  # weekly, Sunday 04:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  cleanup:
+    name: Prune dnf-cache versions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6.0.2
+
+      - name: Prune untagged and stale-branch versions
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OWNER: ${{ github.repository_owner }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          # shellcheck source=.github/scripts/cache-slug.sh
+          . .github/scripts/cache-slug.sh
+
+          PKG=dnf-cache
+
+          # Source of truth for tag prefixes. Must match the matrix in docker.yml and
+          # the target list in docker-bake.hcl. Update both when adding a new OS or stage.
+          OS_LIST=(debian13 ubuntu26 alma9 centos7)
+          STAGE_LIST=(base db server full)
+
+          # Pick the API path based on whether the owner is a user or an organization.
+          OWNER_TYPE=$(gh api "/repos/${REPO}" --jq '.owner.type' | tr '[:upper:]' '[:lower:]')
+          case "$OWNER_TYPE" in
+            user)         BASE="/users/${OWNER}/packages/container/${PKG}" ;;
+            organization) BASE="/orgs/${OWNER}/packages/container/${PKG}"  ;;
+            *) echo "unknown owner type: ${OWNER_TYPE}" >&2; exit 1 ;;
+          esac
+
+          # The package may not exist yet on a brand-new repo; nothing to clean.
+          # Other lookup failures should fail the workflow so stale caches do not
+          # accumulate silently.
+          LOOKUP_ERR=$(mktemp)
+          if ! gh api "$BASE" >/dev/null 2>"$LOOKUP_ERR"; then
+            if grep -q "HTTP 404" "$LOOKUP_ERR"; then
+              echo "package ${PKG} does not exist, nothing to clean"
+              exit 0
+            fi
+
+            echo "::error::failed to look up package ${PKG}; not pruning caches" >&2
+            cat "$LOOKUP_ERR" >&2
+            exit 1
+          fi
+          rm -f "$LOOKUP_ERR"
+
+          # Build the allow-list of cache slugs from active branch names plus the
+          # repo's default branch. docker.yml uses the default branch as
+          # CACHE_FALLBACK_SLUG. Sanitize via the shared helper to stay aligned.
+          DEFAULT_BRANCH=$(gh api "/repos/${REPO}" --jq '.default_branch')
+          KEEP=$(mktemp)
+          {
+            sanitize_slug "${DEFAULT_BRANCH:-main}"
+            echo
+            gh api "/repos/${REPO}/branches" --paginate --jq '.[].name' \
+              | while IFS= read -r BR; do
+                  sanitize_slug "$BR"
+                  echo
+                done
+          } | sort -u > "$KEEP"
+          echo "slugs to keep:"
+          cat "$KEEP"
+          echo "---"
+
+          # Each line: <version_id> <tag1,tag2,...>; empty tag list means an untagged version.
+          VERSIONS=$(mktemp)
+          gh api "${BASE}/versions" --paginate \
+            --jq '.[] | "\(.id) \(.metadata.container.tags | join(","))"' \
+            > "$VERSIONS"
+
+          DELETED=0
+          KEPT=0
+          FAILED=0
+          while IFS=' ' read -r ID TAGS; do
+            if [ -z "${TAGS:-}" ]; then
+              echo "[untagged] DELETE id=${ID}"
+              if gh api --silent -X DELETE "${BASE}/versions/${ID}"; then
+                DELETED=$((DELETED+1))
+              else
+                FAILED=$((FAILED+1))
+                echo "  delete failed for id=${ID}"
+              fi
+              continue
+            fi
+
+            KEEP_THIS=false
+            HAS_UNKNOWN_TAG=false
+            IFS=',' read -ra TAG_ARR <<< "$TAGS"
+            for TAG in "${TAG_ARR[@]}"; do
+              # Match against ${OS}-${stage}-${slug} using known OS and stage prefixes.
+              # Robust against OS or stage names that contain hyphens. Unknown tag
+              # formats are preserved as a defensive default; an admin can remove
+              # them manually.
+              SLUG=""
+              for OS_VAL in "${OS_LIST[@]}"; do
+                for STAGE in "${STAGE_LIST[@]}"; do
+                  PREFIX="${OS_VAL}-${STAGE}-"
+                  if [[ "$TAG" == "$PREFIX"* ]]; then
+                    SLUG="${TAG#"$PREFIX"}"
+                    break 2
+                  fi
+                done
+              done
+              if [ -z "$SLUG" ]; then
+                HAS_UNKNOWN_TAG=true
+                continue
+              fi
+              if grep -qFx "$SLUG" "$KEEP"; then
+                KEEP_THIS=true
+                break
+              fi
+            done
+
+            if [ "$KEEP_THIS" = false ] && [ "$HAS_UNKNOWN_TAG" = true ]; then
+              echo "[unknown-tag] KEEP id=${ID} tags=${TAGS}"
+              KEPT=$((KEPT+1))
+              continue
+            fi
+
+            if [ "$KEEP_THIS" = false ]; then
+              echo "[stale-branch] DELETE id=${ID} tags=${TAGS}"
+              if gh api --silent -X DELETE "${BASE}/versions/${ID}"; then
+                DELETED=$((DELETED+1))
+              else
+                FAILED=$((FAILED+1))
+                echo "  delete failed for id=${ID}"
+              fi
+            else
+              KEPT=$((KEPT+1))
+            fi
+          done < "$VERSIONS"
+
+          echo "---"
+          echo "deleted: ${DELETED}"
+          echo "kept:    ${KEPT}"
+          echo "failed:  ${FAILED}"
+
+          # Surface transient API failures in the Actions UI so they don't accumulate silently.
+          if [ "${FAILED}" -gt 0 ]; then
+            echo "::error::${FAILED} delete operation(s) failed; rerun to retry"
+            exit 1
+          fi

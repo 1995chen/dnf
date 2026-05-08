@@ -1,0 +1,66 @@
+name: Registry login
+description: Log in to the configured container registries. Skip any registry whose credentials are not provided.
+
+inputs:
+  dockerhub-username:
+    description: Docker Hub username
+    required: false
+  dockerhub-token:
+    description: Docker Hub access token
+    required: false
+  ghcr-token:
+    description: GitHub Container Registry token, typically GITHUB_TOKEN
+    required: false
+  ghcr-actor:
+    description: GitHub actor used as ghcr.io username
+    required: false
+    default: ${{ github.actor }}
+  quay-username:
+    description: quay.io username
+    required: false
+  quay-token:
+    description: quay.io token
+    required: false
+  acr-registry:
+    description: ACR registry hostname; skip ACR login when empty
+    required: false
+  acr-username:
+    description: ACR username
+    required: false
+  acr-password:
+    description: ACR password
+    required: false
+
+runs:
+  using: composite
+  steps:
+    - name: Login to Docker Hub
+      if: inputs.dockerhub-username != '' && inputs.dockerhub-token != ''
+      uses: docker/login-action@v4.1.0
+      with:
+        username: ${{ inputs.dockerhub-username }}
+        password: ${{ inputs.dockerhub-token }}
+
+    - name: Login to ghcr.io
+      if: inputs.ghcr-token != ''
+      uses: docker/login-action@v4.1.0
+      with:
+        registry: ghcr.io
+        username: ${{ inputs.ghcr-actor }}
+        password: ${{ inputs.ghcr-token }}
+
+    - name: Login to quay.io
+      if: inputs.quay-username != '' && inputs.quay-token != ''
+      uses: docker/login-action@v4.1.0
+      with:
+        registry: quay.io
+        username: ${{ inputs.quay-username }}
+        password: ${{ inputs.quay-token }}
+
+    - name: Login to ACR
+      if: inputs.acr-registry != ''
+      uses: docker/login-action@v4.1.0
+      with:
+        registry: ${{ inputs.acr-registry }}
+        username: ${{ inputs.acr-username }}
+        password: ${{ inputs.acr-password }}
