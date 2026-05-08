@@ -7,10 +7,15 @@ ENV DNF_DB_ROOT_PASSWORD=88888888
 
 # 安装MySQL 5.0.95
 RUN cd /tmp && \
-    curl -o MySQL-shared-compat-5.0.95-1.rhel5.x86_64.rpm https://raw.githubusercontent.com/llnut/dnf_util/refs/heads/main/common_pkgs/MySQL-shared-compat-5.0.95-1.rhel5.x86_64.rpm && \
-    curl -o MySQL-devel-community-5.0.95-1.rhel5.x86_64.rpm https://raw.githubusercontent.com/llnut/dnf_util/refs/heads/main/common_pkgs/MySQL-devel-community-5.0.95-1.rhel5.x86_64.rpm && \
-    curl -o MySQL-client-community-5.0.95-1.rhel5.x86_64.rpm https://raw.githubusercontent.com/llnut/dnf_util/refs/heads/main/common_pkgs/MySQL-client-community-5.0.95-1.rhel5.x86_64.rpm && \
-    curl -o MySQL-server-community-5.0.95-1.rhel5.x86_64.rpm https://raw.githubusercontent.com/llnut/dnf_util/refs/heads/main/common_pkgs/MySQL-server-community-5.0.95-1.rhel5.x86_64.rpm && \
+    curl -fsSLO https://raw.githubusercontent.com/llnut/dnf_util/refs/heads/main/Centos7/jemalloc-3.6.0-1.el7.x86_64.rpm && \
+    rpm -ivh /tmp/jemalloc-3.6.0-1.el7.x86_64.rpm && \
+    JEMALLOC_LIB="$(find /usr/lib64 /usr/lib -maxdepth 1 -name 'libjemalloc.so.*' | sort -V | tail -1)" && \
+    [ -n "$JEMALLOC_LIB" ] && \
+    ln -sf "$JEMALLOC_LIB" /usr/lib/libjemalloc.so.2 && \
+    curl -fsSLO https://raw.githubusercontent.com/llnut/dnf_util/refs/heads/main/common_pkgs/MySQL-shared-compat-5.0.95-1.rhel5.x86_64.rpm && \
+    curl -fsSLO https://raw.githubusercontent.com/llnut/dnf_util/refs/heads/main/common_pkgs/MySQL-devel-community-5.0.95-1.rhel5.x86_64.rpm && \
+    curl -fsSLO https://raw.githubusercontent.com/llnut/dnf_util/refs/heads/main/common_pkgs/MySQL-client-community-5.0.95-1.rhel5.x86_64.rpm && \
+    curl -fsSLO https://raw.githubusercontent.com/llnut/dnf_util/refs/heads/main/common_pkgs/MySQL-server-community-5.0.95-1.rhel5.x86_64.rpm && \
     rpm -ivh /tmp/MySQL-shared-compat-5.0.95-1.rhel5.x86_64.rpm && \
     rpm -ivh /tmp/MySQL-devel-community-5.0.95-1.rhel5.x86_64.rpm && \
     rpm -ivh /tmp/MySQL-client-community-5.0.95-1.rhel5.x86_64.rpm && \
@@ -25,7 +30,7 @@ RUN sed -i 's|^#skip-locking$|skip-locking|g; \
             s|^#skip-federated$|skip-federated|g; \
             s|^#thread_concurrency |thread_concurrency |g; \
             s|^table_open_cache |table_cache |g; \
-            s|^max_connections = 100000$|max_connections = 819200|g; \
+            s|^max_connections = .*|max_connections = 4096|g; \
             /^basedir=/d; \
             /^explicit_defaults_for_timestamp=/d; \
             /^log-error=/d; \

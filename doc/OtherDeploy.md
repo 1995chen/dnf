@@ -139,14 +139,14 @@
 
 ### 等待 MySQL 启动就绪
 
-使用远程数据库时，启动脚本会调用 `wait_for_mysql.sh` 轮询 MySQL，直到可连通再做 `GRANT` 和库初始化。以下环境变量控制等待策略。
+使用本地或远程数据库时，启动脚本会调用 `wait_for_mysql.sh` 轮询 MySQL，直到可连通再做 `GRANT` 和库初始化。以下环境变量控制等待策略。
 
 | 环境变量名称 | 描述 | 可选参数 | 默认值 |
 | ------- | ------- | ------- | ------- |
-| WAIT_FOR_MYSQL_MAX_RETRIES | 探活最大重试次数 |  | 60 |
+| WAIT_FOR_MYSQL_MAX_RETRIES | 探活最大重试次数 |  | 240 |
 | WAIT_FOR_MYSQL_RETRY_INTERVAL | 每次重试间隔秒数 |  | 2 |
 
-默认 60 × 2 = 120 秒总超时，覆盖冷启动 mysqld 初始化 datadir 较慢的场景。
+默认 240 × 2 = 480 秒总超时，覆盖冷启动 mysqld 初始化 datadir 较慢的场景。若每次都触发 `mysqladmin --connect-timeout=3` 的超时等待，则总超时为 240 × (3 + 2) = 1200 秒。
 
 ## docker-compose部署[群晖推荐]
 

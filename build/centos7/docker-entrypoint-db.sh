@@ -22,7 +22,7 @@ echo "configuring root user..."
 /usr/bin/mysqld_safe --user=mysql --datadir=/var/lib/mysql \
     --socket="$SOCKET" --skip-grant-tables --skip-networking &
 
-for _ in $(seq 1 30); do
+for _ in $(seq 1 120); do
     if /usr/bin/mysqladmin ping --socket="$SOCKET" 2>/dev/null | grep -q "alive"; then
         break
     fi
@@ -30,7 +30,7 @@ for _ in $(seq 1 30); do
 done
 
 if ! /usr/bin/mysqladmin ping --socket="$SOCKET" 2>/dev/null | grep -q "alive"; then
-    echo "ERROR: mysql failed to start within 60 seconds."
+    echo "ERROR: mysql failed to start within 240 seconds."
     exit 1
 fi
 

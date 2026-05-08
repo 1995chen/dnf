@@ -4,13 +4,15 @@ ARG BASE_TAG=alma9-base
 # 下载MySQL 5.7
 FROM almalinux:9.7-minimal AS mysql-builder
 
-RUN microdnf install -y wget tar gzip binutils && microdnf clean all
+RUN microdnf --setopt=install_weak_deps=0 install -y curl-minimal ca-certificates tar gzip binutils epel-release \
+    && microdnf --setopt=install_weak_deps=0 install -y jemalloc \
+    && microdnf clean all
 
 RUN MYSQL=mysql-5.7.44-linux-glibc2.12-x86_64 && \
     cd /tmp && \
-    wget -q https://downloads.mysql.com/archives/get/p/23/file/${MYSQL}.tar.gz && \
+    curl -fsSLO https://downloads.mysql.com/archives/get/p/23/file/${MYSQL}.tar.gz && \
     tar -zxf ${MYSQL}.tar.gz && \
-    mkdir -p /mysql/bin /mysql/lib /mysql/share && \
+    mkdir -p /mysql/bin /mysql/lib /mysql/share /mysql/allocator && \
     cp ${MYSQL}/bin/mysql ${MYSQL}/bin/mysqld ${MYSQL}/bin/mysqld_safe \
        ${MYSQL}/bin/mysqladmin ${MYSQL}/bin/mysqldump ${MYSQL}/bin/my_print_defaults \
        ${MYSQL}/bin/mysql_ssl_rsa_setup ${MYSQL}/bin/resolveip /mysql/bin/ && \
@@ -19,6 +21,8 @@ RUN MYSQL=mysql-5.7.44-linux-glibc2.12-x86_64 && \
           /mysql/bin/mysql_ssl_rsa_setup /mysql/bin/resolveip && \
     cp -a ${MYSQL}/lib/*.so* /mysql/lib/ && \
     strip --strip-unneeded /mysql/lib/*.so* && \
+    cp -L /usr/lib64/libjemalloc.so.2 /mysql/allocator/libjemalloc.so.2 && \
+    strip --strip-unneeded /mysql/allocator/libjemalloc.so.2 && \
     cp -r ${MYSQL}/share/english ${MYSQL}/share/charsets /mysql/share/ && \
     (cp ${MYSQL}/share/*.sql ${MYSQL}/share/errmsg-utf8.txt /mysql/share/ 2>/dev/null; true) && \
     rm -rf /tmp/*
@@ -31,6 +35,7 @@ ENV DNF_DB_ROOT_PASSWORD=88888888 \
 COPY --from=mysql-builder /mysql/bin/ /usr/local/mysql/bin/
 COPY --from=mysql-builder /mysql/lib/ /usr/local/mysql/lib/
 COPY --from=mysql-builder /mysql/share/ /usr/local/mysql/share/
+COPY --from=mysql-builder /mysql/allocator/libjemalloc.so.2 /usr/lib/libjemalloc.so.2
 
 # 安装MySQL 5.7依赖
 RUN microdnf install -y \

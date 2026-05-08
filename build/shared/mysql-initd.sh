@@ -11,14 +11,14 @@ start)
     chown mysql:mysql /var/run/mysqld /var/log/mysql /var/lib/mysql
     chmod 750 /var/run/mysqld
     /usr/local/mysql/bin/mysqld_safe --defaults-file=/etc/my.cnf "$@" &
-    # 最长等待 60 秒确认 mysql 可用
-    for _ in $(seq 1 30); do
+    # 最长等待 240 秒确认 mysql 可用
+    for _ in $(seq 1 120); do
         if "$MYSQLADMIN" ping --socket="$SOCKET" 2>/dev/null | grep -q alive; then
             exit 0
         fi
         sleep 2
     done
-    echo "mysql failed to start within 60 seconds" >&2
+    echo "mysql failed to start within 240 seconds" >&2
     exit 1
     ;;
 stop)

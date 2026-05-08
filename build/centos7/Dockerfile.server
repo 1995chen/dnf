@@ -7,16 +7,16 @@ FROM llnut/dnf:${BASE_TAG}
 RUN yum install -y vim iptables \
     gcc gcc-c++ make zlib-devel libc.so.6 libstdc++ libstdc++.so.6 glibc.i686 libssl.so.6 xulrunner.x86_64 libXtst.x86_64 && \
     cd /tmp && \
-    wget https://raw.githubusercontent.com/llnut/dnf_util/refs/heads/main/common_pkgs/MySQL-shared-compat-5.0.95-1.rhel5.x86_64.rpm && \
-    wget https://raw.githubusercontent.com/llnut/dnf_util/refs/heads/main/common_pkgs/MySQL-client-community-5.0.95-1.rhel5.x86_64.rpm && \
+    curl -fsSLO https://raw.githubusercontent.com/llnut/dnf_util/refs/heads/main/common_pkgs/MySQL-shared-compat-5.0.95-1.rhel5.x86_64.rpm && \
+    curl -fsSLO https://raw.githubusercontent.com/llnut/dnf_util/refs/heads/main/common_pkgs/MySQL-client-community-5.0.95-1.rhel5.x86_64.rpm && \
     rpm -ivh /tmp/MySQL-shared-compat-5.0.95-1.rhel5.x86_64.rpm && \
     rpm -ivh /tmp/MySQL-client-community-5.0.95-1.rhel5.x86_64.rpm && \
-    wget https://raw.githubusercontent.com/llnut/dnf_util/refs/heads/main/common_pkgs/socat-1.7.4.3.tar.gz && \
-    wget https://raw.githubusercontent.com/llnut/dnf_util/refs/heads/main/common_pkgs/Python-2.7.13.tgz && \
-    wget https://raw.githubusercontent.com/llnut/dnf_util/refs/heads/main/common_pkgs/setuptools-18.0.1.tgz && \
-    wget https://raw.githubusercontent.com/llnut/dnf_util/refs/heads/main/common_pkgs/pip-7.1.0.tar.gz && \
-    wget https://raw.githubusercontent.com/llnut/dnf_util/refs/heads/main/common_pkgs/GeoIP-1.4.8.tgz && \
-    wget https://raw.githubusercontent.com/llnut/dnf_util/refs/heads/main/common_pkgs/lib.tgz && \
+    curl -fsSLO https://raw.githubusercontent.com/llnut/dnf_util/refs/heads/main/common_pkgs/socat-1.7.4.3.tar.gz && \
+    curl -fsSLO https://raw.githubusercontent.com/llnut/dnf_util/refs/heads/main/common_pkgs/Python-2.7.13.tgz && \
+    curl -fsSLO https://raw.githubusercontent.com/llnut/dnf_util/refs/heads/main/common_pkgs/setuptools-18.0.1.tgz && \
+    curl -fsSLO https://raw.githubusercontent.com/llnut/dnf_util/refs/heads/main/common_pkgs/pip-7.1.0.tar.gz && \
+    curl -fsSLO https://raw.githubusercontent.com/llnut/dnf_util/refs/heads/main/common_pkgs/GeoIP-1.4.8.tgz && \
+    curl -fsSLO https://raw.githubusercontent.com/llnut/dnf_util/refs/heads/main/common_pkgs/lib.tgz && \
     tar -zxvf socat-1.7.4.3.tar.gz && \
     tar -zxvf Python-2.7.13.tgz && \
     tar -zxvf setuptools-18.0.1.tgz && \

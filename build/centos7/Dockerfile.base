@@ -7,9 +7,9 @@ LABEL maintainer="llnut"
 ENV TZ=Asia/Shanghai
 
 RUN cd /etc/yum.repos.d/ && rm -rf * && sed -i "s|enabled=1|enabled=0|g" /etc/yum/pluginconf.d/fastestmirror.conf && \
-    curl -o CentOS-Base.repo https://raw.githubusercontent.com/llnut/dnf_util/refs/heads/main/Centos7/CentOS-Base.repo && \
+    curl -fsSLO https://raw.githubusercontent.com/llnut/dnf_util/refs/heads/main/Centos7/CentOS-Base.repo && \
     yum clean all && yum update -y && yum install -y \
-    psmisc openssl openssl-devel curl wget perl initscripts && \
+    psmisc openssl openssl-devel curl perl initscripts && \
     ln -sf /usr/lib64/libssl.so.10 /usr/lib64/libssl.so.6 && \
     ln -sf /usr/lib64/libcrypto.so.10 /usr/lib64/libcrypto.so.6 && \
     ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \

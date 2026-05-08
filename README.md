@@ -4,7 +4,7 @@
 [![Docker Hub](https://img.shields.io/badge/docker-available-blue)](https://hub.docker.com/r/llnut/dnf/)
 [![ghcr.io](https://img.shields.io/badge/ghcr.io-available-blue)](https://github.com/llnut/dnf/pkgs/container/dnf)
 [![quay.io](https://img.shields.io/badge/quay.io-available-blue)](https://quay.io/repository/llnut/dnf)
-[![ACR](https://img.shields.io/badge/ACR-available-blue)](https://crpi-0ghho6wxim378ik8.cn-hangzhou.personal.cr.aliyuncs.com/llnut/dnf)
+[![ACR](https://img.shields.io/badge/ACR-available-blue)](doc/PrepareLinux.md#acr-image)
 [![license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/llnut/dnf/qf-1031/LICENSE)
 
 ## 概述
@@ -42,6 +42,7 @@ mkdir -p /data/log /data/mysql /data/data
 # WEB_USER/WEB_PASS    supervisor 进程管理页面账号密码（访问 PUBLIC_IP:2000）
 # GATE_AES_KEY     dnf-gate-server AES 通讯密钥，需与登录器配置一致，可通过 openssl rand -hex 32 生成
 # CLIENT_POOL_SIZE 启动时分配的客户端池大小，单人可设为 3，多人按需增加，最大 1000
+# --memory=1g      限制容器使用 1G 物理内存，可根据实际情况适当增加
 # --shm-size=8g    【不可删除】docker 默认 64M 太小，必须增大才能保证运行
 # 注意：镜像名中的 debian13 应与上一步拉取的版本一致
 docker run -d \
@@ -96,7 +97,7 @@ docker run -d \
   ├── ...
 ~~~
 
-初始化约 1 分钟，成功后 `.init` 日志中会出现以下内容：
+初始化约 1 分钟，首次初始化或低配硬件可能更久。成功后 `.init` 日志中会出现以下内容：
 
 ~~~shell
 [root@centos-02 siroco11] tail -f Log$(date +%Y%m%d).init

@@ -36,7 +36,7 @@ echo "configuring root user..."
 # 只绑定 unix socket，避免与之后的重启产生竞态
 /usr/local/mysql/bin/mysqld_safe --defaults-file=/etc/my.cnf --skip-grant-tables --skip-networking &
 
-for _ in $(seq 1 30); do
+for _ in $(seq 1 120); do
     if /usr/local/mysql/bin/mysqladmin ping \
         --socket="$SOCKET" 2>/dev/null | grep -q "alive"; then
         break
@@ -46,7 +46,7 @@ done
 
 if ! /usr/local/mysql/bin/mysqladmin ping \
     --socket="$SOCKET" 2>/dev/null | grep -q "alive"; then
-    echo "ERROR: mysql failed to start within 60 seconds."
+    echo "ERROR: mysql failed to start within 240 seconds."
     exit 1
 fi
 

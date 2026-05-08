@@ -10,7 +10,7 @@
 MYSQL_HOST="${1:-${CUR_MAIN_DB_HOST:-127.0.0.1}}"
 MYSQL_PORT="${2:-${CUR_MAIN_DB_PORT:-4000}}"
 MYSQL_PASSWORD="${3:-${CUR_MAIN_DB_ROOT_PASSWORD:-$DNF_DB_ROOT_PASSWORD}}"
-MAX_RETRIES="${4:-${WAIT_FOR_MYSQL_MAX_RETRIES:-60}}"
+MAX_RETRIES="${4:-${WAIT_FOR_MYSQL_MAX_RETRIES:-240}}"
 RETRY_INTERVAL="${5:-${WAIT_FOR_MYSQL_RETRY_INTERVAL:-2}}"
 
 echo "waiting for mysql at ${MYSQL_HOST}:${MYSQL_PORT} ..."
@@ -25,5 +25,5 @@ for i in $(seq 1 "$MAX_RETRIES"); do
     sleep "$RETRY_INTERVAL"
 done
 
-echo "ERROR: mysql at ${MYSQL_HOST}:${MYSQL_PORT} did not become ready within $((MAX_RETRIES * RETRY_INTERVAL))s."
+echo "ERROR: mysql at ${MYSQL_HOST}:${MYSQL_PORT} did not become ready after ${MAX_RETRIES} attempts (${RETRY_INTERVAL}s interval)."
 exit 1

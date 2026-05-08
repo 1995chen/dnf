@@ -5,7 +5,7 @@ FROM almalinux:9.7-minimal AS builder
 
 RUN microdnf install -y dnf && \
     dnf install -y --allowerasing --setopt=install_weak_deps=False \
-    gcc gcc-c++ wget ca-certificates curl git tar gzip binutils \
+    gcc gcc-c++ ca-certificates curl git tar gzip binutils \
     glibc-devel.i686 libstdc++-devel.i686 \
     && dnf clean all
 
@@ -16,7 +16,7 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --de
 
 # 下载GeoIP数据库
 RUN mkdir -p /usr/local/share/GeoIP && \
-    wget -q -O /usr/local/share/GeoIP/GeoIP.dat.gz https://mailfud.org/geoip-legacy/GeoIP.dat.gz && \
+    curl -fsSL -o /usr/local/share/GeoIP/GeoIP.dat.gz https://mailfud.org/geoip-legacy/GeoIP.dat.gz && \
     gunzip /usr/local/share/GeoIP/GeoIP.dat.gz
 
 # 编译dnf-compat-layer
@@ -48,9 +48,9 @@ RUN microdnf install -y dnf && \
 
 # 安装i386共享库，下载dnf-gate-server
 ARG GATE_VERSION="0.4.0"
-RUN dnf install -y --setopt=install_weak_deps=False wget tar gzip \
+RUN dnf install -y --allowerasing --setopt=install_weak_deps=False curl tar gzip \
     && cd /tmp \
-    && wget -q https://raw.githubusercontent.com/llnut/dnf_util/refs/heads/main/common_pkgs/lib.tgz \
+    && curl -fsSLO https://raw.githubusercontent.com/llnut/dnf_util/refs/heads/main/common_pkgs/lib.tgz \
     && tar -zxf lib.tgz \
     && rm -f /tmp/libGeoIP* \
     && (mv /tmp/*.so /usr/lib/ 2>/dev/null; true) \
@@ -58,19 +58,19 @@ RUN dnf install -y --setopt=install_weak_deps=False wget tar gzip \
     && rm -rf /tmp/* \
     && GATE_REPO="llnut/dnf-login" && GATE_TARGET="x86_64-unknown-linux-musl" && \
     if [ -z "${GATE_VERSION}" ]; then \
-        GATE_VERSION=$(wget -qO- "https://api.github.com/repos/${GATE_REPO}/releases/latest" | grep '"tag_name"' | head -1 | sed 's/.*"tag_name": *"\(.*\)".*/\1/'); \
+        GATE_VERSION=$(curl -fsSL "https://api.github.com/repos/${GATE_REPO}/releases/latest" | grep '"tag_name"' | head -1 | sed 's/.*"tag_name": *"\(.*\)".*/\1/'); \
     fi && \
     [ -n "$GATE_VERSION" ] || { echo "ERROR: failed to fetch latest dnf-gate-server version" >&2; exit 1; } && \
     GATE_ASSET="dnf-gate-server-${GATE_VERSION}-${GATE_TARGET}.tar.gz" && \
     GATE_URL="https://github.com/${GATE_REPO}/releases/download/${GATE_VERSION}/${GATE_ASSET}" && \
-    wget -q -O "/tmp/${GATE_ASSET}" "${GATE_URL}" && \
-    wget -q -O "/tmp/${GATE_ASSET}.sha256" "${GATE_URL}.sha256" && \
+    curl -fsSL -o "/tmp/${GATE_ASSET}" "${GATE_URL}" && \
+    curl -fsSL -o "/tmp/${GATE_ASSET}.sha256" "${GATE_URL}.sha256" && \
     EXPECTED=$(awk '{print $1}' "/tmp/${GATE_ASSET}.sha256") && \
     ACTUAL=$(sha256sum "/tmp/${GATE_ASSET}" | awk '{print $1}') && \
     [ "$EXPECTED" = "$ACTUAL" ] || { echo "ERROR: checksum mismatch for ${GATE_ASSET}" >&2; exit 1; } && \
     tar -xzf "/tmp/${GATE_ASSET}" --strip-components=1 -C /usr/bin "dnf-gate-server-${GATE_VERSION}-${GATE_TARGET}/dnf-gate-server" && \
     rm -f "/tmp/${GATE_ASSET}" "/tmp/${GATE_ASSET}.sha256" && \
-    dnf remove -y wget && dnf clean all && rm -rf /tmp/* /var/cache/dnf
+    dnf clean all && rm -rf /tmp/* /var/cache/dnf
 
 ENV MAIN_BRIDGE_IP='127.0.0.1' \
     SERVER_GROUP_DB='cain' \
