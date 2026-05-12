@@ -17,11 +17,21 @@ spec:
       containers:
         - name: dnf-mysql-new
           image: llnut/dnf:debian13-db-latest
+          # 建议设置 resources.limits.memory，否则 my.cnf 会按宿主机内存选择性能配置
+          # resources:
+          #   requests:
+          #     memory: "2Gi"
+          #     cpu: "1"
+          #   limits:
+          #     memory: "2Gi"
+          #     cpu: "1"
           env:
             - name: DNF_DB_ROOT_PASSWORD
               value: "88888888"
             - name: TZ
               value: "Asia/Shanghai"
+            # - name: TUNE_PROFILE
+            #   value: "nano"
           ports:
             - name: mysql
               containerPort: 4000

@@ -15,4 +15,4 @@ while [ "$counter" -lt 60 ]; do
     ((counter++))
 done
 
-LD_PRELOAD=/usr/lib/libglibc_compat.so ./secagent
+LD_PRELOAD=/usr/lib/libjemalloc32.so.2:/usr/lib/libglibc_compat.so ./secagent

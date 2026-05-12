@@ -33,30 +33,41 @@ COPY --from=builder /src/target/i686-unknown-linux-gnu/release/libgeoip_compat.s
 # 安装服务端依赖
 RUN microdnf install -y dnf && \
     dnf install -y --allowerasing --setopt=install_weak_deps=False \
-    net-tools \
+    net-tools curl tar gzip \
     glibc.i686 libstdc++.i686 zlib.i686 libgcc.i686 nss-softokn-freebl.i686 \
-    # i686字体渲染
+    # 32位字体渲染
     freetype.i686 fontconfig.i686 \
     openssl-libs.i686 \
     python3 python3-pip \
     socat \
     && pip3 install --no-cache-dir 'setuptools>=69.5,<70' supervisor==4.2.5 \
-    # i386 SSL符号链接
+    # 32位SSL符号链接
     && ln -sf /usr/lib/libssl.so.3 /usr/lib/libssl.so.6 \
     && ln -sf /usr/lib/libcrypto.so.3 /usr/lib/libcrypto.so.6 \
-    && dnf clean all && rm -rf /root/.cache /tmp/*
+    && dnf clean all && rm -rf /root/.cache /var/cache/dnf
 
-# 安装i386共享库，下载dnf-gate-server
-ARG GATE_VERSION="0.4.0"
-RUN dnf install -y --allowerasing --setopt=install_weak_deps=False curl tar gzip \
-    && cd /tmp \
+# 解压32位共享库
+RUN cd /tmp \
     && curl -fsSLO https://raw.githubusercontent.com/llnut/dnf_util/refs/heads/main/common_pkgs/lib.tgz \
     && tar -zxf lib.tgz \
     && rm -f /tmp/libGeoIP* \
     && (mv /tmp/*.so /usr/lib/ 2>/dev/null; true) \
     && (mv /tmp/*.so.1 /usr/lib/ 2>/dev/null; true) \
-    && rm -rf /tmp/* \
-    && GATE_REPO="llnut/dnf-login" && GATE_TARGET="x86_64-unknown-linux-musl" && \
+    && rm -rf /tmp/*
+
+# 下载并校验32位jemalloc
+ARG JEMALLOC_I686_URL="https://raw.githubusercontent.com/llnut/dnf_util/refs/heads/main/common_pkgs/libjemalloc-5.3.1-i686.so.2"
+RUN curl -fsSL -o /usr/lib/libjemalloc32.so.2 "${JEMALLOC_I686_URL}" && \
+    curl -fsSL -o /tmp/libjemalloc32.so.2.sha256 "${JEMALLOC_I686_URL}.sha256" && \
+    EXPECTED=$(awk '{print $1}' /tmp/libjemalloc32.so.2.sha256) && \
+    ACTUAL=$(sha256sum /usr/lib/libjemalloc32.so.2 | awk '{print $1}') && \
+    [ "$EXPECTED" = "$ACTUAL" ] || { echo "ERROR: checksum mismatch for libjemalloc i686" >&2; exit 1; } && \
+    chmod 0644 /usr/lib/libjemalloc32.so.2 && \
+    rm -f /tmp/libjemalloc32.so.2.sha256
+
+# 下载并校验dnf-gate-server
+ARG GATE_VERSION="0.4.0"
+RUN GATE_REPO="llnut/dnf-login" && GATE_TARGET="x86_64-unknown-linux-musl" && \
     if [ -z "${GATE_VERSION}" ]; then \
         GATE_VERSION=$(curl -fsSL "https://api.github.com/repos/${GATE_REPO}/releases/latest" | grep '"tag_name"' | head -1 | sed 's/.*"tag_name": *"\(.*\)".*/\1/'); \
     fi && \
@@ -69,8 +80,7 @@ RUN dnf install -y --allowerasing --setopt=install_weak_deps=False curl tar gzip
     ACTUAL=$(sha256sum "/tmp/${GATE_ASSET}" | awk '{print $1}') && \
     [ "$EXPECTED" = "$ACTUAL" ] || { echo "ERROR: checksum mismatch for ${GATE_ASSET}" >&2; exit 1; } && \
     tar -xzf "/tmp/${GATE_ASSET}" --strip-components=1 -C /usr/bin "dnf-gate-server-${GATE_VERSION}-${GATE_TARGET}/dnf-gate-server" && \
-    rm -f "/tmp/${GATE_ASSET}" "/tmp/${GATE_ASSET}.sha256" && \
-    dnf clean all && rm -rf /tmp/* /var/cache/dnf
+    rm -rf /tmp/*
 
 ENV MAIN_BRIDGE_IP='127.0.0.1' \
     SERVER_GROUP_DB='cain' \
@@ -109,7 +119,9 @@ ENV MAIN_BRIDGE_IP='127.0.0.1' \
     GATE_TLS_BIND_ADDRESS='0.0.0.0:5504' \
     GATE_TLS_ONLY=false \
     GAME_SERVER_IP='' \
-    CLIENT_POOL_SIZE=10
+    AUTO_TUNE=true \
+    TUNE_PROFILE='' \
+    TUNE_VERBOSE=false
 
 COPY build/dnf_data/ /
 

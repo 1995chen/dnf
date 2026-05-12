@@ -18,6 +18,7 @@
 - Docker 29 及以上版本需要先[配置 Docker seccomp 兼容规则](doc/PrepareLinux.md#seccomp-profile)，并按照[常见问题中的说明](#qa-seccomp-profile)调整启动配置，否则服务端会启动失败。
 - 中国大陆用户若镜像拉取失败，可使用[阿里云 ACR 镜像](doc/PrepareLinux.md#acr-image)。
 - 统一网关用户请拉取 `tongyigate` 后缀的镜像，该镜像后续不再维护。
+- 服务端启动时会自动选择合适的性能配置以合理使用硬件资源，若需手动调整性能参数请参照[性能配置](doc/OtherDeploy.md#性能配置)文档。
 
 ---
 
@@ -41,7 +42,6 @@ mkdir -p /data/log /data/mysql /data/data
 # DNF_DB_ROOT_PASSWORD  mysql root 密码，容器启动时会自动将 root 密码修改为此值
 # WEB_USER/WEB_PASS    supervisor 进程管理页面账号密码（访问 PUBLIC_IP:2000）
 # GATE_AES_KEY     dnf-gate-server AES 通讯密钥，需与登录器配置一致，可通过 openssl rand -hex 32 生成
-# CLIENT_POOL_SIZE 启动时分配的客户端池大小，单人可设为 3，多人按需增加，最大 1000
 # --memory=1g      限制容器使用 1G 物理内存，可根据实际情况适当增加
 # --shm-size=8g    【不可删除】docker 默认 64M 太小，必须增大才能保证运行
 # 注意：镜像名中的 debian13 应与上一步拉取的版本一致
@@ -51,7 +51,6 @@ docker run -d \
   -e WEB_PASS=123456 \
   -e DNF_DB_ROOT_PASSWORD=88888888 \
   -e GATE_AES_KEY=a1b2c3d4e5f6789012345678901234567890abcdef0123456789abcdef012345 \
-  -e CLIENT_POOL_SIZE=10 \
   -v /data/log:/home/neople/game/log \
   -v /data/mysql:/var/lib/mysql \
   -v /data/data:/data \

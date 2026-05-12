@@ -54,6 +54,6 @@ while [ "$counter" -lt 60 ]; do
 done
 
 # 加载DP并启动[确保DP路径已经被正确映射]
-LD_PRELOAD="/usr/lib/libglibc_compat.so:/dp2/libhook.so:/home/neople/game/frida.so" ./df_game_r "$channel_name" start
+LD_PRELOAD="/usr/lib/libjemalloc32.so.2:/usr/lib/libglibc_compat.so:/dp2/libhook.so:/home/neople/game/frida.so" ./df_game_r "$channel_name" start
 sleep 2
 cat "pid/${channel_name}.pid" | xargs -n1 -I{} tail --pid={} -f /dev/null

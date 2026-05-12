@@ -3,15 +3,24 @@
 ARG BASE_TAG=centos7-base
 FROM llnut/dnf:${BASE_TAG}
 
-ENV DNF_DB_ROOT_PASSWORD=88888888
+ENV DNF_DB_ROOT_PASSWORD=88888888 \
+    AUTO_TUNE=true \
+    TUNE_PROFILE='' \
+    TUNE_VERBOSE=false
+
+# 安装jemalloc
+ARG JEMALLOC_X86_64_URL="https://raw.githubusercontent.com/llnut/dnf_util/refs/heads/main/common_pkgs/libjemalloc-5.3.1-x86_64.so.2"
+RUN cd /tmp && \
+    curl -fsSL -o /usr/lib/libjemalloc.so.2 "${JEMALLOC_X86_64_URL}" && \
+    curl -fsSL -o /tmp/libjemalloc.so.2.sha256 "${JEMALLOC_X86_64_URL}.sha256" && \
+    EXPECTED=$(awk '{print $1}' /tmp/libjemalloc.so.2.sha256) && \
+    ACTUAL=$(sha256sum /usr/lib/libjemalloc.so.2 | awk '{print $1}') && \
+    [ "$EXPECTED" = "$ACTUAL" ] || { echo "ERROR: checksum mismatch for libjemalloc x86_64" >&2; exit 1; } && \
+    chmod 0644 /usr/lib/libjemalloc.so.2 && \
+    rm -f /tmp/libjemalloc.so.2.sha256
 
 # 安装MySQL 5.0.95
 RUN cd /tmp && \
-    curl -fsSLO https://raw.githubusercontent.com/llnut/dnf_util/refs/heads/main/Centos7/jemalloc-3.6.0-1.el7.x86_64.rpm && \
-    rpm -ivh /tmp/jemalloc-3.6.0-1.el7.x86_64.rpm && \
-    JEMALLOC_LIB="$(find /usr/lib64 /usr/lib -maxdepth 1 -name 'libjemalloc.so.*' | sort -V | tail -1)" && \
-    [ -n "$JEMALLOC_LIB" ] && \
-    ln -sf "$JEMALLOC_LIB" /usr/lib/libjemalloc.so.2 && \
     curl -fsSLO https://raw.githubusercontent.com/llnut/dnf_util/refs/heads/main/common_pkgs/MySQL-shared-compat-5.0.95-1.rhel5.x86_64.rpm && \
     curl -fsSLO https://raw.githubusercontent.com/llnut/dnf_util/refs/heads/main/common_pkgs/MySQL-devel-community-5.0.95-1.rhel5.x86_64.rpm && \
     curl -fsSLO https://raw.githubusercontent.com/llnut/dnf_util/refs/heads/main/common_pkgs/MySQL-client-community-5.0.95-1.rhel5.x86_64.rpm && \
@@ -23,6 +32,9 @@ RUN cd /tmp && \
     /etc/init.d/mysql stop && rm -rf /var/lib/mysql/* && \
     test -x /usr/sbin/mysqld || ln -sf "$(which mysqld)" /usr/sbin/mysqld && \
     rm -rf /tmp/*
+
+COPY build/dnf_data/home/template/init/lib/common.sh /home/template/init/lib/common.sh
+COPY build/dnf_data/home/template/init/lib/tune.sh /home/template/init/lib/tune.sh
 
 COPY build/dnf_data/etc/my.cnf /etc/
 

@@ -148,6 +148,88 @@
 
 默认 240 × 2 = 480 秒总超时，覆盖冷启动 mysqld 初始化 datadir 较慢的场景。若每次都触发 `mysqladmin --connect-timeout=3` 的超时等待，则总超时为 240 × (3 + 2) = 1200 秒。
 
+### 性能配置
+
+容器启动时读取 cgroup 的 RAM 与 CPU 限制，自动选择一个性能配置并调整 jemalloc `MALLOC_CONF`、`CLIENT_POOL_SIZE` 和 MySQL `/etc/my.cnf`。需要时可通过环境变量覆盖。
+
+#### RAM
+
+| RAM | 性能配置 | 别名 |
+| ------- | ------- | ------- |
+| < 4 GiB | nano | low |
+| 4–8 GiB | micro | |
+| 8–16 GiB | small | |
+| 16–32 GiB | medium | balanced |
+| 32–128 GiB | large | |
+| ≥ 128 GiB | xlarge | high |
+
+#### CPU
+
+CPU 数量影响以下参数：
+- jemalloc `narenas`：取 CPU 数与性能配置上限的较小值
+- MySQL `thread_cache_size`：取性能配置与 CPU × 2 的较大值
+- MySQL 5.7+ `innodb_buffer_pool_size > 1G` 时按 CPU 数设置 `innodb_buffer_pool_instances`
+
+#### 环境变量
+
+| 环境变量名称 | 描述 | 可选参数 | 默认值 |
+| ------- | ------- | ------- | ------- |
+| AUTO_TUNE | 自动选择性能配置开关，关闭后跳过自动选择，但自定义性能参数仍然有效 | true/false | true |
+| TUNE_PROFILE | 指定性能配置 | nano/micro/small/medium/large/xlarge 或<br>low/balanced/high | |
+| TUNE_VERBOSE | 输出性能配置详细日志 | true/false | false |
+| MALLOC_CONF | 自定义 jemalloc 配置。空字符串表示使用 jemalloc 内置默认值 |  | |
+| TUNE_MYSQL_KEY_BUFFER_SIZE | 覆盖 `key_buffer_size` | | |
+| TUNE_MYSQL_TABLE_OPEN_CACHE | 覆盖 `table_open_cache`，MySQL 5.0 会覆盖 `table_cache` | | |
+| TUNE_MYSQL_SORT_BUFFER_SIZE | 覆盖 `sort_buffer_size` | | |
+| TUNE_MYSQL_READ_BUFFER_SIZE | 覆盖 `read_buffer_size` | | |
+| TUNE_MYSQL_READ_RND_BUFFER_SIZE | 覆盖 `read_rnd_buffer_size` | | |
+| TUNE_MYSQL_THREAD_CACHE_SIZE | 覆盖 `thread_cache_size` | | |
+| TUNE_MYSQL_MAX_CONNECTIONS | 覆盖 `max_connections` | | |
+| TUNE_MYSQL_MAX_ALLOWED_PACKET | 覆盖 `max_allowed_packet` | | |
+| TUNE_MYSQL_QUERY_CACHE_SIZE | 覆盖 `query_cache_size`，只对 MySQL 5.0 生效 | | |
+| TUNE_MYSQL_INNODB_BUFFER_POOL_SIZE | 覆盖 `innodb_buffer_pool_size`，只对 MySQL 5.7 生效 | | |
+
+参数优先级，从高到低：
+1. 自定义环境变量 `MALLOC_CONF`、`CLIENT_POOL_SIZE`、`TUNE_MYSQL_*`
+2. 自定义性能配置 `TUNE_PROFILE`
+3. `AUTO_TUNE=true` 自动选择性能配置
+4. nano 性能配置
+
+#### 各性能配置下的 jemalloc 参数
+
+| key | nano | micro | small | medium | large | xlarge |
+| ------- | ------- | ------- | ------- | ------- | ------- | ------- |
+| narenas 上限 | 2 | 2 | 4 | 4 | 8 | 16 |
+| lg_tcache_max | 13 | 14 | 15 | 16 | 17 | 18 |
+| dirty_decay_ms | 1000 | 5000 | 10000 | 20000 | 30000 | 60000 |
+| muzzy_decay_ms | 0 | 1000 | 5000 | 10000 | 30000 | 60000 |
+| background_thread | true | true | true | true | true | true |
+| thp / metadata_thp | thp:never | thp:never | thp:never | thp:never | metadata_thp:auto | metadata_thp:auto |
+
+#### 各性能配置下的 MySQL 参数
+
+| key | nano | micro | small | medium | large | xlarge |
+| ------- | ------- | ------- | ------- | ------- | ------- | ------- |
+| key_buffer_size | 64M | 96M | 128M | 192M | 256M | 384M |
+| table_open_cache (5.7) / table_cache (5.0) | 128 | 256 | 512 | 1024 | 1536 | 2048 |
+| sort_buffer_size | 512K | 1M | 1M | 2M | 4M | 4M |
+| read_buffer_size | 512K | 512K | 1M | 1M | 2M | 2M |
+| read_rnd_buffer_size | 1M | 2M | 2M | 4M | 4M | 8M |
+| myisam_sort_buffer_size | 16M | 32M | 32M | 64M | 64M | 128M |
+| thread_cache_size | 8 | 16 | 32 | 64 | 128 | 256 |
+| max_connections | 4096 | 4096 | 4096 | 4096 | 4096 | 4096 |
+| max_allowed_packet | 1M | 4M | 16M | 32M | 64M | 64M |
+| query_cache_type (5.0) | 1 | 1 | 1 | 1 | 1 | 1 |
+| query_cache_size (5.0) | 8M | 16M | 32M | 64M | 128M | 128M |
+| innodb_buffer_pool_size (5.7+) | 64M | 128M | 256M | 8% RAM | 10% RAM | 12% RAM |
+| innodb_buffer_pool_instances (5.7+, pool>1G) | 1 | 1 | 1 | min(cpu,8) | min(cpu,16) | min(cpu,16) |
+
+#### 各性能配置下的 CLIENT_POOL_SIZE
+
+| 性能配置 | nano | micro | small | medium | large | xlarge |
+| ------- | ------- | ------- | ------- | ------- | ------- | ------- |
+| CLIENT_POOL_SIZE | 10 | 30 | 100 | 300 | 600 | 1000 |
+
 ## docker-compose部署[群晖推荐]
 
 ### 基本部署

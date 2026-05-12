@@ -30,7 +30,10 @@ RUN MYSQL=mysql-5.7.44-linux-glibc2.12-x86_64 && \
 FROM llnut/dnf:${BASE_TAG}
 
 ENV DNF_DB_ROOT_PASSWORD=88888888 \
-    PATH="/usr/local/mysql/bin:${PATH}"
+    PATH="/usr/local/mysql/bin:${PATH}" \
+    AUTO_TUNE=true \
+    TUNE_PROFILE='' \
+    TUNE_VERBOSE=false
 
 COPY --from=mysql-builder /mysql/bin/ /usr/local/mysql/bin/
 COPY --from=mysql-builder /mysql/lib/ /usr/local/mysql/lib/
@@ -57,6 +60,9 @@ RUN for bin in mysql mysqld_safe mysqladmin mysqldump my_print_defaults; do \
 COPY --chmod=0755 build/shared/service-wrapper.sh /usr/sbin/service
 COPY --chmod=0755 build/shared/mysql-install-db.sh /usr/bin/mysql_install_db
 COPY --chmod=0755 build/shared/mysql-initd.sh /etc/init.d/mysql
+
+COPY build/dnf_data/home/template/init/lib/common.sh /home/template/init/lib/common.sh
+COPY build/dnf_data/home/template/init/lib/tune.sh /home/template/init/lib/tune.sh
 
 COPY build/dnf_data/etc/my.cnf /etc/
 

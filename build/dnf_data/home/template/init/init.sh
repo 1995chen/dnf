@@ -144,6 +144,16 @@ fi
 # 旧版本start_zergsvr_secagent.sh基于shm等待，在未加载libglibc_compat.so的发行版上会死锁
 [ -f "/data/run/start_zergsvr_secagent.sh" ] && ! grep -q -e "waiting for zergsvr.pid" "/data/run/start_zergsvr_secagent.sh" && rm -f "/data/run/start_zergsvr_secagent.sh"
 
+# 旧版本启用jemalloc需要先删除全部启动脚本
+for fp in "/home/template/init/run"/start_*.sh; do
+    sh_name=$(basename "$fp")
+    target="/data/run/$sh_name"
+    if [ -f "$target" ] && grep -q libjemalloc "$fp" && ! grep -q libjemalloc "$target"; then
+        echo "regenerate stale $sh_name: missing jemalloc preload"
+        rm -f "$target"
+    fi
+done
+
 # 初始化所有run脚本
 for fp in "/home/template/init/run"/*.sh; do
     if [ -f "$fp" ]; then

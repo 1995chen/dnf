@@ -1,6 +1,13 @@
 #!/bin/bash
 
 source /home/template/init/lib/common.sh
+source /home/template/init/lib/tune.sh
+
+if [ -x /usr/sbin/mysqld ] || [ -x /usr/local/mysql/bin/mysqld ] || [ -x /usr/bin/mysqld ]; then
+    tune_resolve_and_export "yes"
+else
+    tune_resolve_and_export "no"
+fi
 
 # 大区对应名称
 # 1 : 卡恩, 2 :狄瑞吉, 3 : 希洛克, 4 : 普雷prey, 5 : 凱西亞斯casillas, 6 : 赫爾德hilder , 99 : first server  first , 98 : 開發server
@@ -30,7 +37,6 @@ strip_quotes \
     GATE_TLS_CERT_PATH GATE_TLS_KEY_PATH GATE_TLS_BIND_ADDRESS GATE_TLS_ONLY \
     GAME_SERVER_IP
 
-export CLIENT_POOL_SIZE="${CLIENT_POOL_SIZE:-10}"
 strip_quotes CLIENT_POOL_SIZE
 
 # 校验用户选择的大区

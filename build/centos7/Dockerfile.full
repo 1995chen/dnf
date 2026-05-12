@@ -3,33 +3,49 @@
 ARG DB_TAG=centos7-db
 FROM llnut/dnf:${DB_TAG}
 
-# 安装编译工具和服务端依赖
+# 安装依赖
 RUN yum install -y vim iptables \
     gcc gcc-c++ make zlib-devel libc.so.6 libstdc++ libstdc++.so.6 glibc.i686 libssl.so.6 xulrunner.x86_64 libXtst.x86_64 && \
-    cd /tmp && \
+    yum clean all && rm -rf /var/cache/yum
+
+# 源码编译 socat / Python / setuptools / pip / supervisor / GeoIP
+RUN cd /tmp && \
     curl -fsSLO https://raw.githubusercontent.com/llnut/dnf_util/refs/heads/main/common_pkgs/socat-1.7.4.3.tar.gz && \
     curl -fsSLO https://raw.githubusercontent.com/llnut/dnf_util/refs/heads/main/common_pkgs/Python-2.7.13.tgz && \
     curl -fsSLO https://raw.githubusercontent.com/llnut/dnf_util/refs/heads/main/common_pkgs/setuptools-18.0.1.tgz && \
     curl -fsSLO https://raw.githubusercontent.com/llnut/dnf_util/refs/heads/main/common_pkgs/pip-7.1.0.tar.gz && \
     curl -fsSLO https://raw.githubusercontent.com/llnut/dnf_util/refs/heads/main/common_pkgs/GeoIP-1.4.8.tgz && \
-    curl -fsSLO https://raw.githubusercontent.com/llnut/dnf_util/refs/heads/main/common_pkgs/lib.tgz && \
-    tar -zxvf socat-1.7.4.3.tar.gz && \
-    tar -zxvf Python-2.7.13.tgz && \
-    tar -zxvf setuptools-18.0.1.tgz && \
-    tar -zxvf pip-7.1.0.tar.gz && \
-    tar -zxvf GeoIP-1.4.8.tgz && \
-    tar -zxvf lib.tgz && \
-    mv /tmp/*.so /lib/ && mv /tmp/*.so.1 /lib/ && \
+    tar -zxf socat-1.7.4.3.tar.gz && \
+    tar -zxf Python-2.7.13.tgz && \
+    tar -zxf setuptools-18.0.1.tgz && \
+    tar -zxf pip-7.1.0.tar.gz && \
+    tar -zxf GeoIP-1.4.8.tgz && \
     cd /tmp/socat-1.7.4.3 && ./configure --disable-fips && make && make install && \
     cd /tmp/Python-2.7.13 && ./configure && make install && \
     cd /tmp/setuptools-18.0.1 && python2.7 setup.py install && \
     cd /tmp/pip-7.1.0 && python2.7 setup.py install && \
     pip2.7 install supervisor==3.1.3 && \
     cd /tmp/GeoIP-1.4.8/ && chmod 755 configure && ./configure && make && make install && \
-    yum clean all && \
-    rm -rf /tmp/*
+    rm -rf /tmp/* /root/.cache
 
-# 下载dnf-gate-server
+# 解压32位共享库
+RUN cd /tmp \
+    && curl -fsSLO https://raw.githubusercontent.com/llnut/dnf_util/refs/heads/main/common_pkgs/lib.tgz \
+    && tar -zxf lib.tgz \
+    && mv /tmp/*.so /lib/ && mv /tmp/*.so.1 /lib/ \
+    && rm -rf /tmp/*
+
+# 下载并校验32位jemalloc
+ARG JEMALLOC_I686_URL="https://raw.githubusercontent.com/llnut/dnf_util/refs/heads/main/common_pkgs/libjemalloc-5.3.1-i686.so.2"
+RUN curl -fsSL -o /usr/lib/libjemalloc32.so.2 "${JEMALLOC_I686_URL}" && \
+    curl -fsSL -o /tmp/libjemalloc32.so.2.sha256 "${JEMALLOC_I686_URL}.sha256" && \
+    EXPECTED=$(awk '{print $1}' /tmp/libjemalloc32.so.2.sha256) && \
+    ACTUAL=$(sha256sum /usr/lib/libjemalloc32.so.2 | awk '{print $1}') && \
+    [ "$EXPECTED" = "$ACTUAL" ] || { echo "ERROR: checksum mismatch for libjemalloc i686" >&2; exit 1; } && \
+    chmod 0644 /usr/lib/libjemalloc32.so.2 && \
+    rm -f /tmp/libjemalloc32.so.2.sha256
+
+# 下载并校验dnf-gate-server
 ARG GATE_VERSION="0.4.0"
 RUN GATE_REPO="llnut/dnf-login" && GATE_TARGET="x86_64-unknown-linux-musl" && \
     if [ -z "${GATE_VERSION}" ]; then \
@@ -44,7 +60,7 @@ RUN GATE_REPO="llnut/dnf-login" && GATE_TARGET="x86_64-unknown-linux-musl" && \
     ACTUAL=$(sha256sum "/tmp/${GATE_ASSET}" | awk '{print $1}') && \
     [ "$EXPECTED" = "$ACTUAL" ] || { echo "ERROR: checksum mismatch for ${GATE_ASSET}" >&2; exit 1; } && \
     tar -xzf "/tmp/${GATE_ASSET}" --strip-components=1 -C /usr/bin "dnf-gate-server-${GATE_VERSION}-${GATE_TARGET}/dnf-gate-server" && \
-    rm -f "/tmp/${GATE_ASSET}" "/tmp/${GATE_ASSET}.sha256"
+    rm -rf /tmp/*
 
 ENV MAIN_BRIDGE_IP='127.0.0.1' \
     SERVER_GROUP_DB='cain' \
@@ -83,20 +99,24 @@ ENV MAIN_BRIDGE_IP='127.0.0.1' \
     GATE_TLS_BIND_ADDRESS='0.0.0.0:5504' \
     GATE_TLS_ONLY=false \
     GAME_SERVER_IP='' \
-    CLIENT_POOL_SIZE=10
+    AUTO_TUNE=true \
+    TUNE_PROFILE='' \
+    TUNE_VERBOSE=false
 
 COPY build/dnf_data/ /
 
-RUN sed -i 's|^#skip-locking$|skip-locking|g; \
-            s|^#skip-federated$|skip-federated|g; \
-            s|^#thread_concurrency |thread_concurrency |g; \
-            s|^table_open_cache |table_cache |g; \
-            s|^max_connections = .*|max_connections = 4096|g; \
-            /^basedir=/d; \
-            /^explicit_defaults_for_timestamp=/d; \
-            /^log-error=/d; \
-            /^pid-file=/d' /etc/my.cnf \
+RUN rm -rf /home/template/neople/game/history \
+    && sed -i 's|^#skip-locking$|skip-locking|g; \
+               s|^#skip-federated$|skip-federated|g; \
+               s|^#thread_concurrency |thread_concurrency |g; \
+               s|^table_open_cache |table_cache |g; \
+               s|^max_connections = .*|max_connections = 4096|g; \
+               /^basedir=/d; \
+               /^explicit_defaults_for_timestamp=/d; \
+               /^log-error=/d; \
+               /^pid-file=/d' /etc/my.cnf \
     && sed -i 's|/usr/lib/libglibc_compat.so:||g; \
+               s|:/usr/lib/libglibc_compat.so||g; \
                s|LD_PRELOAD=/usr/lib/libglibc_compat.so ||g' /home/template/init/run/*.sh
 
 WORKDIR /root
