@@ -530,7 +530,7 @@ tune_resolve_and_export() {
     if [ "${MALLOC_CONF+set}" = "set" ]; then
         export MALLOC_CONF
         if [ -z "$MALLOC_CONF" ]; then
-            malloc_src="user-cleared (jemalloc defaults)"
+            malloc_src="user-cleared"
         else
             malloc_src="user-set"
         fi
@@ -564,7 +564,8 @@ tune_resolve_and_export() {
     fi
 
     local mem_mib=$((mem / 1048576))
-    echo "[tune] profile=$profile ($profile_src) cpu=$cpus mem=${mem_mib}MiB MALLOC_CONF=$malloc_src CLIENT_POOL_SIZE=$CLIENT_POOL_SIZE ($cps_src)"
+    local malloc_show="${MALLOC_CONF:-(jemalloc defaults)}"
+    echo "[tune] profile=$profile ($profile_src) cpu=$cpus mem=${mem_mib}MiB CLIENT_POOL_SIZE=$CLIENT_POOL_SIZE ($cps_src) MALLOC_CONF=$malloc_show ($malloc_src)"
 
     if [ "${TUNE_VERBOSE:-false}" = "true" ]; then
         echo "[tune-verbose] cgroup=$cg mem_bytes=$mem cpus=$cpus"
