@@ -120,6 +120,10 @@ tune_size_to_bytes() {
 
 tune_compute_malloc_conf() {
     local profile="$1" cpus="${2:-1}"
+    case "$profile" in
+    nano | micro | small | medium | large | xlarge) ;;
+    *) profile=nano ;;
+    esac
     local narenas_cap lg_tcache dirty muzzy
     case "$profile" in
     nano)
@@ -157,12 +161,6 @@ tune_compute_malloc_conf() {
         lg_tcache=18
         dirty=60000
         muzzy=60000
-        ;;
-    *)
-        narenas_cap=2
-        lg_tcache=13
-        dirty=1000
-        muzzy=0
         ;;
     esac
 
@@ -221,7 +219,11 @@ tune_detect_mysql_family() {
 
 tune_compute_mysql_vars() {
     local profile="$1" mem="${2:-0}" cpus="${3:-1}" family="${4:-57}"
-    local key_buf tos sb rb rrb msb tcs mac map qcs ibps_spec
+    case "$profile" in
+    nano | micro | small | medium | large | xlarge) ;;
+    *) profile=nano ;;
+    esac
+    local key_buf tos sb rb rrb msb tcs tcs_cap mac map qcs ibps_spec
     case "$profile" in
     nano)
         key_buf=64M
@@ -231,7 +233,8 @@ tune_compute_mysql_vars() {
         rrb=1M
         msb=16M
         tcs=8
-        mac=4096
+        tcs_cap=16
+        mac=512
         map=1M
         qcs=8M
         ibps_spec=64M
@@ -244,7 +247,8 @@ tune_compute_mysql_vars() {
         rrb=2M
         msb=32M
         tcs=16
-        mac=4096
+        tcs_cap=32
+        mac=1024
         map=4M
         qcs=16M
         ibps_spec=128M
@@ -257,7 +261,8 @@ tune_compute_mysql_vars() {
         rrb=2M
         msb=32M
         tcs=32
-        mac=4096
+        tcs_cap=64
+        mac=2048
         map=16M
         qcs=32M
         ibps_spec=256M
@@ -270,6 +275,7 @@ tune_compute_mysql_vars() {
         rrb=4M
         msb=64M
         tcs=64
+        tcs_cap=128
         mac=4096
         map=32M
         qcs=64M
@@ -283,7 +289,8 @@ tune_compute_mysql_vars() {
         rrb=4M
         msb=64M
         tcs=128
-        mac=4096
+        tcs_cap=256
+        mac=8192
         map=64M
         qcs=128M
         ibps_spec=10%
@@ -296,27 +303,17 @@ tune_compute_mysql_vars() {
         rrb=8M
         msb=128M
         tcs=256
-        mac=4096
+        tcs_cap=512
+        mac=16384
         map=64M
         qcs=128M
         ibps_spec=12%
         ;;
-    *)
-        key_buf=64M
-        tos=128
-        sb=512K
-        rb=512K
-        rrb=1M
-        msb=16M
-        tcs=8
-        mac=4096
-        map=1M
-        qcs=8M
-        ibps_spec=64M
-        ;;
     esac
 
+    # thread_cache_size 取 max(profile, min(cpus*2, tcs_cap))
     local tcs_floor=$((cpus * 2))
+    [ "$tcs_floor" -gt "$tcs_cap" ] && tcs_floor=$tcs_cap
     [ "$tcs_floor" -gt "$tcs" ] && tcs=$tcs_floor
 
     echo "key_buffer_size=$key_buf"
