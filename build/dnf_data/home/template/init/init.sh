@@ -71,6 +71,15 @@ else
     echo "libhook.so have already inited, do nothing!"
 fi
 
+# 判断frida.js文件是否初始化过
+if [ ! -f "/data/frida.js" ]; then
+    # 拷贝frida.js文件到持久化目录
+    cp /home/template/init/frida.js /data/
+    echo "init frida.js success"
+else
+    echo "frida.js have already inited, do nothing!"
+fi
+
 # 重新生成channel配置文件[这里要重置下]
 rm -rf /etc/supervisor/conf.d/channel.conf
 cp /etc/supervisor/conf.d/channel.conf.template /etc/supervisor/conf.d/channel.conf
