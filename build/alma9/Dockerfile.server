@@ -3,11 +3,10 @@ ARG BASE_TAG=alma9-base
 
 FROM almalinux:9.7-minimal AS builder
 
-RUN microdnf install -y dnf && \
-    dnf install -y --allowerasing --setopt=install_weak_deps=False \
-    gcc gcc-c++ ca-certificates curl git tar gzip binutils \
+RUN microdnf --setopt=install_weak_deps=0 install -y \
+    gcc gcc-c++ ca-certificates git tar gzip binutils \
     glibc-devel.i686 libstdc++-devel.i686 \
-    && dnf clean all
+    && microdnf clean all
 
 # 安装Rust
 ENV RUSTUP_HOME=/usr/local/rustup CARGO_HOME=/usr/local/cargo PATH="/usr/local/cargo/bin:${PATH}"
@@ -55,9 +54,9 @@ RUN for bin in mysql mysqladmin mysqldump my_print_defaults; do \
     && ldconfig
 
 # 安装服务端依赖
-RUN microdnf install -y dnf && \
-    dnf install -y --allowerasing --setopt=install_weak_deps=False \
-    net-tools curl tar gzip \
+RUN microdnf --setopt=install_weak_deps=0 install -y epel-release && \
+    microdnf --setopt=install_weak_deps=0 install -y \
+    net-tools tar gzip \
     glibc.i686 libstdc++.i686 zlib.i686 libgcc.i686 nss-softokn-freebl.i686 \
     # 32位字体渲染
     freetype.i686 fontconfig.i686 \
@@ -71,7 +70,7 @@ RUN microdnf install -y dnf && \
     && ln -sf /usr/lib/libcrypto.so.3 /usr/lib/libcrypto.so.6 \
     # 安装64位jemalloc
     && cp -L /usr/lib64/libjemalloc.so.2 /usr/lib/libjemalloc.so.2 \
-    && dnf clean all && rm -rf /root/.cache /var/cache/dnf
+    && microdnf clean all && rm -rf /root/.cache
 
 # 解压32位共享库
 RUN cd /tmp \
