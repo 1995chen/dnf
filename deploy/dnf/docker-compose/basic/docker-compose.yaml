@@ -40,7 +40,7 @@ services:
     shm_size: 8g
     memswap_limit: -1
     mem_limit: 1g
-    cpu_count: 1
+    cpus: '1.0'
     restart: always
     ports:
       - 2000:180/tcp              # supervisor web

@@ -136,20 +136,41 @@ else
     echo "get_ddns_ip.sh have already inited, do nothing!"
 fi
 
-# 旧版本启用DofSlim需要先删除start_bridge.sh和start_channel.sh
-[ -f "/data/run/start_bridge.sh" ] && ! grep -q -e "^LD_PRELOAD=.*/home/template/init/libdofslim.so" "/data/run/start_bridge.sh" && rm -f "/data/run/start_bridge.sh"
-[ -f "/data/run/start_channel.sh" ] && ! grep -q -e "^LD_PRELOAD=.*/home/template/init/libdofslim.so" "/data/run/start_channel.sh" && rm -f "/data/run/start_channel.sh"
-# 旧版本start_game.sh未等待TSS反作弊shm，启动df_game_r后会触发SIGSEGV
-[ -f "/data/run/start_game.sh" ] && ! grep -q -e "waiting for tss_sdk_bus shm" "/data/run/start_game.sh" && rm -f "/data/run/start_game.sh"
-# 旧版本start_zergsvr_secagent.sh基于shm等待，在未加载libglibc_compat.so的发行版上会死锁
-[ -f "/data/run/start_zergsvr_secagent.sh" ] && ! grep -q -e "waiting for zergsvr.pid" "/data/run/start_zergsvr_secagent.sh" && rm -f "/data/run/start_zergsvr_secagent.sh"
-
-# 旧版本启用jemalloc需要先删除全部启动脚本
+# 扫描并更新run脚本
 for fp in "/home/template/init/run"/start_*.sh; do
     sh_name=$(basename "$fp")
     target="/data/run/$sh_name"
-    if [ -f "$target" ] && grep -q libjemalloc "$fp" && ! grep -q libjemalloc "$target"; then
-        echo "regenerate stale $sh_name: missing jemalloc preload"
+    [ -f "$target" ] || continue
+
+    reason=""
+    # 旧版本启用jemalloc需要先删除全部启动脚本
+    if grep -q libjemalloc "$fp" && ! grep -q libjemalloc "$target"; then
+        reason="missing jemalloc preload"
+    else
+        case "$sh_name" in
+        start_bridge.sh | start_channel.sh)
+            # 旧版本启用DofSlim需要先删除start_bridge.sh和start_channel.sh
+            if grep -q libdofslim.so "$fp" && ! grep -q libdofslim.so "$target"; then
+                reason="missing libdofslim preload"
+            fi
+            ;;
+        start_game.sh)
+            # 旧版本start_game.sh未等待TSS反作弊shm，启动df_game_r后会触发SIGSEGV
+            if grep -q "waiting for tss_sdk_bus shm" "$fp" && ! grep -q "waiting for tss_sdk_bus shm" "$target"; then
+                reason="missing tss_sdk_bus shm wait"
+            fi
+            ;;
+        start_zergsvr_secagent.sh)
+            # 旧版本start_zergsvr_secagent.sh基于shm等待，在未加载libglibc_compat.so的发行版上会死锁
+            if grep -q "waiting for zergsvr.pid" "$fp" && ! grep -q "waiting for zergsvr.pid" "$target"; then
+                reason="missing zergsvr.pid wait"
+            fi
+            ;;
+        esac
+    fi
+
+    if [ -n "$reason" ]; then
+        echo "regenerate stale $sh_name: $reason"
         rm -f "$target"
     fi
 done
