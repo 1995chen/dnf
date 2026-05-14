@@ -124,43 +124,55 @@ tune_compute_malloc_conf() {
     nano | micro | small | medium | large | xlarge) ;;
     *) profile=nano ;;
     esac
-    local narenas_cap lg_tcache dirty muzzy
+    local narenas_cap lg_tcache dirty muzzy bg_thread retain
     case "$profile" in
     nano)
         narenas_cap=2
         lg_tcache=13
         dirty=1000
-        muzzy=0
+        muzzy=500
+        bg_thread=false
+        retain=false
         ;;
     micro)
         narenas_cap=2
         lg_tcache=14
-        dirty=5000
+        dirty=3000
         muzzy=1000
+        bg_thread=false
+        retain=false
         ;;
     small)
         narenas_cap=4
         lg_tcache=15
         dirty=10000
         muzzy=5000
+        bg_thread=true
+        retain=true
         ;;
     medium)
         narenas_cap=4
         lg_tcache=16
         dirty=20000
         muzzy=10000
+        bg_thread=true
+        retain=true
         ;;
     large)
         narenas_cap=8
         lg_tcache=17
         dirty=30000
         muzzy=30000
+        bg_thread=true
+        retain=true
         ;;
     xlarge)
         narenas_cap=16
         lg_tcache=18
         dirty=60000
         muzzy=60000
+        bg_thread=true
+        retain=true
         ;;
     esac
 
@@ -172,9 +184,11 @@ tune_compute_malloc_conf() {
     parts="${parts},lg_tcache_max:${lg_tcache}"
     parts="${parts},dirty_decay_ms:${dirty}"
     parts="${parts},muzzy_decay_ms:${muzzy}"
-    parts="${parts},background_thread:true"
+    parts="${parts},background_thread:${bg_thread}"
+    parts="${parts},retain:${retain}"
     case "$profile" in
-    nano | micro | small | medium) parts="${parts},thp:never" ;;
+    nano | micro) parts="${parts},metadata_thp:disabled,thp:never" ;;
+    small | medium) parts="${parts},thp:never" ;;
     large | xlarge) parts="${parts},metadata_thp:auto" ;;
     esac
     echo "$parts"

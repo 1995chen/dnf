@@ -201,10 +201,12 @@ CPU 数量影响以下参数：
 | ------- | ------- | ------- | ------- | ------- | ------- | ------- |
 | narenas 上限 | 2 | 2 | 4 | 4 | 8 | 16 |
 | lg_tcache_max | 13 | 14 | 15 | 16 | 17 | 18 |
-| dirty_decay_ms | 1000 | 5000 | 10000 | 20000 | 30000 | 60000 |
-| muzzy_decay_ms | 0 | 1000 | 5000 | 10000 | 30000 | 60000 |
-| background_thread | true | true | true | true | true | true |
-| thp / metadata_thp | thp:never | thp:never | thp:never | thp:never | metadata_thp:auto | metadata_thp:auto |
+| dirty_decay_ms | 1000 | 3000 | 10000 | 20000 | 30000 | 60000 |
+| muzzy_decay_ms | 500 | 1000 | 5000 | 10000 | 30000 | 60000 |
+| background_thread | false | false | true | true | true | true |
+| retain | false | false | true | true | true | true |
+| thp | never | never | never | never | default | default |
+| metadata_thp | disabled | disabled | disabled | disabled | auto | auto |
 
 #### 各性能配置下的 MySQL 参数
 
