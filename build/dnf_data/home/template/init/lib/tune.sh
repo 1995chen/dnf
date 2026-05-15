@@ -135,7 +135,7 @@ tune_compute_malloc_conf() {
         retain=false
         ;;
     micro)
-        narenas_cap=2
+        narenas_cap=4
         lg_tcache=14
         dirty=3000
         muzzy=1000
@@ -143,7 +143,7 @@ tune_compute_malloc_conf() {
         retain=false
         ;;
     small)
-        narenas_cap=4
+        narenas_cap=8
         lg_tcache=15
         dirty=10000
         muzzy=5000
@@ -151,7 +151,7 @@ tune_compute_malloc_conf() {
         retain=true
         ;;
     medium)
-        narenas_cap=4
+        narenas_cap=16
         lg_tcache=16
         dirty=20000
         muzzy=10000
@@ -159,7 +159,7 @@ tune_compute_malloc_conf() {
         retain=true
         ;;
     large)
-        narenas_cap=8
+        narenas_cap=64
         lg_tcache=17
         dirty=30000
         muzzy=30000
@@ -167,7 +167,7 @@ tune_compute_malloc_conf() {
         retain=true
         ;;
     xlarge)
-        narenas_cap=16
+        narenas_cap=512
         lg_tcache=18
         dirty=60000
         muzzy=60000
@@ -177,6 +177,9 @@ tune_compute_malloc_conf() {
     esac
 
     local narenas=$cpus
+    case "$profile" in
+    small | medium | large | xlarge) narenas=$((cpus * 2)) ;;
+    esac
     [ "$narenas" -gt "$narenas_cap" ] && narenas=$narenas_cap
     [ "$narenas" -lt 1 ] && narenas=1
 

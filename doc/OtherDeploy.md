@@ -166,7 +166,7 @@
 #### CPU
 
 CPU 数量影响以下参数：
-- jemalloc `narenas`：取 CPU 数与性能配置上限的较小值
+- jemalloc `narenas`：nano/micro 取 CPU 数与性能配置上限的较小值，small 及以上配置取 CPU × 2 与性能配置上限的较小值
 - MySQL `thread_cache_size`：取性能配置与 CPU × 2 的较大值
 - MySQL 5.7+ `innodb_buffer_pool_size > 1G` 时按 CPU 数设置 `innodb_buffer_pool_instances`
 
@@ -199,7 +199,7 @@ CPU 数量影响以下参数：
 
 | key | nano | micro | small | medium | large | xlarge |
 | ------- | ------- | ------- | ------- | ------- | ------- | ------- |
-| narenas 上限 | 2 | 2 | 4 | 4 | 8 | 16 |
+| narenas | min(cpu,2) | min(cpu,4) | min(cpu×2,8) | min(cpu×2,16) | min(cpu×2,64) | min(cpu×2,512) |
 | lg_tcache_max | 13 | 14 | 15 | 16 | 17 | 18 |
 | dirty_decay_ms | 1000 | 3000 | 10000 | 20000 | 30000 | 60000 |
 | muzzy_decay_ms | 500 | 1000 | 5000 | 10000 | 30000 | 60000 |
