@@ -9,3 +9,4 @@ deploy
 doc
 other
 plugin
+**/*.test.sh

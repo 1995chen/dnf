@@ -222,6 +222,8 @@ GATE_ENV="GAME_SERVER_IP=\"${GAME_SERVER_IP:-$PUBLIC_IP}\",DB_HOST=\"$CUR_MAIN_D
 GATE_ENV="${GATE_ENV//%/%%}"
 GATE_ENV=$(printf '%s' "$GATE_ENV" | sed 's/[\\&]/\\&/g')
 sed -i "s|^environment=.*|environment=$GATE_ENV|" /etc/supervisor/conf.d/gate.conf
+rm -rf /data/.barrier
+mkdir -p /data/.barrier/ready /data/.barrier/started
 # 切换到主目录
 cd /root || exit
 supervisord -c /etc/supervisord.conf

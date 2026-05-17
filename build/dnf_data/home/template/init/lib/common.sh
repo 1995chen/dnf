@@ -30,24 +30,6 @@ wait_for_port() {
     return 1
 }
 
-# 等待MONITOR_PUBLIC_IP文件写入后获取内容
-# 用法: MONITOR_PUBLIC_IP=$(wait_for_monitor_ip)
-# 超时5分钟后返回1
-wait_for_monitor_ip() {
-    local max_retries=60
-    local counter=0
-    while [ -z "$(cat /data/monitor_ip/MONITOR_PUBLIC_IP 2>/dev/null)" ]; do
-        echo "waiting for MONITOR_PUBLIC_IP..." >&2
-        if [ "$counter" -ge "$max_retries" ]; then
-            echo "ERROR: timeout waiting for MONITOR_PUBLIC_IP" >&2
-            return 1
-        fi
-        sleep 5
-        ((counter++))
-    done
-    cat /data/monitor_ip/MONITOR_PUBLIC_IP
-}
-
 # sed替换前先转义特殊字符
 # 用法: safe_sed PATTERN REPLACEMENT FILE
 safe_sed() {

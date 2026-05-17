@@ -1,0 +1,19 @@
+#!/bin/bash
+
+if [ "$#" -lt 2 ]; then
+    echo "usage: barrier-wait PROGRAM CMD [ARGS...]" >&2
+    exit 2
+fi
+
+prog="$1"
+shift
+
+SCRIPT_PATH=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+if [ -z "$SCRIPT_PATH" ] || [ ! -f "${SCRIPT_PATH}/barrier.sh" ]; then
+    echo "barrier-wait: cannot locate barrier.sh next to ${BASH_SOURCE[0]}" >&2
+    exit 3
+fi
+# shellcheck source=barrier.sh
+source "${SCRIPT_PATH}/barrier.sh"
+
+barrier_main "$prog" "$@"

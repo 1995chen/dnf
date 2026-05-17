@@ -14,8 +14,6 @@ on:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event.inputs.tags || '' }}
-  # Skip cancellation for release runs. A partially-promoted release would leave
-  # :latest pointing to a mix of new db / server tags and an old full tag.
   cancel-in-progress: ${{ github.event_name != 'release' }}
 
 permissions:
@@ -83,7 +81,13 @@ jobs:
             echo "cache_fallback_slug=${CACHE_FALLBACK_SLUG}"
           } >> "$GITHUB_OUTPUT"
 
-  # Ensure the buildkit mirror exists on ghcr. Recreate it on first run or after deletion.
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6.0.2
+      - name: Run unified shell test suite
+        run: bash .github/scripts/run-shell-tests.sh
+
   ensure-buildkit-mirror:
     needs: metadata
     runs-on: ubuntu-latest
@@ -119,11 +123,8 @@ jobs:
             exit 1
           fi
 
-  # One job per OS runs base, then middle with db and server in parallel, then full,
-  # all on the same buildkit instance. Layers stay in the local cache between stages.
-  # The registry only sees cache-to writes for cross-run reuse and the final image push.
   build-pipeline:
-    needs: [metadata, ensure-buildkit-mirror]
+    needs: [metadata, ensure-buildkit-mirror, tests]
     name: build-${{ matrix.os }}
     runs-on: ubuntu-latest
     strategy:
@@ -235,11 +236,6 @@ jobs:
             docker buildx imagetools create --tag "${REG}:${LATEST}" "${REG}:${PRIMARY}"
           done
 
-      # Build db and server together in one buildkit invocation via the middle group.
-      # The FROM base layers stay in the buildkit local cache from the previous step,
-      # so no layer download is needed. A manifest HEAD lookup may still resolve the
-      # tag to a digest. db is IO and network bound; server is CPU bound. The two do
-      # not contend for the same resource.
       - name: Build and push db + server via bake
         uses: docker/bake-action@v7.1.0
         env:
@@ -274,10 +270,6 @@ jobs:
             docker buildx imagetools create --tag "${REG}:${SERVER_LATEST}" "${REG}:${SERVER_PRIMARY}"
           done
 
-      # full's FROM db layers come from the middle step. The rust builder stage comes
-      # from the server build on debian13, ubuntu26, and alma9. Both stay in the
-      # buildkit local cache. The rust compile hits the cache and no layer is
-      # downloaded from the registry.
       - name: Build and push full
         uses: docker/bake-action@v7.1.0
         env:

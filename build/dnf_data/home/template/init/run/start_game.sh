@@ -9,11 +9,9 @@ channel_name="${SERVER_GROUP_NAME}${channel_no}"
 
 echo "channel_name is $channel_name"
 echo "prepare to start ch.$channel_no, process_sequence is $process_sequence"
-# 等待bridge启动,最多等待30秒
-wait_for_port "$MAIN_BRIDGE_IP" 7000 30
-# 等待MONITOR_PUBLIC_IP设置
-if ! MONITOR_PUBLIC_IP=$(wait_for_monitor_ip); then
-    echo "ERROR: timeout waiting for MONITOR_PUBLIC_IP, cannot start game" >&2
+MONITOR_PUBLIC_IP=$(cat /data/monitor_ip/MONITOR_PUBLIC_IP 2>/dev/null)
+if [ -z "$MONITOR_PUBLIC_IP" ]; then
+    echo "ERROR: MONITOR_PUBLIC_IP empty, cannot start game" >&2
     exit 1
 fi
 echo "MONITOR_PUBLIC_IP is $MONITOR_PUBLIC_IP"
@@ -39,19 +37,6 @@ if [ -n "$old_pid" ]; then
     kill -9 "$old_pid"
 fi
 rm -rf "pid/${channel_name}.pid"
-
-# 等待secagent创建TSS反作弊shm。
-counter=0
-while [ "$counter" -lt 60 ]; do
-    if ls /dev/shm/sec/tss_sdk_bus_* >/dev/null 2>&1 ||
-        ls /dev/shm/sec_tss_sdk_bus_* >/dev/null 2>&1; then
-        echo "tss_sdk_bus shm ready"
-        break
-    fi
-    echo "waiting for tss_sdk_bus shm... $counter"
-    sleep 2
-    ((counter++))
-done
 
 # 加载DP并启动[确保DP路径已经被正确映射]
 LD_PRELOAD="/usr/lib/libjemalloc32.so.2:/usr/lib/libglibc_compat.so:/dp2/libhook.so:/home/neople/game/frida.so" ./df_game_r "$channel_name" nofork &

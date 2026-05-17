@@ -1,11 +1,9 @@
 #!/bin/bash
 
-source /home/template/init/lib/common.sh
-
-# GAME_SERVER_IP为空时，等待monitor_ip.sh解析到真实IP后再启动
 if [ -z "$GAME_SERVER_IP" ]; then
-    if ! GAME_SERVER_IP=$(wait_for_monitor_ip); then
-        echo "ERROR: timeout waiting for MONITOR_PUBLIC_IP, cannot start dnf-gate-server" >&2
+    GAME_SERVER_IP=$(cat /data/monitor_ip/MONITOR_PUBLIC_IP 2>/dev/null)
+    if [ -z "$GAME_SERVER_IP" ]; then
+        echo "ERROR: MONITOR_PUBLIC_IP empty, cannot start dnf-gate-server" >&2
         exit 1
     fi
 fi

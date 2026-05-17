@@ -11,20 +11,20 @@ else
     echo "init_sql have already inited, do nothing!"
 fi
 # 初始化本地数据库
-run_or_exit "init local db" bash /home/template/init/init_local_db.sh
+run_or_exit "init local db" bash /home/template/init/init-local-db.sh
 # 先等主数据库可连接再执行 GRANT
 # standalone 部署时防止与 mysql 启动过程的竞态
-run_or_exit "wait for main db" bash /home/template/init/wait_for_mysql.sh \
+run_or_exit "wait for main db" bash /home/template/init/wait-for-mysql.sh \
     "$CUR_MAIN_DB_HOST" "$CUR_MAIN_DB_PORT" "$CUR_MAIN_DB_ROOT_PASSWORD"
 # 初始化主数据库
-run_or_exit "init main db" bash /home/template/init/init_main_db.sh
+run_or_exit "init main db" bash /home/template/init/init-main-db.sh
 # 大区数据库部署在不同 host 或端口时同样需要等待
 if [ "$CUR_SG_DB_HOST:$CUR_SG_DB_PORT" != "$CUR_MAIN_DB_HOST:$CUR_MAIN_DB_PORT" ]; then
-    run_or_exit "wait for server group db" bash /home/template/init/wait_for_mysql.sh \
+    run_or_exit "wait for server group db" bash /home/template/init/wait-for-mysql.sh \
         "$CUR_SG_DB_HOST" "$CUR_SG_DB_PORT" "$CUR_SG_DB_ROOT_PASSWORD"
 fi
 # 初始化大区数据库
-run_or_exit "init server group db" bash /home/template/init/init_server_group_db.sh
+run_or_exit "init server group db" bash /home/template/init/init-server-group-db.sh
 
 # 判断Script.pvf文件是否初始化过
 if [ ! -f "/data/Script.pvf" ]; then
@@ -104,7 +104,7 @@ for num in $numbers; do
         cat >>/etc/supervisor/conf.d/channel.conf <<EOF
 
 [program:game_${SERVER_GROUP_NAME}${num}]
-command=/bin/bash -c "/data/run/start_game.sh $num $process_sequence"
+command=/bin/bash -c "/home/template/init/lib/barrier-wait game_${SERVER_GROUP_NAME}${num} /data/run/start_game.sh $num $process_sequence"
 directory=/home/neople/game
 user=root
 autostart=true
@@ -145,56 +145,27 @@ else
     echo "get_ddns_ip.sh have already inited, do nothing!"
 fi
 
-# 扫描并更新run脚本
-for fp in "/home/template/init/run"/start_*.sh; do
+# 初始化所有run脚本
+ref_dir=/data/.run-template
+mkdir -p /data/run "$ref_dir"
+for fp in "/home/template/init/run"/*.sh; do
+    [ -f "$fp" ] || continue
     sh_name=$(basename "$fp")
     target="/data/run/$sh_name"
-    [ -f "$target" ] || continue
-
-    reason=""
-    # 旧版本启用jemalloc需要先删除全部启动脚本
-    if grep -q libjemalloc "$fp" && ! grep -q libjemalloc "$target"; then
-        reason="missing jemalloc preload"
+    ref="$ref_dir/$sh_name"
+    if [ ! -f "$target" ]; then
+        cp -f "$fp" "$target"
+        cp -f "$fp" "$ref"
+        echo "init $sh_name success"
+    elif [ -f "$ref" ] && ! cmp -s "$target" "$ref"; then
+        echo "keep customized $sh_name, not overwritten"
+    elif cmp -s "$fp" "$target"; then
+        cp -f "$fp" "$ref"
+        echo "$sh_name have already inited, do nothing!"
     else
-        case "$sh_name" in
-        start_bridge.sh | start_channel.sh)
-            # 旧版本启用DofSlim需要先删除start_bridge.sh和start_channel.sh
-            if grep -q libdofslim.so "$fp" && ! grep -q libdofslim.so "$target"; then
-                reason="missing libdofslim preload"
-            fi
-            ;;
-        start_game.sh)
-            # 旧版本start_game.sh未等待TSS反作弊shm，启动df_game_r后会触发SIGSEGV
-            if grep -q "waiting for tss_sdk_bus shm" "$fp" && ! grep -q "waiting for tss_sdk_bus shm" "$target"; then
-                reason="missing tss_sdk_bus shm wait"
-            fi
-            ;;
-        start_zergsvr_secagent.sh)
-            # 旧版本start_zergsvr_secagent.sh基于shm等待，在未加载libglibc_compat.so的发行版上会死锁
-            if grep -q "waiting for zergsvr.pid" "$fp" && ! grep -q "waiting for zergsvr.pid" "$target"; then
-                reason="missing zergsvr.pid wait"
-            fi
-            ;;
-        esac
-    fi
-
-    if [ -n "$reason" ]; then
-        echo "regenerate stale $sh_name: $reason"
-        rm -f "$target"
-    fi
-done
-
-# 初始化所有run脚本
-for fp in "/home/template/init/run"/*.sh; do
-    if [ -f "$fp" ]; then
-        sh_name=$(basename "$fp")
-        # 判断脚本是否初始化
-        if [ ! -f "/data/run/$sh_name" ]; then
-            cp "$fp" "/data/run/"
-            echo "init $sh_name success"
-        else
-            echo "$sh_name have already inited, do nothing!"
-        fi
+        cp -f "$fp" "$target"
+        cp -f "$fp" "$ref"
+        echo "regenerate $sh_name: template updated"
     fi
 done
 

@@ -1,0 +1,84 @@
+name: dev-tag-cleanup
+
+on:
+  schedule:
+    - cron: '0 6 * * 0'  # weekly, Sunday 06:00 UTC
+  workflow_dispatch:
+    inputs:
+      retention_days:
+        description: Days of dev commit tags to keep
+        required: false
+        default: 90
+        type: number
+      dry_run:
+        description: List deletions without deleting tags
+        required: false
+        default: true
+        type: boolean
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  ACR_REGISTRY: ${{ secrets.ACR_REGISTRY }}
+  IMAGE_PATH: llnut/dnf
+  REGCTL_VERSION: v0.11.4
+  REGCTL_SHA256: 67938b732228a8afcee8e9e771a8667a29de967f984a8cdc8fb147741718db15
+
+jobs:
+  cleanup:
+    name: Prune old dev commit tags
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6.0.2
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          fetch-depth: 0
+
+      - uses: ./.github/actions/registry-login
+        with:
+          dockerhub-username: ${{ secrets.DOCKERHUB_USERNAME }}
+          dockerhub-token: ${{ secrets.DOCKERHUB_TOKEN }}
+          ghcr-token: ${{ secrets.GITHUB_TOKEN }}
+          ghcr-actor: ${{ github.actor }}
+          quay-username: ${{ secrets.QUAY_USERNAME }}
+          quay-token: ${{ secrets.QUAY_TOKEN }}
+          acr-registry: ${{ env.ACR_REGISTRY }}
+          acr-username: ${{ secrets.ACR_USERNAME }}
+          acr-password: ${{ secrets.ACR_PASSWORD }}
+
+      - name: Install regctl
+        run: |
+          if ! curl -fsSL \
+            -o regctl \
+            "https://github.com/regclient/regclient/releases/download/${REGCTL_VERSION}/regctl-linux-amd64"; then
+            echo "::error::failed to download regctl ${REGCTL_VERSION}" >&2
+            exit 1
+          fi
+
+          if ! printf '%s  regctl\n' "${REGCTL_SHA256}" > regctl.sha256; then
+            echo "::error::failed to write regctl checksum file" >&2
+            exit 1
+          fi
+
+          if ! sha256sum -c regctl.sha256; then
+            echo "::error::regctl checksum verification failed" >&2
+            exit 1
+          fi
+
+          if ! sudo install -m 0755 regctl /usr/local/bin/regctl; then
+            echo "::error::failed to install regctl" >&2
+            exit 1
+          fi
+
+          if ! regctl version; then
+            echo "::error::failed to run regctl after installation" >&2
+            exit 1
+          fi
+
+      - name: Prune dev commit tags
+        env:
+          DRY_RUN: ${{ inputs.dry_run || false }}
+          RETENTION_DAYS: ${{ inputs.retention_days || 90 }}
+        run: ./.github/scripts/prune-dev-tags.sh

@@ -4,11 +4,9 @@ source /home/template/init/lib/common.sh
 
 killall -9 df_channel_r
 rm -rf pid/*.pid
-# 等待bridge启动,最多等待20秒
-wait_for_port "$MAIN_BRIDGE_IP" 7000 20
-# 等待MONITOR_PUBLIC_IP设置
-if ! MONITOR_PUBLIC_IP=$(wait_for_monitor_ip); then
-    echo "ERROR: timeout waiting for MONITOR_PUBLIC_IP, cannot start channel" >&2
+MONITOR_PUBLIC_IP=$(cat /data/monitor_ip/MONITOR_PUBLIC_IP 2>/dev/null)
+if [ -z "$MONITOR_PUBLIC_IP" ]; then
+    echo "ERROR: MONITOR_PUBLIC_IP empty, cannot start channel" >&2
     exit 1
 fi
 # 生成配置文件
