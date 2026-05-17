@@ -4,6 +4,11 @@
 SCRIPT_PATH=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 PROBE="${SCRIPT_PATH}/probe-port.sh"
 
+if ! command -v socat >/dev/null 2>&1; then
+    echo "probe-port.test: socat is required but not installed" >&2
+    exit 1
+fi
+
 WORK=$(mktemp -d)
 LISTENERS=()
 cleanup() {

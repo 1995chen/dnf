@@ -85,6 +85,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6.0.2
+      - name: Install test dependencies
+        run: sudo apt-get update && sudo apt-get install -y socat
       - name: Run unified shell test suite
         run: bash .github/scripts/run-shell-tests.sh
 
