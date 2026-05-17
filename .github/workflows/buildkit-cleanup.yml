@@ -4,136 +4,150 @@ on:
   schedule:
     - cron: '0 5 * * 0'  # weekly, Sunday 05:00 UTC
   workflow_dispatch:
+    inputs:
+      keep_days:
+        description: Days of dated buildkit snapshot tags to keep
+        required: false
+        default: 7
+        type: number
+      dry_run:
+        description: List deletions without deleting tags
+        required: false
+        default: true
+        type: boolean
 
 permissions:
   contents: read
   packages: write
 
+env:
+  REGCTL_VERSION: v0.11.4
+  REGCTL_SHA256: 67938b732228a8afcee8e9e771a8667a29de967f984a8cdc8fb147741718db15
+
 jobs:
   cleanup:
-    name: Prune buildkit mirror versions
+    name: Prune buildkit mirror snapshot tags
     runs-on: ubuntu-latest
     steps:
-      - name: Prune old buildkit mirror snapshots
+      - uses: actions/checkout@v6.0.2
+
+      - uses: ./.github/actions/registry-login
+        with:
+          ghcr-token: ${{ secrets.GHCR_DELETE_TOKEN }}
+          ghcr-actor: ${{ github.actor }}
+
+      - name: Install regctl
+        run: |
+          if ! curl -fsSL \
+            -o regctl \
+            "https://github.com/regclient/regclient/releases/download/${REGCTL_VERSION}/regctl-linux-amd64"; then
+            echo "::error::failed to download regctl ${REGCTL_VERSION}" >&2
+            exit 1
+          fi
+
+          if ! printf '%s  regctl\n' "${REGCTL_SHA256}" > regctl.sha256; then
+            echo "::error::failed to write regctl checksum file" >&2
+            exit 1
+          fi
+
+          if ! sha256sum -c regctl.sha256; then
+            echo "::error::regctl checksum verification failed" >&2
+            exit 1
+          fi
+
+          if ! sudo install -m 0755 regctl /usr/local/bin/regctl; then
+            echo "::error::failed to install regctl" >&2
+            exit 1
+          fi
+
+          if ! regctl version; then
+            echo "::error::failed to run regctl after installation" >&2
+            exit 1
+          fi
+
+      - name: Prune old buildkit snapshot tags
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          KEEP_DAYS: ${{ inputs.keep_days || 7 }}
+          DRY_RUN: ${{ inputs.dry_run || false }}
           OWNER: ${{ github.repository_owner }}
-          REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
 
-          PKG=buildkit
+          REPO="ghcr.io/${OWNER}/buildkit"
           ROLLING_TAG=buildx-stable-1
-          SNAPSHOT_RE='^buildx-stable-1-[0-9]{8}$'
-          KEEP_DAILY_SNAPSHOTS=7
 
-          # Pick the API path based on whether the owner is a user or an organization.
-          OWNER_TYPE=$(gh api "/repos/${REPO}" --jq '.owner.type' | tr '[:upper:]' '[:lower:]')
-          case "$OWNER_TYPE" in
-            user)         BASE="/users/${OWNER}/packages/container/${PKG}" ;;
-            organization) BASE="/orgs/${OWNER}/packages/container/${PKG}"  ;;
-            *) echo "unknown owner type: ${OWNER_TYPE}" >&2; exit 1 ;;
-          esac
+          is_true() {
+            case "${1,,}" in
+              1 | true | yes | y | on) return 0 ;;
+              *) return 1 ;;
+            esac
+          }
 
-          # The package may not exist yet on a brand-new repo; nothing to clean.
-          # Other lookup failures should fail the workflow so stale snapshots do
-          # not accumulate silently.
-          LOOKUP_ERR=$(mktemp)
-          if ! gh api "$BASE" >/dev/null 2>"$LOOKUP_ERR"; then
-            if grep -q "HTTP 404" "$LOOKUP_ERR"; then
-              echo "package ${PKG} does not exist, nothing to clean"
+          # Tags only. The rolling buildx-stable-1 index and its per-platform
+          # child manifests stay, so the in-use mirror cannot break. Untagged
+          # versions are deliberately left alone: a multi-arch index references
+          # them by digest, deleting them by id orphans the live mirror.
+          if ! regctl tag ls "$REPO" > tags.txt 2> tagerr.txt; then
+            if grep -qiE 'not found|404' tagerr.txt; then
+              echo "package buildkit does not exist, nothing to clean"
               exit 0
             fi
-
-            echo "::error::failed to look up package ${PKG}; not pruning mirror snapshots" >&2
-            cat "$LOOKUP_ERR" >&2
+            echo "::error::failed to list tags for ${REPO}" >&2
+            cat tagerr.txt >&2
             exit 1
           fi
-          rm -f "$LOOKUP_ERR"
 
-          # Each line: <created_at><tab><version_id><tab><tag1,tag2,...>;
-          # empty tag list means an untagged version.
-          VERSIONS=$(mktemp)
-          gh api "${BASE}/versions" --paginate \
-            --jq '.[] | [.created_at, .id, (.metadata.container.tags | join(","))] | @tsv' \
-            > "$VERSIONS"
+          now=$(date -u +%s)
+          deleted=0
+          kept=0
+          failed=0
+          while IFS= read -r tag; do
+            [ -n "$tag" ] || continue
 
-          KEEP_SNAPSHOT_IDS=$(mktemp)
-          awk -F '\t' -v snapshot_re="$SNAPSHOT_RE" '
-            {
-              split($3, tags, ",")
-              for (i in tags) {
-                if (tags[i] ~ snapshot_re) {
-                  print tags[i] "\t" $2
-                }
-              }
-            }
-          ' "$VERSIONS" \
-            | sort -r \
-            | awk -F '\t' '!seen[$2]++ { print $2 }' \
-            | head -n "$KEEP_DAILY_SNAPSHOTS" \
-            > "$KEEP_SNAPSHOT_IDS"
+            if [ "$tag" = "$ROLLING_TAG" ]; then
+              echo "[rolling] keep ${tag}"
+              kept=$((kept + 1))
+              continue
+            fi
 
-          echo "snapshot version ids to keep:"
-          cat "$KEEP_SNAPSHOT_IDS"
-          echo "---"
-
-          DELETED=0
-          KEPT=0
-          FAILED=0
-          while IFS=$'\t' read -r CREATED_AT ID TAGS; do
-            if [ -z "${TAGS:-}" ]; then
-              echo "[untagged] DELETE id=${ID} created_at=${CREATED_AT}"
-              if gh api --silent -X DELETE "${BASE}/versions/${ID}"; then
-                DELETED=$((DELETED+1))
+            if [[ "$tag" =~ ^buildx-stable-1-([0-9]{4})([0-9]{2})([0-9]{2})$ ]]; then
+              snap_date="${BASH_REMATCH[1]}-${BASH_REMATCH[2]}-${BASH_REMATCH[3]}"
+              if ! snap_ts=$(date -u -d "$snap_date" +%s 2>/dev/null); then
+                echo "[skip] unparseable date in ${tag}, keeping"
+                kept=$((kept + 1))
+                continue
+              fi
+              age=$(( (now - snap_ts) / 86400 ))
+              if [ "$age" -le "$KEEP_DAYS" ]; then
+                echo "[recent] keep ${tag} age=${age}d"
+                kept=$((kept + 1))
+                continue
+              fi
+              if is_true "$DRY_RUN"; then
+                echo "[dry-run] delete ${tag} age=${age}d"
+                continue
+              fi
+              echo "[stale] delete ${tag} age=${age}d"
+              # tag delete drops only this tag pointer, never the index children
+              if regctl tag delete --ignore-missing "${REPO}:${tag}"; then
+                deleted=$((deleted + 1))
               else
-                FAILED=$((FAILED+1))
-                echo "  delete failed for id=${ID}"
+                failed=$((failed + 1))
+                echo "  delete failed for ${tag}"
               fi
               continue
             fi
 
-            KEEP_THIS=false
-            HAS_SNAPSHOT=false
-            HAS_UNKNOWN=false
-            IFS=',' read -ra TAG_ARR <<< "$TAGS"
-            for TAG in "${TAG_ARR[@]}"; do
-              if [ "$TAG" = "$ROLLING_TAG" ]; then
-                KEEP_THIS=true
-              elif [[ "$TAG" =~ ^buildx-stable-1-[0-9]{8}$ ]]; then
-                HAS_SNAPSHOT=true
-              else
-                HAS_UNKNOWN=true
-              fi
-            done
-
-            if [ "$KEEP_THIS" = true ]; then
-              echo "[rolling] KEEP id=${ID} tags=${TAGS}"
-              KEPT=$((KEPT+1))
-            elif [ "$HAS_SNAPSHOT" = true ] && grep -qFx "$ID" "$KEEP_SNAPSHOT_IDS"; then
-              echo "[recent-snapshot] KEEP id=${ID} tags=${TAGS}"
-              KEPT=$((KEPT+1))
-            elif [ "$HAS_SNAPSHOT" = true ] && [ "$HAS_UNKNOWN" = false ]; then
-              echo "[stale-snapshot] DELETE id=${ID} tags=${TAGS}"
-              if gh api --silent -X DELETE "${BASE}/versions/${ID}"; then
-                DELETED=$((DELETED+1))
-              else
-                FAILED=$((FAILED+1))
-                echo "  delete failed for id=${ID}"
-              fi
-            else
-              echo "[unknown-tag] KEEP id=${ID} tags=${TAGS}"
-              KEPT=$((KEPT+1))
-            fi
-          done < "$VERSIONS"
+            echo "[unknown] keep ${tag}"
+            kept=$((kept + 1))
+          done < tags.txt
 
           echo "---"
-          echo "deleted: ${DELETED}"
-          echo "kept:    ${KEPT}"
-          echo "failed:  ${FAILED}"
+          echo "deleted: ${deleted}"
+          echo "kept:    ${kept}"
+          echo "failed:  ${failed}"
 
-          # Surface transient API failures in the Actions UI so they don't accumulate silently.
-          if [ "${FAILED}" -gt 0 ]; then
-            echo "::error::${FAILED} delete operation(s) failed; rerun to retry"
+          if [ "${failed}" -gt 0 ]; then
+            echo "::error::${failed} delete operation(s) failed; rerun to retry"
             exit 1
           fi

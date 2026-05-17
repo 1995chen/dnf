@@ -49,7 +49,13 @@ free_port() {
 listen_on() {
     socat "TCP-LISTEN:$1,reuseaddr,fork" /dev/null >/dev/null 2>&1 &
     LISTENERS+=("$!")
-    sleep 0.5
+    local i
+    for i in $(seq 1 50); do
+        socat -T1 /dev/null "TCP:127.0.0.1:$1" >/dev/null 2>&1 && return 0
+        sleep 0.1
+    done
+    echo "listen_on: port $1 did not come up" >&2
+    exit 1
 }
 
 # 用法:

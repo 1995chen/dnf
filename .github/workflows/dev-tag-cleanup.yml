@@ -40,7 +40,7 @@ jobs:
         with:
           dockerhub-username: ${{ secrets.DOCKERHUB_USERNAME }}
           dockerhub-token: ${{ secrets.DOCKERHUB_TOKEN }}
-          ghcr-token: ${{ secrets.GITHUB_TOKEN }}
+          ghcr-token: ${{ secrets.GHCR_DELETE_TOKEN }}
           ghcr-actor: ${{ github.actor }}
           quay-username: ${{ secrets.QUAY_USERNAME }}
           quay-token: ${{ secrets.QUAY_TOKEN }}

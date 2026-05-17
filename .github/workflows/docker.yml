@@ -111,19 +111,14 @@ jobs:
         run: |
           set -euo pipefail
           IMAGE="ghcr.io/${{ github.repository_owner }}/buildkit:buildx-stable-1"
-          if docker buildx imagetools inspect "$IMAGE" >/dev/null 2>&1; then
-            echo "mirror exists"
-          else
-            echo "mirror missing, creating..."
-            for attempt in 1 2 3; do
-              if docker buildx imagetools create --tag "$IMAGE" moby/buildkit:buildx-stable-1; then
-                exit 0
-              fi
-              echo "attempt ${attempt} failed, retrying in 30s..."
-              sleep 30
-            done
-            exit 1
-          fi
+          for attempt in 1 2 3; do
+            if docker buildx imagetools create --tag "$IMAGE" moby/buildkit:buildx-stable-1; then
+              exit 0
+            fi
+            echo "attempt ${attempt} failed, retrying in 30s..."
+            sleep 30
+          done
+          exit 1
 
   build-pipeline:
     needs: [metadata, ensure-buildkit-mirror, tests]
