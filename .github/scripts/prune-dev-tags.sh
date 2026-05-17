@@ -5,6 +5,7 @@ ACR_REGISTRY=${ACR_REGISTRY:-}
 RETENTION_DAYS=${RETENTION_DAYS:-90}
 DRY_RUN=${DRY_RUN:-false}
 REGCTL_BIN=${REGCTL_BIN:-regctl}
+GH_BIN=${GH_BIN:-gh}
 DELETE_VERIFY_ATTEMPTS=${DELETE_VERIFY_ATTEMPTS:-3}
 DELETE_VERIFY_SLEEP=${DELETE_VERIFY_SLEEP:-5}
 
@@ -216,18 +217,118 @@ verify_tag_deleted() {
   return 1
 }
 
+ghcr_api_base() {
+  local owner=$1 pkg=$2 owner_type
+
+  # let gh stderr through on failure so auth/scope errors are visible
+  if ! owner_type=$("$GH_BIN" api "/users/${owner}" --jq '.type'); then
+    return 1
+  fi
+  case "$(printf '%s' "$owner_type" | tr '[:upper:]' '[:lower:]')" in
+    user) printf '/users/%s/packages/container/%s' "$owner" "$pkg" ;;
+    organization) printf '/orgs/%s/packages/container/%s' "$owner" "$pkg" ;;
+    *) return 1 ;;
+  esac
+}
+
+# GHCR has no registry v2 manifest delete, so regctl cannot prune it.
+delete_stale_ghcr() {
+  local repo=$1 keep_file=$2 tmp_dir=$3
+  local rest owner pkg base versions versions_err repo_key
+  local id tags tag suffix has_stale keep_version
+  local -a tag_arr
+
+  if ! command -v "$GH_BIN" >/dev/null 2>&1; then
+    error "required command not found: ${GH_BIN}"
+    FAILED=$((FAILED + 1))
+    return 0
+  fi
+
+  rest=${repo#ghcr.io/}
+  owner=${rest%%/*}
+  pkg=${rest#*/}
+
+  if ! base=$(ghcr_api_base "$owner" "$pkg"); then
+    error "failed to resolve GHCR package path for ${repo}"
+    FAILED=$((FAILED + 1))
+    return 0
+  fi
+
+  repo_key=${repo//\//_}
+  repo_key=${repo_key//:/_}
+  versions="${tmp_dir}/${repo_key}.versions"
+  versions_err="${tmp_dir}/${repo_key}.versions.err"
+
+  if ! "$GH_BIN" api --paginate "${base}/versions" \
+    --jq '.[] | [.id, ((.metadata.container.tags // []) | join(","))] | @tsv' \
+    > "$versions" 2>"$versions_err"; then
+    error "failed to list package versions for ${repo}"
+    cat "$versions_err" >&2
+    FAILED=$((FAILED + 1))
+    return 0
+  fi
+
+  while IFS=$'\t' read -r id tags; do
+    [ -n "$id" ] || continue
+    [ -n "${tags:-}" ] || continue
+
+    has_stale=false
+    keep_version=false
+    IFS=',' read -ra tag_arr <<< "$tags"
+    for tag in "${tag_arr[@]}"; do
+      suffix=$(dev_suffix_for_tag "$tag")
+      if [ -z "$suffix" ]; then
+        keep_version=true
+      elif grep -qFx "$suffix" "$keep_file"; then
+        keep_version=true
+      else
+        has_stale=true
+      fi
+    done
+
+    if [ "$has_stale" != true ]; then
+      continue
+    fi
+    if [ "$keep_version" = true ]; then
+      echo "  skip version id=${id}: also carries kept or non-dev tags (${tags})"
+      continue
+    fi
+
+    SELECTED=$((SELECTED + 1))
+    if is_true "$DRY_RUN"; then
+      echo "  [dry-run] DELETE ${repo} version id=${id} tags=${tags}"
+      continue
+    fi
+
+    echo "  DELETE ${repo} version id=${id} tags=${tags}"
+    if "$GH_BIN" api --silent -X DELETE "${base}/versions/${id}"; then
+      DELETED=$((DELETED + 1))
+    else
+      FAILED=$((FAILED + 1))
+      echo "  delete failed for ${repo} version id=${id}" >&2
+    fi
+  done < "$versions"
+}
+
 prune_repo() {
   local repo=$1
   local keep_file=$2
   local tmp_dir=$3
   local repo_key tags_file stale_file tag
 
+  echo "Scanning ${repo}"
+  case "$repo" in
+  ghcr.io/*)
+    delete_stale_ghcr "$repo" "$keep_file" "$tmp_dir"
+    return 0
+    ;;
+  esac
+
   repo_key=${repo//\//_}
   repo_key=${repo_key//:/_}
   tags_file="${tmp_dir}/${repo_key}.tags"
   stale_file="${tmp_dir}/${repo_key}.stale"
 
-  echo "Scanning ${repo}"
   if ! "$REGCTL_BIN" tag ls "$repo" > "$tags_file"; then
     error "failed to list tags for ${repo}"
     FAILED=$((FAILED + 1))

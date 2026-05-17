@@ -81,4 +81,5 @@ jobs:
         env:
           DRY_RUN: ${{ inputs.dry_run || false }}
           RETENTION_DAYS: ${{ inputs.retention_days || 90 }}
+          GH_TOKEN: ${{ secrets.GHCR_DELETE_TOKEN }}
         run: ./.github/scripts/prune-dev-tags.sh

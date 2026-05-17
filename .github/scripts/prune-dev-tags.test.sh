@@ -126,6 +126,140 @@ test_registry_repos() {
   assert_lines_eq $'llnut/dnf\nghcr.io/llnut/dnf\nquay.io/llnut/dnf' "$actual" "registry refs skip empty ACR"
 }
 
+test_ghcr_delete_via_gh_api() {
+  local tmp output_file rc
+  if ! tmp=$(mktemp -d); then
+    fail "failed to create test directory"
+  fi
+  trap 'rm -rf "$tmp"' RETURN
+
+  if ! : > "${tmp}/keep"; then
+    fail "failed to write empty keep list"
+  fi
+
+  if ! cat > "${tmp}/fake-gh" <<'SCRIPT'
+#!/usr/bin/env bash
+if [ "$1" = "api" ] && [ "$2" = "/users/llnut" ]; then
+  printf 'User\n'
+  exit 0
+fi
+if [ "$1" = "api" ] && [ "$2" = "--paginate" ]; then
+  printf '%s\t%s\n' 11 "debian13-server-qf1031-dev-abc1234"
+  printf '%s\t%s\n' 12 ""
+  printf '%s\t%s\n' 13 "debian13-server-qf1031-dev-abc1234,debian13-server-qf1031-dev-latest"
+  exit 0
+fi
+if [ "$1" = "api" ] && [ "$2" = "--silent" ] && [ "$3" = "-X" ] && [ "$4" = "DELETE" ]; then
+  printf 'deleted %s\n' "$5" >> "GH_DELLOG"
+  exit 0
+fi
+exit 9
+SCRIPT
+  then
+    fail "failed to write fake gh"
+  fi
+  sed -i "s#GH_DELLOG#${tmp}/dellog#" "${tmp}/fake-gh"
+  if ! chmod +x "${tmp}/fake-gh"; then
+    fail "failed to make fake gh executable"
+  fi
+
+  GH_BIN="${tmp}/fake-gh"
+  DRY_RUN=false
+  SELECTED=0
+  DELETED=0
+  FAILED=0
+  output_file="${tmp}/output"
+
+  delete_stale_ghcr "ghcr.io/llnut/dnf" "${tmp}/keep" "$tmp" > "$output_file" 2>&1
+  rc=$?
+  if [ "$rc" -ne 0 ]; then
+    fail "delete_stale_ghcr should not return ${rc}"
+  fi
+
+  assert_eq "1" "$SELECTED" "only the all-stale tagged version is selected"
+  assert_eq "1" "$DELETED" "the stale version is deleted via gh api"
+  assert_eq "0" "$FAILED" "no failures expected"
+  assert_file_contains "deleted /users/llnut/packages/container/dnf/versions/11" "${tmp}/dellog" "version 11 deleted by id"
+  assert_file_contains "skip version id=13" "$output_file" "mixed-tag version is skipped"
+  if [ -f "${tmp}/dellog" ] && grep -q "versions/12" "${tmp}/dellog"; then
+    fail "untagged version 12 must never be deleted"
+  fi
+  passed=$((passed + 1))
+}
+
+test_prune_repo_ghcr_uses_gh_not_regctl() {
+  local tmp output_file rc
+  if ! tmp=$(mktemp -d); then
+    fail "failed to create test directory"
+  fi
+  trap 'rm -rf "$tmp"' RETURN
+
+  if ! : > "${tmp}/keep"; then
+    fail "failed to write empty keep list"
+  fi
+
+  if ! cat > "${tmp}/fake-gh" <<'SCRIPT'
+#!/usr/bin/env bash
+if [ "$1" = "api" ] && [ "$2" = "/users/llnut" ]; then
+  printf 'User\n'
+  exit 0
+fi
+if [ "$1" = "api" ] && [ "$2" = "--paginate" ]; then
+  printf '%s\t%s\n' 11 "debian13-server-qf1031-dev-abc1234"
+  printf '%s\t%s\n' 12 ""
+  exit 0
+fi
+if [ "$1" = "api" ] && [ "$2" = "--silent" ] && [ "$3" = "-X" ] && [ "$4" = "DELETE" ]; then
+  printf 'deleted %s\n' "$5" >> "GH_DELLOG"
+  exit 0
+fi
+exit 9
+SCRIPT
+  then
+    fail "failed to write fake gh"
+  fi
+  sed -i "s#GH_DELLOG#${tmp}/dellog#" "${tmp}/fake-gh"
+  if ! chmod +x "${tmp}/fake-gh"; then
+    fail "failed to make fake gh executable"
+  fi
+
+  if ! cat > "${tmp}/fake-regctl" <<'SCRIPT'
+#!/usr/bin/env bash
+printf 'regctl called: %s\n' "$*" >> "RGLOG"
+exit 2
+SCRIPT
+  then
+    fail "failed to write fake regctl"
+  fi
+  sed -i "s#RGLOG#${tmp}/rglog#" "${tmp}/fake-regctl"
+  if ! chmod +x "${tmp}/fake-regctl"; then
+    fail "failed to make fake regctl executable"
+  fi
+
+  GH_BIN="${tmp}/fake-gh"
+  REGCTL_BIN="${tmp}/fake-regctl"
+  DRY_RUN=false
+  SELECTED=0
+  DELETED=0
+  FAILED=0
+  output_file="${tmp}/output"
+
+  prune_repo "ghcr.io/llnut/dnf" "${tmp}/keep" "$tmp" > "$output_file" 2>&1
+  rc=$?
+  if [ "$rc" -ne 0 ]; then
+    fail "prune_repo ghcr should return 0, got ${rc}"
+  fi
+
+  if [ -f "${tmp}/rglog" ]; then
+    fail "regctl must never be invoked for a ghcr repo: $(cat "${tmp}/rglog")"
+  fi
+  passed=$((passed + 1))
+  assert_eq "1" "$SELECTED" "ghcr stale version selected via prune_repo"
+  assert_eq "1" "$DELETED" "ghcr stale version deleted via gh api"
+  assert_eq "0" "$FAILED" "no failures for ghcr prune_repo"
+  assert_file_contains "deleted /users/llnut/packages/container/dnf/versions/11" "${tmp}/dellog" "gh api DELETE fired for version 11"
+}
+
 test_delete_is_verified_after_regctl_success() {
   local tmp output_file rc
   if ! tmp=$(mktemp -d); then
@@ -206,6 +340,8 @@ test_workflow_verifies_regctl_checksum() {
 test_dev_suffix_detection
 test_stale_tag_planning
 test_registry_repos
+test_ghcr_delete_via_gh_api
+test_prune_repo_ghcr_uses_gh_not_regctl
 test_delete_is_verified_after_regctl_success
 test_no_implicit_pipeline_error_mode
 test_workflow_verifies_regctl_checksum
