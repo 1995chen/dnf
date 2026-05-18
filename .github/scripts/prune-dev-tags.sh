@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 
 IMAGE_PATH=${IMAGE_PATH:-llnut/dnf}
-ACR_REGISTRY=${ACR_REGISTRY:-}
-RETENTION_DAYS=${RETENTION_DAYS:-90}
+RETENTION_DAYS=${RETENTION_DAYS:-30}
 DRY_RUN=${DRY_RUN:-false}
 REGCTL_BIN=${REGCTL_BIN:-regctl}
 GH_BIN=${GH_BIN:-gh}
@@ -43,10 +42,6 @@ registry_repos() {
     "${IMAGE_PATH}" \
     "ghcr.io/${IMAGE_PATH}" \
     "quay.io/${IMAGE_PATH}"
-
-  if [ -n "$ACR_REGISTRY" ]; then
-    printf '%s\n' "${ACR_REGISTRY}/${IMAGE_PATH}"
-  fi
 }
 
 plan_stale_tags() {

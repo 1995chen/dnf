@@ -111,19 +111,20 @@ TAGS
 }
 
 test_registry_repos() {
-  local actual
+  local actual ACR_REGISTRY
   IMAGE_PATH=llnut/dnf
+
   ACR_REGISTRY=cr.example.com
   if ! actual=$(registry_repos); then
-    fail "failed to build registry repo list with ACR"
+    fail "failed to build registry repo list with ACR_REGISTRY set"
   fi
-  assert_lines_eq $'llnut/dnf\nghcr.io/llnut/dnf\nquay.io/llnut/dnf\ncr.example.com/llnut/dnf' "$actual" "registry refs include ACR when configured"
+  assert_lines_eq $'llnut/dnf\nghcr.io/llnut/dnf\nquay.io/llnut/dnf' "$actual" "ACR is excluded even when ACR_REGISTRY is set"
 
   ACR_REGISTRY=
   if ! actual=$(registry_repos); then
-    fail "failed to build registry repo list without ACR"
+    fail "failed to build registry repo list"
   fi
-  assert_lines_eq $'llnut/dnf\nghcr.io/llnut/dnf\nquay.io/llnut/dnf' "$actual" "registry refs skip empty ACR"
+  assert_lines_eq $'llnut/dnf\nghcr.io/llnut/dnf\nquay.io/llnut/dnf' "$actual" "registry refs are docker hub, ghcr and quay only"
 }
 
 test_ghcr_delete_via_gh_api() {

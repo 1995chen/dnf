@@ -8,7 +8,7 @@ on:
       retention_days:
         description: Days of dev commit tags to keep
         required: false
-        default: 90
+        default: 30
         type: number
       dry_run:
         description: List deletions without deleting tags
@@ -21,7 +21,6 @@ permissions:
   packages: write
 
 env:
-  ACR_REGISTRY: ${{ secrets.ACR_REGISTRY }}
   IMAGE_PATH: llnut/dnf
   REGCTL_VERSION: v0.11.4
   REGCTL_SHA256: 67938b732228a8afcee8e9e771a8667a29de967f984a8cdc8fb147741718db15
@@ -44,9 +43,6 @@ jobs:
           ghcr-actor: ${{ github.actor }}
           quay-username: ${{ secrets.QUAY_USERNAME }}
           quay-token: ${{ secrets.QUAY_TOKEN }}
-          acr-registry: ${{ env.ACR_REGISTRY }}
-          acr-username: ${{ secrets.ACR_USERNAME }}
-          acr-password: ${{ secrets.ACR_PASSWORD }}
 
       - name: Install regctl
         run: |
@@ -80,6 +76,6 @@ jobs:
       - name: Prune dev commit tags
         env:
           DRY_RUN: ${{ inputs.dry_run || false }}
-          RETENTION_DAYS: ${{ inputs.retention_days || 90 }}
+          RETENTION_DAYS: ${{ inputs.retention_days || 30 }}
           GH_TOKEN: ${{ secrets.GHCR_DELETE_TOKEN }}
         run: ./.github/scripts/prune-dev-tags.sh

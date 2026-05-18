@@ -172,7 +172,8 @@ jobs:
           FULL_ALIAS="${{ matrix.os }}-full-qf1031-${TAG_SUFFIX}"
           FULL_ALIAS_LATEST="${{ matrix.os }}-full-qf1031-${LATEST_SUFFIX}"
           REGISTRIES=("${IMAGE_PATH}" "ghcr.io/${IMAGE_PATH}" "quay.io/${IMAGE_PATH}")
-          if [ -n "$ACR_REGISTRY" ]; then
+
+          if [ -n "$ACR_REGISTRY" ] && [ "$LATEST_SUFFIX" != "dev-latest" ]; then
             REGISTRIES+=("${ACR_REGISTRY}/${IMAGE_PATH}")
           fi
 
@@ -222,10 +223,11 @@ jobs:
         env:
           LATEST: ${{ steps.tags.outputs.base_latest }}
           PRIMARY: ${{ steps.tags.outputs.base_primary }}
+          LATEST_SUFFIX: ${{ needs.metadata.outputs.latest_suffix }}
         run: |
           set -euo pipefail
           REGISTRIES=("${IMAGE_PATH}" "ghcr.io/${IMAGE_PATH}" "quay.io/${IMAGE_PATH}")
-          if [ -n "$ACR_REGISTRY" ]; then
+          if [ -n "$ACR_REGISTRY" ] && [ "$LATEST_SUFFIX" != "dev-latest" ]; then
             REGISTRIES+=("${ACR_REGISTRY}/${IMAGE_PATH}")
           fi
 
@@ -255,10 +257,11 @@ jobs:
           DB_PRIMARY: ${{ steps.tags.outputs.db_primary }}
           SERVER_LATEST: ${{ steps.tags.outputs.server_latest }}
           SERVER_PRIMARY: ${{ steps.tags.outputs.server_primary }}
+          LATEST_SUFFIX: ${{ needs.metadata.outputs.latest_suffix }}
         run: |
           set -euo pipefail
           REGISTRIES=("${IMAGE_PATH}" "ghcr.io/${IMAGE_PATH}" "quay.io/${IMAGE_PATH}")
-          if [ -n "$ACR_REGISTRY" ]; then
+          if [ -n "$ACR_REGISTRY" ] && [ "$LATEST_SUFFIX" != "dev-latest" ]; then
             REGISTRIES+=("${ACR_REGISTRY}/${IMAGE_PATH}")
           fi
 
@@ -288,10 +291,11 @@ jobs:
           ALIAS_LATEST: ${{ steps.tags.outputs.full_alias_latest }}
           LATEST: ${{ steps.tags.outputs.full_latest }}
           PRIMARY: ${{ steps.tags.outputs.full_primary }}
+          LATEST_SUFFIX: ${{ needs.metadata.outputs.latest_suffix }}
         run: |
           set -euo pipefail
           REGISTRIES=("${IMAGE_PATH}" "ghcr.io/${IMAGE_PATH}" "quay.io/${IMAGE_PATH}")
-          if [ -n "$ACR_REGISTRY" ]; then
+          if [ -n "$ACR_REGISTRY" ] && [ "$LATEST_SUFFIX" != "dev-latest" ]; then
             REGISTRIES+=("${ACR_REGISTRY}/${IMAGE_PATH}")
           fi
 
