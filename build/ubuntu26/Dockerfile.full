@@ -20,7 +20,7 @@ RUN mkdir -p /usr/local/share/GeoIP && \
     gunzip /usr/local/share/GeoIP/GeoIP.dat.gz
 
 # 编译dnf-compat-layer
-ARG DNF_COMPAT_LAYER_VERSION="0.1.0"
+ARG DNF_COMPAT_LAYER_VERSION="0.2.0"
 RUN git clone --branch ${DNF_COMPAT_LAYER_VERSION} --depth 1 https://github.com/llnut/dnf-compat-layer.git /src \
     && cd /src && cargo build --workspace --release --target i686-unknown-linux-gnu
 
