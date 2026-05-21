@@ -21,6 +21,9 @@ cp /tmp/channel.cfg /home/neople/channel/cfg/channel.cfg
 rm -rf /tmp/channel.cfg
 # 启动服务
 echo "starting channel..."
+# shellcheck source=../lib/tune.sh
+source /home/template/init/lib/tune.sh
+tune_apply_malloc_conf_32
 # 加载DP并启动,该DP可以被自定义[确保DP路径已经被正确映射]
 LD_PRELOAD=/usr/lib/libjemalloc32.so.2:/usr/lib/libglibc_compat.so:/home/template/init/libdofslim.so:/dp2/libhook.so ./df_channel_r channel start
 sleep 2

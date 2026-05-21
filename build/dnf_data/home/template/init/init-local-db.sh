@@ -6,6 +6,11 @@ if [ ! -x /usr/sbin/mysqld ]; then
     exit 0
 fi
 
+# MySQL 使用 64 位 jemalloc 配置
+# shellcheck source=lib/tune.sh
+source /home/template/init/lib/tune.sh
+tune_apply_malloc_conf_64
+
 # 判断本地数据库是否初始化过,端口号4000
 if [ -z "$MAIN_MYSQL_HOST" ] && [ -z "$MAIN_MYSQL_PORT" ] && [ -z "$MYSQL_HOST" ] && [ -z "$MYSQL_PORT" ]; then
     echo "use local mysql service"

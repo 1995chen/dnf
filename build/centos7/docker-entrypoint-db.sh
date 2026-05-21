@@ -12,6 +12,9 @@ source /home/template/init/lib/common.sh
 source /home/template/init/lib/tune.sh
 tune_resolve_and_export "yes"
 
+# MySQL 使用 64 位 jemalloc 配置
+tune_apply_malloc_conf_64
+
 SOCKET=/var/lib/mysql/mysql.sock
 
 # 首次启动时初始化数据库

@@ -119,10 +119,14 @@ tune_size_to_bytes() {
 }
 
 tune_compute_malloc_conf() {
-    local profile="$1" cpus="${2:-1}"
+    local profile="$1" cpus="${2:-1}" arch="${3:-32}"
     case "$profile" in
     nano | micro | small | medium | large | xlarge) ;;
     *) profile=nano ;;
+    esac
+    case "$arch" in
+    32 | 64) ;;
+    *) arch=32 ;;
     esac
     local narenas_cap lg_tcache dirty muzzy bg_thread retain
     case "$profile" in
@@ -176,10 +180,24 @@ tune_compute_malloc_conf() {
         ;;
     esac
 
+    if [ "$arch" = "64" ]; then
+        case "$profile" in
+        medium) narenas_cap=32 ;;
+        large) narenas_cap=128 ;;
+        xlarge) narenas_cap=1024 ;;
+        esac
+    fi
+
     local narenas=$cpus
-    case "$profile" in
-    small | medium | large | xlarge) narenas=$((cpus * 2)) ;;
-    esac
+    if [ "$arch" = "64" ]; then
+        case "$profile" in
+        small | medium | large | xlarge) narenas=$((cpus * 4)) ;;
+        esac
+    else
+        case "$profile" in
+        small | medium | large | xlarge) narenas=$((cpus * 2)) ;;
+        esac
+    fi
     [ "$narenas" -gt "$narenas_cap" ] && narenas=$narenas_cap
     [ "$narenas" -lt 1 ] && narenas=1
 
@@ -207,6 +225,18 @@ tune_compute_client_pool_size() {
     xlarge) echo 1000 ;;
     *) echo 10 ;;
     esac
+}
+
+tune_apply_malloc_conf_64() {
+    if [ "${MALLOC_CONF_64+set}" = "set" ]; then
+        export MALLOC_CONF="$MALLOC_CONF_64"
+    fi
+}
+
+tune_apply_malloc_conf_32() {
+    if [ "${MALLOC_CONF_32+set}" = "set" ]; then
+        export MALLOC_CONF="$MALLOC_CONF_32"
+    fi
 }
 
 tune_detect_mysql_family() {
@@ -540,19 +570,70 @@ tune_resolve_and_export() {
         profile_src="fallback to nano"
     fi
 
-    local malloc_src
+    local mc_user_state="" m32_user_state="" m64_user_state=""
     if [ "${MALLOC_CONF+set}" = "set" ]; then
-        export MALLOC_CONF
         if [ -z "$MALLOC_CONF" ]; then
-            malloc_src="user-cleared"
+            mc_user_state="user-cleared"
         else
-            malloc_src="user-set"
+            mc_user_state="user-set"
         fi
-    else
-        MALLOC_CONF=$(tune_compute_malloc_conf "$profile" "$cpus")
-        export MALLOC_CONF
-        malloc_src="profile=$profile"
     fi
+    if [ "${MALLOC_CONF_32+set}" = "set" ]; then
+        if [ -z "$MALLOC_CONF_32" ]; then
+            m32_user_state="user-cleared"
+        else
+            m32_user_state="user-set"
+        fi
+    fi
+    if [ "${MALLOC_CONF_64+set}" = "set" ]; then
+        if [ -z "$MALLOC_CONF_64" ]; then
+            m64_user_state="user-cleared"
+        else
+            m64_user_state="user-set"
+        fi
+    fi
+    local mc_user_val="${MALLOC_CONF:-}"
+    local m32_user_val="${MALLOC_CONF_32:-}"
+    local m64_user_val="${MALLOC_CONF_64:-}"
+
+    local malloc_src
+    if [ -n "$mc_user_state" ]; then
+        MALLOC_CONF="$mc_user_val"
+        malloc_src="$mc_user_state"
+    elif [ -n "$m32_user_state" ]; then
+        MALLOC_CONF="$m32_user_val"
+        malloc_src="inherit MALLOC_CONF_32 [$m32_user_state]"
+    else
+        MALLOC_CONF=$(tune_compute_malloc_conf "$profile" "$cpus" 32)
+        malloc_src="profile=$profile arch=32"
+    fi
+    export MALLOC_CONF
+
+    local malloc32_src
+    if [ -n "$m32_user_state" ]; then
+        MALLOC_CONF_32="$m32_user_val"
+        malloc32_src="$m32_user_state"
+    elif [ -n "$mc_user_state" ]; then
+        MALLOC_CONF_32="$mc_user_val"
+        malloc32_src="inherit MALLOC_CONF [$mc_user_state]"
+    else
+        MALLOC_CONF_32=$(tune_compute_malloc_conf "$profile" "$cpus" 32)
+        malloc32_src="profile=$profile arch=32"
+    fi
+    export MALLOC_CONF_32
+
+    local malloc64_src
+    if [ -n "$m64_user_state" ]; then
+        MALLOC_CONF_64="$m64_user_val"
+        malloc64_src="$m64_user_state"
+    elif [ -n "$mc_user_state" ]; then
+        MALLOC_CONF_64="$mc_user_val"
+        malloc64_src="inherit MALLOC_CONF [$mc_user_state]"
+    else
+        MALLOC_CONF_64=$(tune_compute_malloc_conf "$profile" "$cpus" 64)
+        malloc64_src="profile=$profile arch=64"
+    fi
+    export MALLOC_CONF_64
 
     local cps_src
     if [ "${CLIENT_POOL_SIZE+set}" = "set" ]; then
@@ -579,11 +660,18 @@ tune_resolve_and_export() {
 
     local mem_mib=$((mem / 1048576))
     local malloc_show="${MALLOC_CONF:-(jemalloc defaults)}"
-    echo "[tune] profile=$profile ($profile_src) cpu=$cpus mem=${mem_mib}MiB CLIENT_POOL_SIZE=$CLIENT_POOL_SIZE ($cps_src) MALLOC_CONF=$malloc_show ($malloc_src)"
+    local malloc32_show="${MALLOC_CONF_32:-(jemalloc defaults)}"
+    local malloc64_show="${MALLOC_CONF_64:-(jemalloc defaults)}"
+    echo "[tune] profile=$profile [$profile_src] cpu=$cpus mem=${mem_mib}MiB CLIENT_POOL_SIZE=$CLIENT_POOL_SIZE [$cps_src]"
+    echo "[tune]   MALLOC_CONF=$malloc_show [$malloc_src]"
+    echo "[tune]   MALLOC_CONF_32=$malloc32_show [$malloc32_src]"
+    echo "[tune]   MALLOC_CONF_64=$malloc64_show [$malloc64_src]"
 
     if [ "${TUNE_VERBOSE:-false}" = "true" ]; then
         echo "[tune-verbose] cgroup=$cg mem_bytes=$mem cpus=$cpus"
         echo "[tune-verbose] MALLOC_CONF=$MALLOC_CONF"
+        echo "[tune-verbose] MALLOC_CONF_32=$MALLOC_CONF_32"
+        echo "[tune-verbose] MALLOC_CONF_64=$MALLOC_CONF_64"
         if [ "$apply_mysql" = "yes" ]; then
             echo "[tune-verbose] mysql_family=$family"
             # shellcheck disable=SC2001

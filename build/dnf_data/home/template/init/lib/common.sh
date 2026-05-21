@@ -91,6 +91,9 @@ start_dbmw() {
         echo "no need to kill process"
     fi
     rm -f "pid/${server_id}.pid"
+    # shellcheck source=./tune.sh
+    source /home/template/init/lib/tune.sh
+    tune_apply_malloc_conf_32
     LD_PRELOAD=/usr/lib/libjemalloc32.so.2:/home/template/init/libhook.so ./df_dbmw_r "$server_id" start
     sleep 2
     cat "pid/${server_id}.pid" | xargs -n1 -I{} tail --pid={} -f /dev/null

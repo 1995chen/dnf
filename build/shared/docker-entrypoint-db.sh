@@ -15,6 +15,9 @@ source /home/template/init/lib/common.sh
 source /home/template/init/lib/tune.sh
 tune_resolve_and_export "yes"
 
+# MySQL 使用 64 位 jemalloc 配置
+tune_apply_malloc_conf_64
+
 # 确保目录存在且权限正确
 if ! mkdir -p /var/lib/mysql /var/run/mysqld /var/log/mysql; then
     echo "ERROR: mkdir failed for mysql directories." >&2

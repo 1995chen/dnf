@@ -13,7 +13,10 @@ WORK=$(mktemp -d)
 LISTENERS=()
 cleanup() {
     local p
-    for p in "${LISTENERS[@]}"; do kill "$p" 2>/dev/null; done
+    for p in "${LISTENERS[@]}"; do
+        pkill -P "$p" 2>/dev/null
+        kill "$p" 2>/dev/null
+    done
     rm -rf "$WORK"
 }
 trap cleanup EXIT

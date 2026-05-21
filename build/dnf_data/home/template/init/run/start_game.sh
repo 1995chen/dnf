@@ -38,6 +38,9 @@ if [ -n "$old_pid" ]; then
 fi
 rm -rf "pid/${channel_name}.pid"
 
+# shellcheck source=../lib/tune.sh
+source /home/template/init/lib/tune.sh
+tune_apply_malloc_conf_32
 # 加载DP并启动[确保DP路径已经被正确映射]
 LD_PRELOAD="/usr/lib/libjemalloc32.so.2:/usr/lib/libglibc_compat.so:/dp2/libhook.so:/home/neople/game/frida.so" ./df_game_r "$channel_name" nofork &
 sleep 2
