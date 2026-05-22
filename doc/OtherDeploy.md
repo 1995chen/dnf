@@ -166,8 +166,8 @@
 #### CPU
 
 CPU 数量影响以下参数：
-- jemalloc `narenas`：nano/micro 取 CPU 数与性能配置上限的较小值，small 及以上配置取 CPU × 2 与性能配置上限的较小值
-- MySQL `thread_cache_size`：取性能配置与 CPU × 2 的较大值
+- jemalloc `narenas`：按进程架构 (32 位/64 位) 分别计算。nano/micro 为 min(cpu, cap)；针对 small 及以上配置，32 位进程为 min(cpu×2, cap)，64 位为 min(cpu×4, cap)
+- MySQL `thread_cache_size`：取 max(性能配置, cpu×2)
 - MySQL 5.7+ `innodb_buffer_pool_size > 1G` 时按 CPU 数设置 `innodb_buffer_pool_instances`
 
 #### 环境变量
@@ -177,7 +177,9 @@ CPU 数量影响以下参数：
 | AUTO_TUNE | 自动选择性能配置开关，关闭后跳过自动选择，但自定义性能参数仍然有效 | true/false | true |
 | TUNE_PROFILE | 指定性能配置 | nano/micro/small/medium/large/xlarge 或<br>low/balanced/high | |
 | TUNE_VERBOSE | 输出性能配置详细日志 | true/false | false |
-| MALLOC_CONF | 自定义 jemalloc 配置。空字符串表示使用 jemalloc 内置默认值 |  | |
+| MALLOC_CONF | jemalloc 全局默认配置，作为 `MALLOC_CONF_32` 与 `MALLOC_CONF_64` 未显式设置时的默认值。设置为空则表示使用 jemalloc 内置默认值 |  | |
+| MALLOC_CONF_32 | 32 位进程的 jemalloc 配置，优先级高于 `MALLOC_CONF` |  | |
+| MALLOC_CONF_64 | 64 位进程的 jemalloc 配置，优先级高于 `MALLOC_CONF` |  | |
 | TUNE_MYSQL_KEY_BUFFER_SIZE | 覆盖 `key_buffer_size` | | |
 | TUNE_MYSQL_TABLE_OPEN_CACHE | 覆盖 `table_open_cache`，MySQL 5.0 会覆盖 `table_cache` | | |
 | TUNE_MYSQL_SORT_BUFFER_SIZE | 覆盖 `sort_buffer_size` | | |
@@ -190,16 +192,18 @@ CPU 数量影响以下参数：
 | TUNE_MYSQL_INNODB_BUFFER_POOL_SIZE | 覆盖 `innodb_buffer_pool_size`，只对 MySQL 5.7 生效 | | |
 
 参数优先级，从高到低：
-1. 自定义环境变量 `MALLOC_CONF`、`CLIENT_POOL_SIZE`、`TUNE_MYSQL_*`
-2. 自定义性能配置 `TUNE_PROFILE`
-3. `AUTO_TUNE=true` 自动选择性能配置
-4. nano 性能配置
+1. 自定义环境变量 `MALLOC_CONF_32`、`MALLOC_CONF_64`，以及 `CLIENT_POOL_SIZE`、`TUNE_MYSQL_*`
+2. 全局默认 `MALLOC_CONF`（仅在 MALLOC_CONF_32或 MALLOC_CONF_64 未设置时生效）
+3. 自定义性能配置 `TUNE_PROFILE`
+4. `AUTO_TUNE=true` 自动选择性能配置
+5. nano 性能配置
 
 #### 各性能配置下的 jemalloc 参数
 
 | key | nano | micro | small | medium | large | xlarge |
 | ------- | ------- | ------- | ------- | ------- | ------- | ------- |
-| narenas | min(cpu,2) | min(cpu,4) | min(cpu×2,8) | min(cpu×2,16) | min(cpu×2,64) | min(cpu×2,512) |
+| narenas (32 位) | min(cpu,2) | min(cpu,4) | min(cpu×2,8) | min(cpu×2,16) | min(cpu×2,64) | min(cpu×2,512) |
+| narenas (64 位) | min(cpu,2) | min(cpu,4) | min(cpu×4,8) | min(cpu×4,32) | min(cpu×4,128) | min(cpu×4,1024) |
 | lg_tcache_max | 13 | 14 | 15 | 16 | 17 | 18 |
 | dirty_decay_ms | 1000 | 3000 | 10000 | 20000 | 30000 | 60000 |
 | muzzy_decay_ms | 500 | 1000 | 5000 | 10000 | 30000 | 60000 |
