@@ -73,8 +73,15 @@ wait_time=${DDNS_INTERVAL:-10}
 while [ -z "$MONITOR_PUBLIC_IP" ] && [ "$DDNS_ENABLE" = true ] &&  [ -n "$DDNS_DOMAIN" ];
 do
   old_ip=$(cat /data/monitor_ip/MONITOR_PUBLIC_IP 2>/dev/null || true)
-  nslookup_output=$(nslookup -debug $DDNS_DOMAIN 2>/dev/null || true)
-  ddns_ip=$(echo "$nslookup_output" | awk '/^Address: / { print $2 }')
+  # nslookup_output=$(nslookup -debug $DDNS_DOMAIN 2>/dev/null || true)
+  # 只获取IPV4地址
+  nslookup_output=$(nslookup -type=A $DDNS_DOMAIN 2>/dev/null || true)
+  
+  # ddns_ip=$(echo "$nslookup_output" | awk '/^Address: / { print $2 }')
+  # nslookup 可能会得到 100.100.100.100 因此必须要和Name一组的IP才是真正的DDNS IP
+  ddns_ip=$(echo "$nslookup_output" | awk '/^Name:/{found=1} found && /^Address:/{print $2; exit}' | sed 's/#.*//')
+
+  
   # 判断ddns_ip是否为空
   if [ -z "$ddns_ip" ]; then
     echo "ddns ip is empty, wait $wait_time second"
