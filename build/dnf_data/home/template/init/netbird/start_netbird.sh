@@ -18,7 +18,7 @@ if [ -z "$PUBLIC_IP" ] && [ -n "$NB_SETUP_KEY" ] && [ -n "$NB_MANAGEMENT_URL" ];
     # 等待netbird启动
     while true; do
         nb_status=$(service netbird status 2>/dev/null || true)
-        /data/monitor_ip/get_ddns_ip.sh 2>/dev/null || true
+        /data/monitor_ip/get_public_ip.sh 2>/dev/null || true
         if [ "$nb_status" != "Running" ]; then
             echo "netbird service status is $nb_status, restart and sleep"
             service netbird stop || true

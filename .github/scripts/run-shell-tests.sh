@@ -43,6 +43,8 @@ if command -v shellcheck >/dev/null 2>&1; then
         build/dnf_data/home/template/init/lib/probe-secbus.sh
         build/dnf_data/home/template/init/lib/tune.sh
         build/dnf_data/home/template/init/wait-for-mysql.sh
+        build/dnf_data/home/template/init/monitor_ip/get_public_ip.sh
+        build/dnf_data/home/template/init/monitor_ip/get_public_ip.test.sh
         build/shared/mysql-initd.sh
     )
     if shellcheck -s bash -S style -e SC1091 "${sc_targets[@]}"; then

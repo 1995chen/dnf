@@ -43,9 +43,9 @@ rm -rf /data/monitor_ip/MONITOR_PUBLIC_IP
 MONITOR_PUBLIC_IP=$PUBLIC_IP
 # 云服务器自动获取公网IP
 while [ -z "$MONITOR_PUBLIC_IP" ] && [ "$AUTO_PUBLIC_IP" = true ]; do
-    echo "try to get public ip from auto_public_ip.sh"
+    echo "try to get public ip from get_public_ip.sh"
     # 检查是否成功拿到IP
-    auto_ip=$(/data/monitor_ip/auto_public_ip.sh 2>/dev/null || true)
+    auto_ip=$(/data/monitor_ip/get_public_ip.sh 2>/dev/null || true)
     # 连接成功
     if [ -n "$auto_ip" ]; then
         echo "auto get public ip is $auto_ip"
@@ -108,7 +108,7 @@ wait_time=${DDNS_INTERVAL:-10}
 while [ -z "$MONITOR_PUBLIC_IP" ] && [ "$DDNS_ENABLE" = true ] && [ -n "$DDNS_DOMAIN" ]; do
     # 获取域名指向的全部IPv4
     ddns_ips=$(getent ahostsv4 "$DDNS_DOMAIN" 2>/dev/null |
-        awk '$1 ~ /^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$/ {print $1}' |
+        awk '$1 ~ /^((25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])$/ {print $1}' |
         sort -u)
     # 多A记录域名每次解析结果可能不同
     # 只要旧IP依然在列表中就继续使用，否则取第一个IP
@@ -124,7 +124,7 @@ done
 
 # DDNS-IP
 while [ -z "$MONITOR_PUBLIC_IP" ] && [ "$DDNS_ENABLE" = true ]; do
-    ddns_ip=$(/data/monitor_ip/get_ddns_ip.sh 2>/dev/null || true)
+    ddns_ip=$(/data/monitor_ip/get_public_ip.sh 2>/dev/null || true)
     handle_ip_change "$ddns_ip" "net" "$wait_time"
     # 等待
     sleep "$wait_time"
