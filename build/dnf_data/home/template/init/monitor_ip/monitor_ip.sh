@@ -106,12 +106,12 @@ done
 wait_time=${DDNS_INTERVAL:-10}
 # DDNS-域名
 while [ -z "$MONITOR_PUBLIC_IP" ] && [ "$DDNS_ENABLE" = true ] && [ -n "$DDNS_DOMAIN" ]; do
-    # 拿到本次解析到的全部IPv4,守卫格式,去重排序
+    # 获取域名指向的全部IPv4
     ddns_ips=$(getent ahostsv4 "$DDNS_DOMAIN" 2>/dev/null |
         awk '$1 ~ /^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$/ {print $1}' |
         sort -u)
-    # 多A记录域名每次解析返回的子集可能不同,取首个会抖动,
-    # 因此优先沿用旧IP(只要它仍在新集合里),否则才挑首个
+    # 多A记录域名每次解析结果可能不同
+    # 只要旧IP依然在列表中就继续使用，否则取第一个IP
     old_ip=$(cat /data/monitor_ip/MONITOR_PUBLIC_IP 2>/dev/null || true)
     if [ -n "$old_ip" ] && printf '%s\n' "$ddns_ips" | grep -qxF "$old_ip"; then
         ddns_ip="$old_ip"
@@ -119,7 +119,6 @@ while [ -z "$MONITOR_PUBLIC_IP" ] && [ "$DDNS_ENABLE" = true ] && [ -n "$DDNS_DO
         ddns_ip=$(printf '%s\n' "$ddns_ips" | head -n1)
     fi
     handle_ip_change "$ddns_ip" "domain" "$wait_time"
-    # 等待
     sleep "$wait_time"
 done
 
@@ -131,8 +130,6 @@ while [ -z "$MONITOR_PUBLIC_IP" ] && [ "$DDNS_ENABLE" = true ]; do
     sleep "$wait_time"
 done
 
-# 必须等待一定时间后才可以退出
-sleep 10
 if [ -z "$MONITOR_PUBLIC_IP" ]; then
     echo "warning!!! empty PUBLIC_IP, exit..."
     exit 1
@@ -141,3 +138,6 @@ else
     echo "$MONITOR_PUBLIC_IP" >/data/monitor_ip/MONITOR_PUBLIC_IP
     echo "success, final ip is $MONITOR_PUBLIC_IP"
 fi
+
+# 保证启动超过 supervisor startsecs，防止被当作启动失败
+sleep 2
