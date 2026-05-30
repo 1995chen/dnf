@@ -25,7 +25,7 @@
 		<insurance>0x1</insurance>
 		<opt_key1/>
 		<opt_key2/>
-		<get_svr_info_type>cfgsvr</get_svr_info_type>
+		<get_svr_info_type>cfgfile</get_svr_info_type>
 	</comm_cfg>
 	<cfgsvr_cfg>
 		<svr_info>

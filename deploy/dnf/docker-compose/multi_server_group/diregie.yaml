@@ -32,7 +32,6 @@ services:
     cpus: '1.0'
     restart: always
     ports:
-      - 2002:180/tcp              # supervisor web
       - 7200:7200/tcp             # df_relay_r
       - 7200:7200/udp             # df_relay_r
       - 20011:20011/tcp           # df_game_r[ch.11]

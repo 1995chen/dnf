@@ -1,0 +1,4 @@
+#!/command/execlineb -P
+with-contenv
+cd /home/template/init/tailscale
+/home/template/init/tailscale/start_tailscale.sh

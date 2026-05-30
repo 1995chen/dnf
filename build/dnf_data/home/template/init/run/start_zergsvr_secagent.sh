@@ -6,4 +6,5 @@ rm -rf secagent.pid
 # shellcheck source=../lib/tune.sh
 source /home/template/init/lib/tune.sh
 tune_apply_malloc_conf_32
-LD_PRELOAD=/usr/lib/libjemalloc32.so.2:/usr/lib/libglibc_compat.so ./secagent
+exec env LD_PRELOAD=/usr/lib/libjemalloc32.so.2:/usr/lib/libglibc_compat.so \
+    ./secagent

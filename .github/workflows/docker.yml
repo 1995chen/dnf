@@ -86,7 +86,13 @@ jobs:
     steps:
       - uses: actions/checkout@v6.0.2
       - name: Install test dependencies
-        run: sudo apt-get update && sudo apt-get install -y socat
+        run: |
+          sudo apt-get update && sudo apt-get install -y socat
+          S6_OVERLAY_VERSION=3.2.3.0
+          sudo mkdir -p /opt/s6
+          curl -fsSL "https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-x86_64.tar.xz" \
+            | sudo tar -C /opt/s6 -Jx
+          echo /opt/s6/command >> "$GITHUB_PATH"
       - name: Run unified shell test suite
         run: bash .github/scripts/run-shell-tests.sh
 

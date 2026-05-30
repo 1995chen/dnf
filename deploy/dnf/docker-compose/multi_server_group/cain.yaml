@@ -48,7 +48,6 @@ services:
     cpus: '1.0'
     restart: always
     ports:
-      - 2001:180/tcp              # supervisor web
       - 5505:5505/tcp             # dnf-gate-server http
       # - 5504:5504/tcp           # dnf-gate-server https（启用TLS后开放）
       - 7000-7001:7000-7001/tcp   # df_bridge_r, df_channel_r

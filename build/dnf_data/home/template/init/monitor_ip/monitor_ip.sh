@@ -1,6 +1,8 @@
 #!/bin/bash
 
-source /home/template/init/lib/common.sh
+source "${DNF_LIB_PATH:-/home/template/init/lib}/common.sh"
+
+state_file="${MONITOR_IP_STATE_FILE:-/data/monitor_ip/MONITOR_PUBLIC_IP}"
 
 # IP变更后重启服务
 # 参数: NEW_IP SOURCE_DESC INTERVAL
@@ -8,7 +10,7 @@ source /home/template/init/lib/common.sh
 handle_ip_change() {
     local new_ip="$1" source_desc="$2" interval="$3"
     local old_ip
-    old_ip=$(cat /data/monitor_ip/MONITOR_PUBLIC_IP 2>/dev/null || true)
+    old_ip=$(cat "$state_file" 2>/dev/null || true)
     # 判断IP是否为空
     if [ -z "$new_ip" ]; then
         echo "${source_desc} ip is empty, wait ${interval} second"
@@ -18,28 +20,31 @@ handle_ip_change() {
     if [ "$new_ip" != "$old_ip" ]; then
         echo "${source_desc} ip changed, old ip is ${old_ip}, new ip is ${new_ip}"
         # 通知其他进程[写入文件]
-        echo "$new_ip" >/data/monitor_ip/MONITOR_PUBLIC_IP
-        supervisorctl stop dnf_channel:*
+        echo "$new_ip" >"$state_file"
+        s6-rc -d change dnf-channel
         if [ -n "$MAIN_BRIDGE_IP" ]; then
-            supervisorctl stop dnf:bridge
+            s6-rc -d change dnf-bridge
         fi
         kill_graceful 3 df_bridge_r df_channel_r
         killall -9 df_game_r 2>/dev/null || true
         sleep 1
         if [ -n "$MAIN_BRIDGE_IP" ]; then
-            supervisorctl start dnf:bridge
+            s6-rc -u change dnf-bridge
             wait_for_port "$MAIN_BRIDGE_IP" 7000 30 || true
         fi
-        supervisorctl start dnf_channel:*
-        supervisorctl restart llnut_gate
+        s6-rc -u change dnf-channel
+        s6-svc -r /run/service/llnut_gate
     else
         echo "${source_desc} ip not change, ip is ${new_ip}, wait ${interval} second"
     fi
     return 0
 }
 
+# 被 source 时只加载函数
+[ "${BASH_SOURCE[0]}" = "$0" ] || return 0
+
 # 清除MONITOR_PUBLIC_IP文件
-rm -rf /data/monitor_ip/MONITOR_PUBLIC_IP
+rm -rf "$state_file"
 MONITOR_PUBLIC_IP=$PUBLIC_IP
 # 云服务器自动获取公网IP
 while [ -z "$MONITOR_PUBLIC_IP" ] && [ "$AUTO_PUBLIC_IP" = true ]; do
@@ -51,7 +56,7 @@ while [ -z "$MONITOR_PUBLIC_IP" ] && [ "$AUTO_PUBLIC_IP" = true ]; do
         echo "auto get public ip is $auto_ip"
         MONITOR_PUBLIC_IP=$auto_ip
         # 通知其他进程[写入文件]
-        echo "$MONITOR_PUBLIC_IP" >/data/monitor_ip/MONITOR_PUBLIC_IP
+        echo "$MONITOR_PUBLIC_IP" >"$state_file"
         break
     else
         echo "auto get ip failed, retry"
@@ -73,7 +78,7 @@ while [ -z "$MONITOR_PUBLIC_IP" ] && [ -n "$NB_SETUP_KEY" ] && [ -n "$NB_MANAGEM
         echo "connected to netbird with ip $netbird_ip"
         MONITOR_PUBLIC_IP=$netbird_ip
         # 通知其他进程[写入文件]
-        echo "$MONITOR_PUBLIC_IP" >/data/monitor_ip/MONITOR_PUBLIC_IP
+        echo "$MONITOR_PUBLIC_IP" >"$state_file"
         break
     else
         echo "connect failed, netbird_ip is $netbird_ip, management_status is $management_status, signal_status is $signal_status, retry"
@@ -93,7 +98,7 @@ while [ -z "$MONITOR_PUBLIC_IP" ] && [ -n "$TS_AUTH_KEY" ] && [ -n "$TS_LOGIN_SE
         echo "connected to tailscale with ip $ts_ip"
         MONITOR_PUBLIC_IP=$ts_ip
         # 通知其他进程[写入文件]
-        echo "$MONITOR_PUBLIC_IP" >/data/monitor_ip/MONITOR_PUBLIC_IP
+        echo "$MONITOR_PUBLIC_IP" >"$state_file"
         break
     else
         echo "connect failed, ts_ip is $ts_ip, ts_status is $ts_status, retry"
@@ -112,7 +117,7 @@ while [ -z "$MONITOR_PUBLIC_IP" ] && [ "$DDNS_ENABLE" = true ] && [ -n "$DDNS_DO
         sort -u)
     # 多A记录域名每次解析结果可能不同
     # 只要旧IP依然在列表中就继续使用，否则取第一个IP
-    old_ip=$(cat /data/monitor_ip/MONITOR_PUBLIC_IP 2>/dev/null || true)
+    old_ip=$(cat "$state_file" 2>/dev/null || true)
     if [ -n "$old_ip" ] && printf '%s\n' "$ddns_ips" | grep -qxF "$old_ip"; then
         ddns_ip="$old_ip"
     else
@@ -135,9 +140,8 @@ if [ -z "$MONITOR_PUBLIC_IP" ]; then
     exit 1
 else
     # 通知其他进程[写入文件]
-    echo "$MONITOR_PUBLIC_IP" >/data/monitor_ip/MONITOR_PUBLIC_IP
+    echo "$MONITOR_PUBLIC_IP" >"$state_file"
     echo "success, final ip is $MONITOR_PUBLIC_IP"
 fi
 
-# 保证启动超过 supervisor startsecs，防止被当作启动失败
-sleep 2
+exec /command/s6-pause

@@ -1,0 +1,4 @@
+#!/command/execlineb -P
+with-contenv
+cd /usr/bin
+/home/template/init/run/start_gate.sh

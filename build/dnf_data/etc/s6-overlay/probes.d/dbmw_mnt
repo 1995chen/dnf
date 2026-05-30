@@ -1,0 +1,1 @@
+cmd:/home/template/init/lib/probe-port.sh /home/neople/dbmw_mnt/cfg/server_01.cfg 127.0.0.1 tcp_port

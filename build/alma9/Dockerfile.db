@@ -42,7 +42,7 @@ COPY --from=mysql-builder /mysql/allocator/libjemalloc.so.2 /usr/lib/libjemalloc
 
 # 安装MySQL 5.7依赖
 RUN microdnf install -y \
-    libaio numactl-libs \
+    libaio numactl-libs libxcrypt-compat \
     && groupadd mysql && useradd -r -g mysql -s /bin/false mysql \
     && mkdir -p /var/lib/mysql /var/run/mysqld /var/log/mysql \
     && chown -R mysql:mysql /var/lib/mysql /var/run/mysqld /var/log/mysql \

@@ -7,10 +7,6 @@ spec:
   selector:
     app: dnf-server-new
   ports:
-    - name: tcp-180
-      port: 180
-      targetPort: 180
-      protocol: TCP
     - name: tcp-5505
       port: 5505
       targetPort: 5505

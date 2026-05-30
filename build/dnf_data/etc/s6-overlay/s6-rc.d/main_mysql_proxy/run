@@ -1,0 +1,4 @@
+#!/command/execlineb -P
+with-contenv
+cd /home/template/init/mysql_proxy
+/home/template/init/mysql_proxy/start_main_mysql_proxy.sh

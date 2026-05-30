@@ -1,0 +1,1 @@
+cmd:/home/template/init/lib/probe-port.sh /home/neople/manager/cfg/server.cfg 127.0.0.1 Define_Server_TCP_Port

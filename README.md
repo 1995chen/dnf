@@ -40,21 +40,17 @@ mkdir -p /data/log /data/mysql /data/data
 # 启动服务
 # PUBLIC_IP        公网 IP 地址，局域网部署则填局域网 IP
 # DNF_DB_ROOT_PASSWORD  mysql root 密码，容器启动时会自动将 root 密码修改为此值
-# WEB_USER/WEB_PASS    supervisor 进程管理页面账号密码（访问 PUBLIC_IP:2000）
 # GATE_AES_KEY     dnf-gate-server AES 通讯密钥，需与登录器配置一致，可通过 openssl rand -hex 32 生成
 # --memory=1g      限制容器使用 1G 物理内存，可根据实际情况适当增加
 # --shm-size=8g    【不可删除】docker 默认 64M 太小，必须增大才能保证运行
 # 注意：镜像名中的 debian13 应与上一步拉取的版本一致
 docker run -d \
   -e PUBLIC_IP=x.x.x.x \
-  -e WEB_USER=root \
-  -e WEB_PASS=123456 \
   -e DNF_DB_ROOT_PASSWORD=88888888 \
   -e GATE_AES_KEY=a1b2c3d4e5f6789012345678901234567890abcdef0123456789abcdef012345 \
   -v /data/log:/home/neople/game/log \
   -v /data/mysql:/var/lib/mysql \
   -v /data/data:/data \
-  -p 2000:180 \
   -p 3000:3306/tcp \
   -p 5505:5505/tcp \
   -p 7001:7001/tcp \
@@ -120,11 +116,23 @@ root 16500 16039 9 20:39 ? 00:01:20 ./df_game_r siroco11 start
 root 16502 16039 9 20:39 ? 00:01:22 ./df_game_r siroco52 start
 ~~~
 
-`df_game_r` 进程存在即代表成功。
+对应频道的 `df_game_r` 进程存在即代表成功。
 
-**3. 查看进程管理页面**
+**3. 查看服务状态与日志**
 
-访问 `http://PUBLIC_IP:2000`，点击 `dnf:game_siroco11` 或 `dnf:game_siroco52` 进程的 `Tail -f` 查看实时日志。
+```shell
+# 查看正在运行的服务
+docker exec dnf s6-rc -a list
+
+# 查看 11 频道的状态
+docker exec dnf s6-svstat /run/service/game_siroco11
+
+# 查看 11 频道的日志
+docker exec dnf tail -f /data/log/game_siroco11/current
+
+# 查看 52 频道的日志
+docker exec dnf tail -f /data/log/game_siroco52/current
+```
 
 ### 第四步：配置客户端
 
@@ -152,7 +160,11 @@ root 16502 16039 9 20:39 ? 00:01:22 ./df_game_r siroco52 start
 docker restart dnf
 ```
 
-或在进程管理页面（`http://PUBLIC_IP:2000`）手动重启相关进程。
+或单独重启某个服务：
+
+```shell
+docker exec dnf s6-svc -r /run/service/<service-name>
+```
 
 ---
 
@@ -223,7 +235,7 @@ rm -rf /data/log/* /data/mysql/* /data/data/* # 路径按实际情况填写
 
 6.点击登录后报错: "网络错误: error sending request for url ...."
 * A: 设置界面服务器地址设置错误
-* A: 服务端网关启动失败，请检查`/data/data/log/llnut_gate.log`中是否有报错信息
+* A: 服务端网关启动失败，请用 `docker exec dnf tail -f /data/log/llnut_gate/current` 检查是否有报错信息
 * A: 防火墙未开放网关端口(http端口默认为5505，https端口默认为5504)
 
 7.灰频道或频道点击无法进入
@@ -322,6 +334,8 @@ security_opt:
 
 | 环境变量 | 原默认值 | 说明 |
 |---|---|---|
+| `WEB_USER` | `root` | supervisor 管理页面账号 |
+| `WEB_PASS` | `123456` | supervisor 管理页面密码 |
 | `GM_ACCOUNT` | `gmuser` | GM 账号 |
 | `GM_PASSWORD` | `gmpass` | GM 密码 |
 | `GM_CONNECT_KEY` | `763WXRBW3PFTC3IXPFWH` | GM 通讯密钥 |

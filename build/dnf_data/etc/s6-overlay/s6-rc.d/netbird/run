@@ -1,0 +1,4 @@
+#!/command/execlineb -P
+with-contenv
+cd /home/template/init/netbird
+/home/template/init/netbird/start_netbird.sh

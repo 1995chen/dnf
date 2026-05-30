@@ -31,18 +31,31 @@ COPY --from=builder /src/target/i686-unknown-linux-gnu/release/libgeoip_compat.s
 
 # 安装服务端依赖
 RUN microdnf --setopt=install_weak_deps=0 install -y \
-    net-tools tar gzip \
+    tar gzip openssl \
+    libstdc++ \
     glibc.i686 libstdc++.i686 zlib.i686 libgcc.i686 nss-softokn-freebl.i686 \
     # 32位字体渲染
     freetype.i686 fontconfig.i686 \
     openssl-libs.i686 \
-    python3 python3-pip \
     socat \
-    && pip3 install --no-cache-dir 'setuptools>=69.5,<70' supervisor==4.2.5 \
     # 32位SSL符号链接
     && ln -sf /usr/lib/libssl.so.3 /usr/lib/libssl.so.6 \
     && ln -sf /usr/lib/libcrypto.so.3 /usr/lib/libcrypto.so.6 \
     && microdnf clean all && rm -rf /root/.cache
+
+# 安装 s6-overlay
+ARG S6_OVERLAY_VERSION=3.2.3.0
+ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz /tmp/
+ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-x86_64.tar.xz /tmp/
+RUN microdnf --setopt=install_weak_deps=0 install -y xz \
+ && tar -C / -Jxpf /tmp/s6-overlay-noarch.tar.xz \
+ && tar -C / -Jxpf /tmp/s6-overlay-x86_64.tar.xz \
+ && rm -f /tmp/s6-overlay-*.tar.xz \
+ && microdnf remove -y xz \
+ && microdnf clean all
+
+ENV S6_STAGE2_HOOK=/etc/s6-overlay/scripts/stage2-hook.sh
+ENV S6_BEHAVIOUR_IF_STAGE2_FAILS=2
 
 # 解压32位共享库
 RUN cd /tmp \
@@ -85,7 +98,7 @@ ENV MAIN_BRIDGE_IP='127.0.0.1' \
     SERVER_GROUP=3 \
     MAIN_MYSQL_HOST='' \
     MAIN_MYSQL_PORT='' \
-    MAIN_MYSQL_ROOT_PASSWORD=88888888 \
+    MAIN_MYSQL_ROOT_PASSWORD='' \
     MAIN_MYSQL_GAME_ALLOW_IP='' \
     MYSQL_HOST='' \
     MYSQL_PORT='' \
@@ -94,8 +107,6 @@ ENV MAIN_BRIDGE_IP='127.0.0.1' \
     PUBLIC_IP='' \
     DNF_DB_ROOT_PASSWORD=88888888 \
     DNF_DB_GAME_PASSWORD='uu5!^%jg' \
-    WEB_USER=root \
-    WEB_PASS=123456 \
     OPEN_CHANNEL='11,52' \
     DDNS_ENABLE=false \
     DDNS_DOMAIN='' \
@@ -124,8 +135,7 @@ ENV MAIN_BRIDGE_IP='127.0.0.1' \
 COPY build/dnf_data/ /
 
 RUN rm -rf /home/template/neople/game/history \
-    && sed -i 's|cat pid/\*\.pid .*|tail --pid=\$(cat pid/channel.pid) -f /dev/null|g' /home/template/init/run/start_channel.sh \
     && rm -rf /tmp/* /var/tmp/* /root/.cache
 
 WORKDIR /root
-CMD ["/bin/bash", "/docker-entrypoint.sh"]
+ENTRYPOINT ["/init"]

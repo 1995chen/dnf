@@ -80,56 +80,6 @@ else
     echo "frida.js have already inited, do nothing!"
 fi
 
-# 重新生成channel配置文件[这里要重置下]
-rm -rf /etc/supervisor/conf.d/channel.conf
-cp /etc/supervisor/conf.d/channel.conf.template /etc/supervisor/conf.d/channel.conf
-# 根据环境变量重置频道配置文件
-numbers=$(echo "$OPEN_CHANNEL" | awk -F, '{for(i=1;i<=NF;i++){if($i~/-/){split($i,a,"-");for(j=a[1];j<=a[2];j++)printf j" "}else{printf $i" "}}}')
-group_programs="channel"
-
-echo "" >>/etc/supervisor/conf.d/channel.conf
-# 循环遍历存储的数字
-for num in $numbers; do
-    if [[ $num -eq 1 || $num -eq 6 || $num -eq 7 || ($num -ge 11 && $num -le 39) || ($num -ge 52 && $num -le 56) ]]; then
-        if [ "$num" -ge 11 ] && [ "$num" -le 51 ]; then
-            process_sequence=3
-        else
-            process_sequence=5
-        fi
-        # 对于小于10的频道补0
-        if [[ $num -lt 10 ]]; then
-            num="0$num"
-        fi
-        group_programs="$group_programs,game_${SERVER_GROUP_NAME}${num}"
-        cat >>/etc/supervisor/conf.d/channel.conf <<EOF
-
-[program:game_${SERVER_GROUP_NAME}${num}]
-command=/bin/bash -c "/home/template/init/lib/barrier-wait game_${SERVER_GROUP_NAME}${num} /data/run/start_game.sh $num $process_sequence"
-directory=/home/neople/game
-user=root
-autostart=true
-autorestart=true
-stopasgroup=true
-killasgroup=true
-stdout_logfile=/data/log/game_${SERVER_GROUP_NAME}${num}.log
-redirect_stderr=true
-stdout_logfile_maxbytes=1MB
-stderr_logfile_maxbytes=1MB
-priority=2000
-EOF
-        continue
-    fi
-    echo "invalid channel number: $num"
-done
-# 添加dnf_channel分组
-cat >>/etc/supervisor/conf.d/channel.conf <<EOF
-
-[group:dnf_channel]
-programs=$group_programs
-priority=999
-EOF
-echo "init channel.conf success"
-
 # 判断monitor_ip脚本是否初始化[get_public_ip.sh]
 if [ ! -f "/data/monitor_ip/get_public_ip.sh" ]; then
     cp /home/template/init/monitor_ip/get_public_ip.sh /data/monitor_ip/
@@ -139,13 +89,13 @@ else
 fi
 
 # 初始化所有run脚本
-ref_dir=/data/.run-template
-mkdir -p /data/run "$ref_dir"
+ref_path=/data/.run-template
+mkdir -p /data/run "$ref_path"
 for fp in "/home/template/init/run"/*.sh; do
     [ -f "$fp" ] || continue
     sh_name=$(basename "$fp")
     target="/data/run/$sh_name"
-    ref="$ref_dir/$sh_name"
+    ref="$ref_path/$sh_name"
     if [ ! -f "$target" ]; then
         cp -f "$fp" "$target"
         cp -f "$fp" "$ref"

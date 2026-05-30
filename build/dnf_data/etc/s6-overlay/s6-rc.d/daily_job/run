@@ -1,0 +1,4 @@
+#!/command/execlineb -P
+with-contenv
+cd /home/template/init/daily_job
+/home/template/init/daily_job/daily_job.sh

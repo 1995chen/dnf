@@ -1,8 +1,6 @@
 #!/bin/bash
 # tune.sh 测试脚本
 
-set -u
-
 SCRIPT_PATH=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 
 # shellcheck source=common.sh
@@ -373,31 +371,31 @@ resolve_case() {
     "
 }
 
-extract_mc()  { echo "$1"  | sed -n 's/^MC=\([^|]*\)|.*/\1/p';  }
-extract_m32() { echo "$1"  | sed -n 's/.*|M32=\([^|]*\)|.*/\1/p'; }
-extract_m64() { echo "$1"  | sed -n 's/.*|M64=\(.*\)$/\1/p';   }
+extract_mc() { echo "$1" | sed -n 's/^MC=\([^|]*\)|.*/\1/p'; }
+extract_m32() { echo "$1" | sed -n 's/.*|M32=\([^|]*\)|.*/\1/p'; }
+extract_m64() { echo "$1" | sed -n 's/.*|M64=\(.*\)$/\1/p'; }
 
 # 只设 MALLOC_CONF -> MC=X M32=X M64=X
 out=$(resolve_case 'export MALLOC_CONF=X')
-check "case1 MC=X"  "$(extract_mc  "$out")" "X"
+check "case1 MC=X" "$(extract_mc "$out")" "X"
 check "case1 M32=X" "$(extract_m32 "$out")" "X"
 check "case1 M64=X" "$(extract_m64 "$out")" "X"
 
 # MC + _32 -> MC=X M32=A M64=X
 out=$(resolve_case 'export MALLOC_CONF=X MALLOC_CONF_32=A')
-check "case2 MC=X"  "$(extract_mc  "$out")" "X"
+check "case2 MC=X" "$(extract_mc "$out")" "X"
 check "case2 M32=A" "$(extract_m32 "$out")" "A"
 check "case2 M64=X" "$(extract_m64 "$out")" "X"
 
 # MC + _64 -> MC=X M32=X M64=B
 out=$(resolve_case 'export MALLOC_CONF=X MALLOC_CONF_64=B')
-check "case3 MC=X"  "$(extract_mc  "$out")" "X"
+check "case3 MC=X" "$(extract_mc "$out")" "X"
 check "case3 M32=X" "$(extract_m32 "$out")" "X"
 check "case3 M64=B" "$(extract_m64 "$out")" "B"
 
 # 只设 _32 -> MC=A M32=A M64=auto-64
 out=$(resolve_case 'export MALLOC_CONF_32=A')
-check "case4 MC=A"  "$(extract_mc  "$out")" "A"
+check "case4 MC=A" "$(extract_mc "$out")" "A"
 check "case4 M32=A" "$(extract_m32 "$out")" "A"
 out_m64=$(extract_m64 "$out")
 case "$out_m64" in narenas:*) check "case4 M64 自动计算" ok ok ;; *) check "case4 M64 自动计算" "$out_m64" "narenas:..." ;; esac
@@ -406,7 +404,7 @@ case "$out_m64" in narenas:*) check "case4 M64 自动计算" ok ok ;; *) check "
 out=$(resolve_case 'export MALLOC_CONF_64=B')
 out_mc=$(extract_mc "$out")
 out_m32=$(extract_m32 "$out")
-case "$out_mc"  in narenas:*) check "case5 MC 自动计算"  ok ok ;; *) check "case5 MC 自动计算"  "$out_mc"  "narenas:..." ;; esac
+case "$out_mc" in narenas:*) check "case5 MC 自动计算" ok ok ;; *) check "case5 MC 自动计算" "$out_mc" "narenas:..." ;; esac
 case "$out_m32" in narenas:*) check "case5 M32 自动计算" ok ok ;; *) check "case5 M32 自动计算" "$out_m32" "narenas:..." ;; esac
 check "case5 MC == M32" "$out_mc" "$out_m32"
 check "case5 M64=B" "$(extract_m64 "$out")" "B"
@@ -416,27 +414,31 @@ out=$(resolve_case '')
 out_mc=$(extract_mc "$out")
 out_m32=$(extract_m32 "$out")
 out_m64=$(extract_m64 "$out")
-case "$out_mc"  in narenas:*) check "case6 MC 自动计算"  ok ok ;; *) check "case6 MC 自动计算"  "$out_mc"  "narenas:..." ;; esac
+case "$out_mc" in narenas:*) check "case6 MC 自动计算" ok ok ;; *) check "case6 MC 自动计算" "$out_mc" "narenas:..." ;; esac
 case "$out_m32" in narenas:*) check "case6 M32 自动计算" ok ok ;; *) check "case6 M32 自动计算" "$out_m32" "narenas:..." ;; esac
 case "$out_m64" in narenas:*) check "case6 M64 自动计算" ok ok ;; *) check "case6 M64 自动计算" "$out_m64" "narenas:..." ;; esac
 check "case6 MC == M32" "$out_mc" "$out_m32"
-[ "$out_mc" != "$out_m64" ] && check "case6 MC 与 M64 不同" ok ok || check "case6 MC 与 M64 不同" "same" "different"
+if [ "$out_mc" != "$out_m64" ]; then
+    check "case6 MC 与 M64 不同" ok ok
+else
+    check "case6 MC 与 M64 不同" "same" "different"
+fi
 
 # 都设置 -> MC=X M32=A M64=B
 out=$(resolve_case 'export MALLOC_CONF=X MALLOC_CONF_32=A MALLOC_CONF_64=B')
-check "case7 MC=X" "$(extract_mc  "$out")" "X"
+check "case7 MC=X" "$(extract_mc "$out")" "X"
 check "case7 M32=A" "$(extract_m32 "$out")" "A"
 check "case7 M64=B" "$(extract_m64 "$out")" "B"
 
 # 设置空 MALLOC_CONF 的情况下，MC M32 和 M64 都为空
 out=$(resolve_case "export MALLOC_CONF=''")
-check "case8 MC 为空" "$(extract_mc  "$out")" ""
+check "case8 MC 为空" "$(extract_mc "$out")" ""
 check "case8 M32 为空" "$(extract_m32 "$out")" ""
 check "case8 M64 为空" "$(extract_m64 "$out")" ""
 
 # 设置空 MALLOC_CONF 但还设置了非空的32位或64位配置
 out=$(resolve_case "export MALLOC_CONF='' MALLOC_CONF_32=A MALLOC_CONF_64=B")
-check "case9 MC 为空" "$(extract_mc  "$out")" ""
+check "case9 MC 为空" "$(extract_mc "$out")" ""
 check "case9 M32 使用手动设置的值" "$(extract_m32 "$out")" "A"
 check "case9 M64 使用手动设置的值" "$(extract_m64 "$out")" "B"
 

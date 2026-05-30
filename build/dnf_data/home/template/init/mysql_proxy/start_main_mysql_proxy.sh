@@ -8,5 +8,3 @@ if [ -n "$CUR_MAIN_DB_HOST" ] && [ -n "$CUR_MAIN_DB_PORT" ]; then
 else
     echo "no need to start master mysql proxy"
 fi
-# 等待5秒后退出
-sleep 5

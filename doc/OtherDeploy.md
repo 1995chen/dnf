@@ -12,13 +12,9 @@
 | 5 | casillas | 卡西利亚斯 | taiwan_casillas |
 | 6 | hilder | 赫尔德 | taiwan_hilder |
 
-```
-默认情况下，当指定运行一个大区时，该项目会创建并连接该大区对应的数据库。
-```
+默认情况下，当指定运行一个大区时，会创建并连接该大区对应的数据库。然而，目前市面上*主流的PVF*只有 160MB 左右，并且*仅开放了希洛克大区*。因此，我们将`SERVER_GROUP`的默认值设置为3（代表希洛克大区）。
 
-然而，目前市面上`主流的PVF`只有160MB左右，并且`仅开放了希洛克大区`。因此，我们将SERVER_GROUP的默认值设置为3（代表希洛克大区）。
-
-此外，大多数服务端以及GM工具连接的是cain数据库。为了适配这种情况，我们可以通过设置环境变量SERVER_GROUP_DB=cain来明确指定使用卡恩数据库。否则可能会造成部分GM工具无法使用等问题。
+大多数服务端以及GM工具连接的是cain数据库。为兼容这种情况，本项目将 `SERVER_GROUP_DB` 默认设为 `cain`，即默认连接 cain 数据库。
 
 ## 环境变量概述
 
@@ -85,15 +81,6 @@
 | DNF_DB_USER_EXTENDED_QF | 清风版本DNF数据库额外的账号,密码不可设置, 与game保持一致 | 逗号分隔 | supergod,chhappy,cash |
 | CLIENT_POOL_SIZE | 服务端启动时分配的客户端缓冲池大小，此配置项影响df_bridge_r和df_channel_r的内存占用 | 3-1000 | 10 |
 
-### 进程监控管理页面配置
-
-配置访问Supervisor进程管理页面所需的用户名密码。
-
-| 环境变量名称 | 描述 | 可选参数 | 默认值 |
-| ------- | ------- | ------- | ------- |
-| WEB_USER | supervisor web页面用户名 |  | root |
-| WEB_PASS | supervisor web页面密码 |  | 123456 |
-
 
 ### 网关配置
 
@@ -127,13 +114,13 @@
 | MAIN_BRIDGE_IP | 主大区 BRIDGE_IP | 主大区的PUBLIC_IP地址 | 127.0.0.1 |
 | MAIN_MYSQL_HOST | 主数据库IP地址 |  | '' |
 | MAIN_MYSQL_PORT | 主数据库端口号 |  | '' |
-| MAIN_MYSQL_ROOT_PASSWORD | 主数据库ROOT账号密码 |  | 88888888 |
+| MAIN_MYSQL_ROOT_PASSWORD | 主数据库ROOT账号密码，为空则使用 DNF_DB_ROOT_PASSWORD |  | '' |
 | MAIN_MYSQL_GAME_ALLOW_IP | 主数据库GAME账号ALLOW IP |  | '' |
 | MYSQL_HOST | 大区数据库的IP地址 |  | '' |
 | MYSQL_PORT | 大区数据库的端口号 |  | '' |
 | MYSQL_GAME_ALLOW_IP | 大区数据库GAME账号ALLOW IP |  | '' |
 
-默认情况下，系统会创建并连接到相应大区的数据库。若需要连接到其他大区的数据库，需设置环境变量SERVER_GROUP_DB为相应大区的名称（例如cain/diregie/siroco）。在这种情况下，服务内部也会连接到 taiwan_cain/taiwan_diregie/taiwan_siroco 等大区的数据库。
+本镜像 `SERVER_GROUP_DB` 默认值为 `cain`，因此默认会创建并连接 cain 系列数据库（taiwan_cain 等）。如需连接大区自己的数据库，可以将 `SERVER_GROUP_DB` 设为对应大区名（例如 cain/diregie/siroco），服务端会连接到 taiwan_cain/taiwan_diregie/taiwan_siroco 等对应数据库。若设为空值则使用连接到 `SERVER_GROUP` 对应的大区数据库。
 
 `MAIN_MYSQL_GAME_ALLOW_IP` 和 `MYSQL_GAME_ALLOW_IP` 不设置时，启动脚本从 mysql 的拒绝连接回包里解析 `game` 账号的授权地址。db 镜像的 my.cnf 默认开启 `skip-name-resolve`，解析到的始终是 IP。手动填写时也请使用 IP，不要用主机名。
 
@@ -277,6 +264,18 @@ CPU 数量影响以下参数：
 mysql -h $CUR_MAIN_DB_HOST -P $CUR_MAIN_DB_PORT -u game -p$DNF_DB_GAME_PASSWORD <<EOF
   insert into d_taiwan.geo_allow values ('192.168.48.1', "*", "2016-04-09 23:53:04");
 EOF
+```
+
+### docker 服务管理
+
+```shell
+docker exec dnf s6-rc-db list all          # 查看全部服务
+docker exec dnf s6-rc -a list              # 查看已启动的服务
+docker exec dnf s6-rc -da list             # 查看已停止的服务
+docker exec dnf s6-svstat /run/service/X   # 查看服务状态
+docker exec dnf s6-svc -r /run/service/X   # 重启服务
+docker exec dnf s6-rc -u change Y          # 启动服务
+docker exec dnf s6-rc -d change Y          # 停止服务
 ```
 
 ## k8s部署

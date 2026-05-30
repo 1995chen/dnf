@@ -5,6 +5,5 @@ rm -rf zergsvr.pid
 # shellcheck source=../lib/tune.sh
 source /home/template/init/lib/tune.sh
 tune_apply_malloc_conf_32
-LD_PRELOAD=/usr/lib/libjemalloc32.so.2:/usr/lib/libglibc_compat.so ./zergsvr -t30 -i1
-sleep 5
-cat zergsvr.pid | xargs -n1 -I{} tail --pid={} -f /dev/null
+exec env LD_PRELOAD=/usr/lib/libjemalloc32.so.2:/usr/lib/libglibc_compat.so \
+    ./zergsvr -t30 -i1

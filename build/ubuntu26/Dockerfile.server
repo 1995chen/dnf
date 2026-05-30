@@ -57,15 +57,13 @@ RUN for bin in mysql mysqladmin mysqldump my_print_defaults; do \
 # 安装服务端依赖
 RUN dpkg --add-architecture i386 && \
     apt-get update && apt-get install -y --no-install-recommends \
-    net-tools curl ca-certificates \
+    curl ca-certificates openssl \
     libc6:i386 libstdc++6:i386 zlib1g:i386 \
     # 32位字体渲染
     libfreetype6:i386 libfontconfig1:i386 \
     libssl3t64:i386 \
     libjemalloc2:i386 libjemalloc2 \
-    python3 python3-pip \
     socat \
-    && pip3 install --no-cache-dir --break-system-packages 'setuptools>=69.5,<70' supervisor==4.2.5 \
     # 32位SSL符号链接
     && ln -sf /usr/lib/i386-linux-gnu/libssl.so.3 /lib/i386-linux-gnu/libssl.so.6 2>/dev/null || true \
     && ln -sf /usr/lib/i386-linux-gnu/libcrypto.so.3 /lib/i386-linux-gnu/libcrypto.so.6 2>/dev/null || true \
@@ -73,6 +71,20 @@ RUN dpkg --add-architecture i386 && \
     && cp -L /usr/lib/i386-linux-gnu/libjemalloc.so.2 /usr/lib/libjemalloc32.so.2 \
     && cp -L /usr/lib/x86_64-linux-gnu/libjemalloc.so.2 /usr/lib/libjemalloc.so.2 \
     && apt-get clean && rm -rf /var/lib/apt/lists/* /root/.cache
+
+# 安装 s6-overlay
+ARG S6_OVERLAY_VERSION=3.2.3.0
+ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz /tmp/
+ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-x86_64.tar.xz /tmp/
+RUN apt-get update && apt-get install -y --no-install-recommends xz-utils \
+ && tar -C / -Jxpf /tmp/s6-overlay-noarch.tar.xz \
+ && tar -C / -Jxpf /tmp/s6-overlay-x86_64.tar.xz \
+ && rm -f /tmp/s6-overlay-*.tar.xz \
+ && apt-get purge -y --auto-remove xz-utils \
+ && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+ENV S6_STAGE2_HOOK=/etc/s6-overlay/scripts/stage2-hook.sh
+ENV S6_BEHAVIOUR_IF_STAGE2_FAILS=2
 
 # 解压32位共享库
 RUN cd /tmp \
@@ -105,7 +117,7 @@ ENV MAIN_BRIDGE_IP='127.0.0.1' \
     SERVER_GROUP=3 \
     MAIN_MYSQL_HOST='' \
     MAIN_MYSQL_PORT='' \
-    MAIN_MYSQL_ROOT_PASSWORD=88888888 \
+    MAIN_MYSQL_ROOT_PASSWORD='' \
     MAIN_MYSQL_GAME_ALLOW_IP='' \
     MYSQL_HOST='' \
     MYSQL_PORT='' \
@@ -114,8 +126,6 @@ ENV MAIN_BRIDGE_IP='127.0.0.1' \
     PUBLIC_IP='' \
     DNF_DB_ROOT_PASSWORD=88888888 \
     DNF_DB_GAME_PASSWORD='uu5!^%jg' \
-    WEB_USER=root \
-    WEB_PASS=123456 \
     OPEN_CHANNEL='11,52' \
     DDNS_ENABLE=false \
     DDNS_DOMAIN='' \
@@ -144,8 +154,7 @@ ENV MAIN_BRIDGE_IP='127.0.0.1' \
 COPY build/dnf_data/ /
 
 RUN rm -rf /home/template/neople/game/history \
-    && sed -i 's|cat pid/\*\.pid .*|tail --pid=\$(cat pid/channel.pid) -f /dev/null|g' /home/template/init/run/start_channel.sh \
     && rm -rf /tmp/* /var/tmp/* /root/.cache
 
 WORKDIR /root
-CMD ["/bin/bash", "/docker-entrypoint.sh"]
+ENTRYPOINT ["/init"]

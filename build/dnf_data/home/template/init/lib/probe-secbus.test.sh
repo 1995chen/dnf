@@ -44,7 +44,7 @@ mkbus() {
     for ((i = 1; i <= full; i++)); do head -c 2000 /dev/zero >"$d/sec_tss_sdk_bus_$i"; done
     for ((i = 1; i <= empty; i++)); do : >"$d/sec_tss_sdk_bus_e$i"; done
 }
-runp() { SECAGENT_CONFIG="$1" SECBUS_GLOB="$2" SECBUS_GLOB_ALT= bash "$PROBE"; }
+runp() { SECAGENT_CONFIG="$1" SECBUS_GLOB="$2" SECBUS_GLOB_ALT='' bash "$PROBE"; }
 mkbus_nested() {
     local d="$1" full="$2" i
     mkdir -p "$d"

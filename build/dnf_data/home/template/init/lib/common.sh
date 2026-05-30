@@ -83,7 +83,7 @@ run_or_exit() {
 start_dbmw() {
     local server_id="$1"
     local old_pid
-    old_pid=$(pgrep -f "df_dbmw_r ${server_id} start")
+    old_pid=$(pgrep -f "df_dbmw_r ${server_id}")
     if [ -n "$old_pid" ]; then
         echo "prepare to kill old pid:${old_pid}"
         kill -9 "$old_pid"
@@ -94,7 +94,6 @@ start_dbmw() {
     # shellcheck source=./tune.sh
     source /home/template/init/lib/tune.sh
     tune_apply_malloc_conf_32
-    LD_PRELOAD=/usr/lib/libjemalloc32.so.2:/home/template/init/libhook.so ./df_dbmw_r "$server_id" start
-    sleep 2
-    cat "pid/${server_id}.pid" | xargs -n1 -I{} tail --pid={} -f /dev/null
+    exec env LD_PRELOAD=/usr/lib/libjemalloc32.so.2:/home/template/init/libhook.so \
+        ./df_dbmw_r "$server_id" nofork
 }

@@ -1,0 +1,67 @@
+#!/command/with-contenv bash
+# shellcheck shell=bash
+# 服务就绪探针脚本
+# 就绪返回 0, 未就绪返回 1; 若没有规则文件则视为立即就绪。
+# 循环/超时/通知由 s6-notifyoncheck 负责, 此脚本只探测一次
+
+s6_runprobe__trim() {
+    local s="$1"
+    s="${s#"${s%%[![:space:]]*}"}"
+    s="${s%"${s##*[![:space:]]}"}"
+    printf '%s' "$s"
+}
+
+probe_one() {
+    local probe="$1" type arg
+    type="${probe%%:*}"
+    arg="${probe#*:}"
+    case "$type" in
+    file)
+        local f files=() saved_ifs="$IFS"
+        IFS=' '
+        # shellcheck disable=SC2206
+        files=($arg)
+        IFS="$saved_ifs"
+        for f in "${files[@]}"; do
+            [ -s "$f" ] && return 0
+        done
+        return 1
+        ;;
+    tcp)
+        socat -T2 /dev/null "TCP:${arg}" >/dev/null 2>&1
+        ;;
+    udp)
+        socat -T1 /dev/null "UDP-SENDTO:${arg}" >/dev/null 2>&1
+        ;;
+    logmark)
+        local file="${arg%%:*}" regex="${arg#*:}"
+        [ -f "$file" ] && grep -Eq -- "$regex" "$file"
+        ;;
+    cmd)
+        PROGRAM="$prog" bash -c "$arg" >/dev/null 2>&1
+        ;;
+    *)
+        echo "[s6-runprobe] $prog unknown probe type: $type" >&2
+        return 1
+        ;;
+    esac
+}
+
+prog="$1"
+[ -n "$prog" ] || {
+    echo "usage: s6-runprobe NAME" >&2
+    exit 2
+}
+
+probes_file="${S6_PROBES_PATH:-/etc/s6-overlay/probes.d}/${prog}"
+[ -f "$probes_file" ] || exit 0
+probes=$(cat "$probes_file")
+[ -z "$probes" ] && exit 0
+
+IFS=';' read -ra parts <<<"$probes"
+for p in "${parts[@]}"; do
+    p="$(s6_runprobe__trim "$p")"
+    [ -z "$p" ] && continue
+    probe_one "$p" || exit 1
+done
+exit 0

@@ -44,7 +44,7 @@ COPY --from=mysql-builder /mysql/allocator/libjemalloc.so.2 /usr/lib/libjemalloc
 
 # 安装MySQL 5.7依赖
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libaio1t64 libnuma1 \
+    libaio1t64 libnuma1 libcrypt1 \
     && ln -sf /usr/lib/x86_64-linux-gnu/libaio.so.1t64 /usr/lib/x86_64-linux-gnu/libaio.so.1 \
     && groupadd mysql && useradd -r -g mysql -s /bin/false mysql \
     && mkdir -p /var/lib/mysql /var/run/mysqld /var/log/mysql \

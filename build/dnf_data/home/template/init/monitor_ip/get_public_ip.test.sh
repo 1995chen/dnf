@@ -1,8 +1,6 @@
 #!/bin/bash
 # get_public_ip.sh 测试脚本
 
-set -u
-
 SCRIPT_PATH=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 TARGET="$SCRIPT_PATH/get_public_ip.sh"
 

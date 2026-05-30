@@ -1,0 +1,6 @@
+#!/command/execlineb -P
+with-contenv
+s6-notifyoncheck -T 1200000 -n 0 -w 500 -t 10000 -c "/home/template/init/lib/s6-runprobe dbmw_stat"
+fdclose 3
+cd /home/neople/dbmw_stat
+/data/run/start_dbmw_stat.sh
