@@ -88,13 +88,24 @@ jobs:
       - name: Install test dependencies
         run: |
           sudo apt-get update && sudo apt-get install -y socat
+          SHELLCHECK_VERSION=0.11.0
+          curl -fsSL "https://github.com/koalaman/shellcheck/releases/download/v${SHELLCHECK_VERSION}/shellcheck-v${SHELLCHECK_VERSION}.linux.x86_64.tar.xz" \
+            | tar -C /tmp -Jx
+          sc_path=$(command -v shellcheck || echo /usr/local/bin/shellcheck)
+          sudo install -m 0755 "/tmp/shellcheck-v${SHELLCHECK_VERSION}/shellcheck" "$sc_path"
+          hash -r
+          sc_ver=$(shellcheck --version | awk '/^version:/{print $2}')
+          [ "$sc_ver" = "$SHELLCHECK_VERSION" ] || { echo "::error::shellcheck on PATH is ${sc_ver:-missing}, expected ${SHELLCHECK_VERSION}"; exit 1; }
+          echo "shellcheck ${sc_ver} ready at $(command -v shellcheck)"
           S6_OVERLAY_VERSION=3.2.3.0
           sudo mkdir -p /opt/s6
           curl -fsSL "https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-x86_64.tar.xz" \
             | sudo tar -C /opt/s6 -Jx
           echo /opt/s6/command >> "$GITHUB_PATH"
       - name: Run unified shell test suite
-        run: bash .github/scripts/run-shell-tests.sh
+        run: |
+          shellcheck --version
+          bash .github/scripts/run-shell-tests.sh
 
   ensure-buildkit-mirror:
     needs: metadata
