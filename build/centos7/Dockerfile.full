@@ -12,7 +12,7 @@ RUN yum install -y \
 ARG S6_OVERLAY_VERSION=3.2.3.0
 ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz /tmp/
 ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-x86_64.tar.xz /tmp/
-RUN yum install -y gcc gcc-c++ make zlib-devel xz && \
+RUN yum install -y gcc gcc-c++ make zlib-devel && \
     cd /tmp && \
     curl -fsSLO https://raw.githubusercontent.com/llnut/dnf_util/refs/heads/main/common_pkgs/socat-1.7.4.3.tar.gz && \
     curl -fsSLO https://raw.githubusercontent.com/llnut/dnf_util/refs/heads/main/common_pkgs/GeoIP-1.4.8.tgz && \
@@ -22,7 +22,7 @@ RUN yum install -y gcc gcc-c++ make zlib-devel xz && \
     cd /tmp/GeoIP-1.4.8/ && chmod 755 configure && ./configure && make && make install && \
     tar -C / -Jxpf /tmp/s6-overlay-noarch.tar.xz && \
     tar -C / -Jxpf /tmp/s6-overlay-x86_64.tar.xz && \
-    yum remove -y gcc gcc-c++ make zlib-devel xz && \
+    yum remove -y gcc gcc-c++ zlib-devel xulrunner gtk2 && \
     yum clean all && rm -rf /tmp/* /root/.cache /var/cache/yum
 
 ENV S6_STAGE2_HOOK=/etc/s6-overlay/scripts/stage2-hook.sh
