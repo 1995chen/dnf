@@ -94,28 +94,20 @@ mkdir -p /data/run "$ref_path"
 for fp in "/home/template/init/run"/*.sh; do
     [ -f "$fp" ] || continue
     sh_name=$(basename "$fp")
-    target="/data/run/$sh_name"
-    ref="$ref_path/$sh_name"
-    if [ ! -f "$target" ]; then
-        cp -f "$fp" "$target"
-        cp -f "$fp" "$ref"
-        echo "init $sh_name success"
-    elif [ -f "$ref" ] && ! cmp -s "$target" "$ref"; then
-        echo "keep customized $sh_name, not overwritten"
-    elif cmp -s "$fp" "$target"; then
-        cp -f "$fp" "$ref"
-        echo "$sh_name have already inited, do nothing!"
-    else
-        cp -f "$fp" "$target"
-        cp -f "$fp" "$ref"
-        echo "regenerate $sh_name: template updated"
-    fi
+    sync_template_file "$fp" "/data/run/$sh_name" "$ref_path/$sh_name"
 done
 
-# 判断每日脚本是否初始化
-if [ ! -f "/data/daily_job/user_daily_script.sh" ]; then
-    cp /home/template/init/daily_job/user_daily_script.sh /data/daily_job/
-    echo "init user_daily_script.sh success"
-else
-    echo "user_daily_script.sh have already inited, do nothing!"
+# 定时任务，src更新时自动升级, 用户改过则保留
+scheduler_ref_path=/data/.scheduler-template
+mkdir -p /data/scheduler "$scheduler_ref_path"
+# 兼容旧路径
+if [ -f /data/daily_job/user_daily_script.sh ] && [ ! -e /data/scheduler/user-script.sh ]; then
+    cp -f /data/daily_job/user_daily_script.sh /data/scheduler/user-script.sh
+    echo "migrate /data/daily_job/user_daily_script.sh -> /data/scheduler/user-script.sh"
 fi
+if [ -f /data/.daily_job-template/user_daily_script.sh ] && [ ! -e "$scheduler_ref_path/user-script.sh" ]; then
+    cp -f /data/.daily_job-template/user_daily_script.sh "$scheduler_ref_path/user-script.sh"
+fi
+sync_template_file /home/template/init/scheduler/user-script.sh \
+    /data/scheduler/user-script.sh \
+    "$scheduler_ref_path/user-script.sh"

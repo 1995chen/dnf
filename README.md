@@ -17,8 +17,9 @@
 - 若您需要从旧版本升级，请先阅读[从旧版本升级](#upgrade)。
 - Docker 29 及以上版本需要先[配置 Docker seccomp 兼容规则](doc/PrepareLinux.md#seccomp-profile)，并按照[常见问题中的说明](#qa-seccomp-profile)调整启动配置，否则服务端会启动失败。
 - 中国大陆用户若镜像拉取失败，可使用[阿里云 ACR 镜像](doc/PrepareLinux.md#acr-image)。
-- 统一网关用户请拉取 `tongyigate` 后缀的镜像，该镜像后续不再维护。
+- 统一网关用户请拉取 `tongyigate` 后缀的镜像，该镜像后续不再维护（需自行安装统一登录器到客户端）。
 - 服务端启动时会自动选择合适的性能配置以合理使用硬件资源，若需手动调整性能参数请参照[性能配置](doc/OtherDeploy.md#性能配置)文档。
+- 服务端内置定时任务功能，包含自动创建/清理拍卖行表、更新 geo ip 白名单、清理 core dump、数据库自动备份等功能。详细文档见[定时任务与数据库备份恢复](doc/OtherDeploy.md#定时任务与数据库备份恢复)。
 
 ---
 

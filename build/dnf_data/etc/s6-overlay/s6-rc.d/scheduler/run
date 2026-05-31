@@ -1,0 +1,4 @@
+#!/command/execlineb -P
+with-contenv
+cd /home/template/init/scheduler
+/home/template/init/scheduler/scheduler.sh

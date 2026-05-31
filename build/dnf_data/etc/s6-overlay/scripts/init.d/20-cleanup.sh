@@ -28,6 +28,6 @@ mkdir -p /data/dp
 ln -s /data/dp /dp2
 mkdir -p /data/log /data/log/netbird /data/log/tailscale
 mkdir -p /data/monitor_ip
-mkdir -p /data/daily_job
+mkdir -p /data/scheduler
 mkdir -p /data/netbird /data/tailscale
 mkdir -p /data/run

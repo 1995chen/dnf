@@ -27,12 +27,19 @@ echo junk >"$tpl_path/game/old.log"
 echo junk >"$tpl_path/game/old.pid"
 echo junk >"$tpl_path/game/core.999"
 
+# 创建 dbmw 目录
+mkdir -p "$tpl_path/dbmw_guild/cfg" "$tpl_path/dbmw_mnt/cfg" "$tpl_path/dbmw_stat/cfg"
+
 # 版本文件 + dp 目录
 data_path="$WORK/data"
 mkdir -p "$data_path/dp"
 echo pvf >"$data_path/Script.pvf"
 echo gamebin >"$data_path/df_game_r"
 echo pubkey >"$data_path/publickey.pem"
+
+# df_dbmw_r
+dbmw_bin="$WORK/df_dbmw_r"
+echo dbmwbin >"$dbmw_bin"
 
 dest_path="$WORK/neople"
 
@@ -43,6 +50,7 @@ run_hook() {
         NEOPLE_TMP_PATH="$WORK/template/neople-tmp" \
         NEOPLE_PATH="$dest_path" \
         DATA_PATH="$data_path" \
+        DBMW_BIN_FILE="$dbmw_bin" \
         DNF_DB_GAME_PASSWORD=gamepwd \
         DEC_GAME_PWD=decpwd \
         SERVER_GROUP_NAME=siroco \
@@ -77,6 +85,10 @@ chk "复制 Script.pvf" yes "$(exists "$dest_path/game/Script.pvf")"
 chk "复制 df_game_r" yes "$(exists "$dest_path/game/df_game_r")"
 chk "复制 publickey.pem" yes "$(exists "$dest_path/game/publickey.pem")"
 chk "清理临时目录" no "$(exists "$WORK/template/neople-tmp")"
+chk "复制 df_dbmw_r 到 dbmw_guild" yes "$(exists "$dest_path/dbmw_guild/df_dbmw_r")"
+chk "复制 df_dbmw_r 到 dbmw_mnt" yes "$(exists "$dest_path/dbmw_mnt/df_dbmw_r")"
+chk "复制 df_dbmw_r 到 dbmw_stat" yes "$(exists "$dest_path/dbmw_stat/df_dbmw_r")"
+chk "dbmw 复制成功" "dbmwbin" "$(cat "$dest_path/dbmw_guild/df_dbmw_r")"
 
 fp1_cfg=$(cat "$dest_path/game/cfg/test.cfg")
 fp1_list=$(find "$dest_path/game" -maxdepth 1 -mindepth 1 -printf '%f\n' | sort)

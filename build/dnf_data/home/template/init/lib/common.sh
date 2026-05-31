@@ -78,6 +78,38 @@ run_or_exit() {
     fi
 }
 
+# 同步模板文件
+# 用法: sync_template_file SRC TARGET REF
+sync_template_file() {
+    local src="$1" target="$2" ref="$3"
+    local name backup ts
+    name=$(basename "$target")
+    if [ ! -f "$target" ]; then
+        cp -f "$src" "$target"
+        cp -f "$src" "$ref"
+        echo "init $name success"
+        return 0
+    fi
+    if cmp -s "$src" "$target"; then
+        cp -f "$src" "$ref"
+        echo "$name have already inited, do nothing!"
+        return 0
+    fi
+    if [ -f "$ref" ] && cmp -s "$src" "$ref"; then
+        echo "keep customized $name, not overwritten"
+        return 0
+    fi
+    if [ ! -f "$ref" ] || ! cmp -s "$target" "$ref"; then
+        ts=$(date +'%Y%m%d-%H%M%S')
+        backup="${target}.${ts}.bak"
+        cp -f "$target" "$backup"
+        echo "backup customized $name -> $(basename "$backup")"
+    fi
+    cp -f "$src" "$target"
+    cp -f "$src" "$ref"
+    echo "regenerate $name: template updated"
+}
+
 # 启动DBMW服务
 # 用法: start_dbmw "server_01"
 start_dbmw() {

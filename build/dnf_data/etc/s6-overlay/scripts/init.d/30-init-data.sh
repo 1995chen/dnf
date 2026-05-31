@@ -7,6 +7,7 @@ neople_tmp_path="${NEOPLE_TMP_PATH:-/home/template/neople-tmp}"
 neople_path="${NEOPLE_PATH:-/home/neople}"
 data_path="${DATA_PATH:-/data}"
 init_script_file="${INIT_SCRIPT_FILE:-/home/template/init/init.sh}"
+dbmw_bin_file="${DBMW_BIN_FILE:-/home/template/init/df_dbmw_r}"
 
 source "${DNF_LIB_PATH:-/home/template/init/lib}/common.sh"
 
@@ -43,6 +44,17 @@ chmod 644 "$neople_path/game/Script.pvf"
 cp "$data_path/df_game_r" "$neople_path/game/df_game_r"
 chmod 755 "$neople_path/game/df_game_r"
 cp "$data_path/publickey.pem" "$neople_path/game/"
+
+# 复制 df_dbmw_r
+if [ -f "$dbmw_bin_file" ]; then
+    for d in dbmw_guild dbmw_mnt dbmw_stat; do
+        [ -d "$neople_path/$d" ] || continue
+        cp "$dbmw_bin_file" "$neople_path/$d/df_dbmw_r"
+        chmod 755 "$neople_path/$d/df_dbmw_r"
+    done
+else
+    echo "ERROR: dbmw binary not found: $dbmw_bin_file" >&2
+fi
 
 # 为DP目录赋予权限
 chmod 777 -R "$data_path/dp"

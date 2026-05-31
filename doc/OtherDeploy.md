@@ -254,18 +254,6 @@ CPU 数量影响以下参数：
 
 [卡恩/狄瑞吉/希洛克-点击查看部署文件](../deploy/dnf/docker-compose/multi_server_group/combine_server_group.yaml)
 
-如果发现连接频道时网络中断的问题，大概率是GEO拦截，需要从频道的log中找到拦截的IP地址，并修改data/daily_job/user_daily_script.sh脚本，
-添加白名单并重启服务。当发生拦截时，会产生类似以下的日志：
-
-[16:02:51] bool RestrictGeolocation::isAllow(std::string, std::string)(90): [Taiwan, GeoIP] Fail Account:18000000, IP:192.168.48.1, CountryCode:
-
-上述日志被拦截的IP地址为192.168.48.1,则添加如下命令。
-```shell
-mysql -h $CUR_MAIN_DB_HOST -P $CUR_MAIN_DB_PORT -u game -p$DNF_DB_GAME_PASSWORD <<EOF
-  insert into d_taiwan.geo_allow values ('192.168.48.1', "*", "2016-04-09 23:53:04");
-EOF
-```
-
 ### docker 服务管理
 
 ```shell
@@ -283,6 +271,97 @@ docker exec dnf s6-rc -d change Y          # 停止服务
 [最新的K8S部署方式](../deploy/dnf/k8s-deploy/00-1开始一定要看前期准备.md)
 
 [2.1.5版本以前部署文档](Kubernetes.md)
+
+## 定时任务与数据库备份恢复
+
+容器内置 `scheduler` 定时任务，可通过环境变量控制任务开关以及触发间隔时间。
+
+### 定时任务
+
+| 定时任务 | 默认间隔 | 任务开关 | 说明 |
+|---|---|---|---|
+| 定期创建拍卖行数据表 | `AUCTION_TABLE_INTERVAL=3600` | 常开 | 按月创建拍卖行和金币寄售当月和下月的数据表 |
+| 定期更新 geo ip 白名单 | `GEO_ALLOW_INTERVAL=3600` | 常开 | 把容器 IP 和网关 IP 加入 `d_taiwan.geo_allow` |
+| 定期清理 core dump 文件 | `CORE_CLEAN_INTERVAL=86400` | 常开 | 定期删除 `/home/neople` 下的 core 文件 |
+| 定期清理拍卖行旧数据表 | `AUCTION_RETENTION_INTERVAL=86400` | `AUCTION_RETENTION_MONTHS`，默认为 0 (关闭) | 清理超出数量的拍卖行旧数据表 |
+| 定期备份数据库全量数据 | `DB_BACKUP_INTERVAL=86400` | `DB_BACKUP_ENABLE`，默认 false | 见下方"数据库备份" |
+
+### 环境变量
+
+| 环境变量名称 | 默认值 | 说明 |
+|---|---|---|
+| `SCHEDULER_TICK` | `60` | 定时任务循环间隔时间，单位秒 |
+| `AUCTION_TABLE_INTERVAL` | `3600` | 拍卖行数据表创建间隔时间，单位秒 |
+| `GEO_ALLOW_INTERVAL` | `3600` | geo ip 白名单更新间隔时间，单位秒 |
+| `CORE_CLEAN_INTERVAL` | `86400` | core 清理间隔间隔，单位秒 |
+| `AUCTION_RETENTION_INTERVAL` | `86400` | 旧拍卖表清理间隔时间，单位秒 |
+| `AUCTION_RETENTION_MONTHS` | `0` | 拍卖行数据表的保留数量，0 表示不清理。设为 6 则保留最近 6 个月的表 |
+| `DB_BACKUP_INTERVAL` | `86400` | 数据库备份间隔时间，单位秒 |
+| `DB_BACKUP_ENABLE` | `false` | 设为 `true` 启用自动备份 |
+| `DB_BACKUP_KEEP` | `7` | 需要保留的备份文件数量 |
+| `DB_BACKUP_DIR` | `/data/backup` | 数据库自动备份目录 |
+| `DB_RESTORE_CONFIRM` | 空 | 数据库确认恢复开关，见下方“数据库恢复” |
+| `AUCTION_TABLE_RUN_ON_START` | `true` | 启动后是否立刻创建拍卖表 |
+| `GEO_ALLOW_RUN_ON_START` | `true` | 启动后是否立刻更新 geo ip 白名单 |
+| `CORE_CLEAN_RUN_ON_START` | `false` | 启动后是否立刻清理 core dump 文件 |
+| `AUCTION_RETENTION_RUN_ON_START` | `false` | 启动后是否立刻清理旧拍卖表 |
+| `DB_BACKUP_RUN_ON_START` | `false` | 启动后是否立刻备份数据库 |
+
+旧拍卖行清理和数据库备份默认关闭，需要时用环境变量开启。
+`<任务>_RUN_ON_START` 取值为 `true / false`。设为 `false` 的任务在容器启动后不会立刻执行，而是等到下次触发时再执行。
+
+### geo 白名单
+
+如果连接频道时网络中断，多半是 geo 拦截。可以从频道日志里找到被拦截的 IP，加进白名单后重启服务即可。被拦截时日志类似：
+
+```
+[16:02:51] bool RestrictGeolocation::isAllow(std::string, std::string)(90): [Taiwan, GeoIP] Fail Account:18000000, IP:192.168.48.1, CountryCode:
+```
+
+上面被拦截的 IP 是 192.168.48.1，在 `user-script.sh` 里加入：
+
+```shell
+mysql -h $CUR_MAIN_DB_HOST -P $CUR_MAIN_DB_PORT -u game -p$DNF_DB_GAME_PASSWORD <<EOF
+  insert ignore into d_taiwan.geo_allow values ('192.168.48.1', "*", "2016-04-09 23:53:04");
+EOF
+```
+
+### 数据库备份
+
+开启时，容器会使用 `mysqldump` 导出所有非系统库数据，之后用 gzip 压缩保存到 `DB_BACKUP_DIR`。文件名类似 `dnf-20260531-143000.sql.gz`，文件最多保留最近的 `DB_BACKUP_KEEP` 份。备份时间从容器启动时开始计算，每隔 `DB_BACKUP_INTERVAL` 触发一次。
+
+若要启动数据库自动备份功能，可在 docker-compose.yml 中设置以下环境变量来开启:
+
+```yaml
+environment:
+  - DB_BACKUP_ENABLE=true
+  - DB_BACKUP_KEEP=7
+  # 可选：调整备份间隔时间和目录，间隔单位为秒
+  # - DB_BACKUP_INTERVAL=86400
+  # - DB_BACKUP_DIR=/data/backup
+```
+
+### 数据库恢复
+
+若要恢复备份的数据库，可进入容器执行 `restore-db.sh`。考虑到此操作比较危险，脚本默认只会显示将要使用的备份文件以及被还原的库。若要真正触发还原，需设置 `DB_RESTORE_CONFIRM=yes`。
+
+将要使用的备份文件以及被还原的库：
+
+```bash
+docker exec dnf /home/template/init/scheduler/restore-db.sh latest
+```
+
+确认无误后再执行：
+
+```bash
+docker exec -e DB_RESTORE_CONFIRM=yes dnf /home/template/init/scheduler/restore-db.sh latest
+```
+
+脚本参数：
+
+- `latest`：默认值，使用最新备份数据
+- 文件名：如 `dnf-20260531-143000.sql.gz`，从 `DB_BACKUP_DIR` 查找指定备份数据
+- 绝对路径：如 `/data/backup/dnf-20260531-143000.sql.gz`
 
 ## 各大区Relay对应端口
 

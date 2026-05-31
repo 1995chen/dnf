@@ -1,5 +1,6 @@
 #!/bin/bash
-# tune.sh 测试脚本
+
+# shellcheck disable=SC2016
 
 SCRIPT_PATH=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 
