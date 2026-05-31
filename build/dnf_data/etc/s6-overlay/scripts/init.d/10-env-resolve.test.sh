@@ -20,6 +20,11 @@ printf '#!/bin/bash\n' >"$mysqld_present"
 chmod +x "$mysqld_present"
 mysqld_absent="$WORK/no-such-mysqld"
 
+main_proxy_cfg="$WORK/main_proxy.cfg"
+printf 'master_db_ip = 127.0.0.1\nmaster_db_port = 3307\n' >"$main_proxy_cfg"
+sg_proxy_cfg="$WORK/sg_proxy.cfg"
+printf 'game_db_ip = 127.0.0.1\ngame_db_port = 3306\nauction_db_port = 3306\n' >"$sg_proxy_cfg"
+
 failed=0
 pass=0
 chk() {
@@ -44,7 +49,7 @@ run_resolve() {
         TEAENCRYPT_FILE="$tea_file" \
         CONTAINER_ENV_PATH="$envdir" \
         "$@" \
-        bash "$HOOK" >/dev/null 2>&1
+        bash "$HOOK" >/dev/null 2>"$WORK/last.err"
 }
 getenv() { cat "$envdir/$1" 2>/dev/null; }
 
@@ -73,7 +78,8 @@ chk "主库/大区库分离: 大区库用 MYSQL_HOST" "sg.db" "$(getenv CUR_SG_D
 chk "主库/大区库分离: 大区库 port" "3306" "$(getenv CUR_SG_DB_PORT)"
 
 # 主库/大区库一体化: 无 host/port 且本地 mysqld 存在时，默认使用 127.0.0.1:4000
-run_resolve "$mysqld_present" SERVER_GROUP=3 DNF_DB_ROOT_PASSWORD=secret
+run_resolve "$mysqld_present" SERVER_GROUP=3 DNF_DB_ROOT_PASSWORD=secret \
+    MAIN_PROXY_CFG="$main_proxy_cfg" SG_PROXY_CFG="$sg_proxy_cfg"
 rc=$?
 chk "主库/大区库一体化: 退出码" 0 "$rc"
 chk "主库/大区库一体化: 默认主库 host" "127.0.0.1" "$(getenv CUR_MAIN_DB_HOST)"
@@ -81,6 +87,30 @@ chk "主库/大区库一体化: 默认主库 port" "4000" "$(getenv CUR_MAIN_DB_
 chk "主库/大区库一体化: 主库密码" "secret" "$(getenv CUR_MAIN_DB_ROOT_PASSWORD)"
 chk "主库/大区库一体化: 默认 allow_ip" "127.0.0.1" "$(getenv CUR_MAIN_DB_GAME_ALLOW_IP)"
 chk "主库/大区库一体化: 大区库默认 host" "127.0.0.1" "$(getenv CUR_SG_DB_HOST)"
+chk "主库/大区库一体化: 主库 proxy 监听端口" "3307" "$(getenv CUR_MAIN_DB_PROXY_PORT)"
+chk "主库/大区库一体化: 大区库 proxy 监听端口" "3306" "$(getenv CUR_SG_DB_PROXY_PORT)"
+
+# proxy 监听端口从 cfg 解析，改 cfg 端口后解析结果发生变化
+printf 'master_db_port = 9999\n' >"$WORK/alt_main.cfg"
+printf 'game_db_port = 8888\n' >"$WORK/alt_sg.cfg"
+run_resolve "$mysqld_present" SERVER_GROUP=3 DNF_DB_ROOT_PASSWORD=secret \
+    MAIN_PROXY_CFG="$WORK/alt_main.cfg" SG_PROXY_CFG="$WORK/alt_sg.cfg"
+chk "proxy 端口随 cfg 变化: 主库 master_db_port" "9999" "$(getenv CUR_MAIN_DB_PROXY_PORT)"
+chk "proxy 端口随 cfg 变化: 大区库 game_db_port" "8888" "$(getenv CUR_SG_DB_PROXY_PORT)"
+
+# 主库已配置但 cfg 无对应配置项: proxy 端口为空, 显示告警信息
+run_resolve "$mysqld_present" SERVER_GROUP=3 DNF_DB_ROOT_PASSWORD=secret \
+    MAIN_PROXY_CFG="$WORK/no-such.cfg" SG_PROXY_CFG="$sg_proxy_cfg"
+chk "cfg 缺失: 主库 proxy 端口为空" "" "$(getenv CUR_MAIN_DB_PROXY_PORT)"
+chk "cfg 缺失: 打印 WARN 到 stderr" yes "$(grep -q 'WARN.*master_db_port' "$WORK/last.err" && echo yes || echo no)"
+chk "cfg 缺失: 不影响大区库 cfg 解析" "3306" "$(getenv CUR_SG_DB_PROXY_PORT)"
+
+# 仅配置 host 缺 port: 即使 cfg 有端口也不启动 proxy
+run_resolve "$mysqld_absent" SERVER_GROUP=3 MYSQL_HOST=only.host DNF_DB_ROOT_PASSWORD=secret \
+    MAIN_PROXY_CFG="$main_proxy_cfg" SG_PROXY_CFG="$sg_proxy_cfg"
+chk "仅配置 host 缺 port: 退出码" 0 "$?"
+chk "仅配置 host 缺 port: 主库 proxy 端口为空" "" "$(getenv CUR_MAIN_DB_PROXY_PORT)"
+chk "仅配置 host 缺 port: 大区库 proxy 端口为空" "" "$(getenv CUR_SG_DB_PROXY_PORT)"
 
 # 无本地 mysqld -> 退出 1
 run_resolve "$mysqld_absent" SERVER_GROUP=3 DNF_DB_ROOT_PASSWORD=secret

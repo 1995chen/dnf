@@ -103,6 +103,25 @@ fi
 echo "server group db: $CUR_SG_DB_HOST:$CUR_SG_DB_PORT allow ip $CUR_SG_DB_GAME_ALLOW_IP"
 echo "will use server group: $SERVER_GROUP_NAME"
 
+# mysql proxy 本地监听端口
+main_proxy_cfg="${MAIN_PROXY_CFG:-/home/template/neople/game/cfg/server.template}"
+sg_proxy_cfg="${SG_PROXY_CFG:-/home/template/neople/auction/cfg/server.cfg}"
+read_cfg_port() {
+    local cfg="$1" field="$2"
+    [ -r "$cfg" ] || return 0
+    sed -n "s/^[[:space:]]*${field}[[:space:]]*=[[:space:]]*\([0-9][0-9]*\).*/\1/p" "$cfg" | head -n1
+}
+# shellcheck disable=SC2034
+CUR_MAIN_DB_PROXY_PORT=$([ -n "$CUR_MAIN_DB_HOST" ] && [ -n "$CUR_MAIN_DB_PORT" ] && read_cfg_port "$main_proxy_cfg" master_db_port)
+if [ -n "$CUR_MAIN_DB_HOST" ] && [ -n "$CUR_MAIN_DB_PORT" ] && [ -z "$CUR_MAIN_DB_PROXY_PORT" ]; then
+    echo "WARN: 主库已配置但从 $main_proxy_cfg 解析 master_db_port 失败, 主库 proxy 不会启动" >&2
+fi
+# shellcheck disable=SC2034
+CUR_SG_DB_PROXY_PORT=$([ -n "$CUR_SG_DB_HOST" ] && [ -n "$CUR_SG_DB_PORT" ] && read_cfg_port "$sg_proxy_cfg" game_db_port)
+if [ -n "$CUR_SG_DB_HOST" ] && [ -n "$CUR_SG_DB_PORT" ] && [ -z "$CUR_SG_DB_PROXY_PORT" ]; then
+    echo "WARN: 大区库已配置但从 $sg_proxy_cfg 解析 game_db_port 失败, 大区库 proxy 不会启动" >&2
+fi
+
 # 加密GAME密码
 chmod 1777 /tmp
 chmod +x "$teaencrypt_file"
@@ -125,6 +144,7 @@ write_env() {
 for v in MAIN_BRIDGE_IP SERVER_GROUP SERVER_GROUP_NAME SERVER_GROUP_DB \
     CUR_MAIN_DB_HOST CUR_MAIN_DB_PORT CUR_MAIN_DB_ROOT_PASSWORD CUR_MAIN_DB_GAME_ALLOW_IP \
     CUR_SG_DB_HOST CUR_SG_DB_PORT CUR_SG_DB_ROOT_PASSWORD CUR_SG_DB_GAME_ALLOW_IP \
+    CUR_MAIN_DB_PROXY_PORT CUR_SG_DB_PROXY_PORT \
     DNF_DB_GAME_PASSWORD DEC_GAME_PWD DNF_DB_USER_EXTENDED_QF \
     MALLOC_CONF MALLOC_CONF_32 MALLOC_CONF_64 \
     AUTO_PUBLIC_IP PUBLIC_IP \

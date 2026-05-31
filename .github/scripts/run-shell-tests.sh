@@ -39,6 +39,10 @@ if command -v shellcheck >/dev/null 2>&1; then
         .github/scripts/prune-dev-tags.sh
         build/dnf_data/home/template/init/lib/s6-runprobe
         build/dnf_data/home/template/init/lib/probe-port.sh
+        build/dnf_data/home/template/init/lib/probe-zerg-listen.sh
+        build/dnf_data/home/template/init/lib/probe-zerg-listen.test.sh
+        build/dnf_data/home/template/init/lib/probe-socat-port.sh
+        build/dnf_data/home/template/init/lib/probe-socat-port.test.sh
         build/dnf_data/etc/s6-overlay/scripts/stage2-hook.sh
         build/dnf_data/etc/s6-overlay/scripts/stage2-hook.test.sh
         build/dnf_data/etc/s6-overlay/scripts/dnf-bootstrap.sh
