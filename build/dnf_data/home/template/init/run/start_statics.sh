@@ -1,6 +1,6 @@
 #!/bin/bash
 
-killall -9 df_statics_r
+killall -q -9 df_statics_r
 rm -rf pid/*.pid
 # shellcheck source=../lib/tune.sh
 source /home/template/init/lib/tune.sh

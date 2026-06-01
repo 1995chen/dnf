@@ -1,6 +1,6 @@
 #!/bin/bash
 
-killall -9 gunnersvr
+killall -q -9 gunnersvr
 rm -rf ./*.pid
 # shellcheck source=../lib/tune.sh
 source /home/template/init/lib/tune.sh

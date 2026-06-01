@@ -1,6 +1,6 @@
 #!/bin/bash
 
-killall -9 zergsvr
+killall -q -9 zergsvr
 rm -rf zergsvr.pid
 # shellcheck source=../lib/tune.sh
 source /home/template/init/lib/tune.sh

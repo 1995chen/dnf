@@ -30,9 +30,6 @@ RUN yum install -y gcc gcc-c++ make zlib-devel && \
     yum remove -y gcc gcc-c++ zlib-devel xulrunner gtk2 && \
     yum clean all && rm -rf /tmp/* /root/.cache /var/cache/yum
 
-ENV S6_STAGE2_HOOK=/etc/s6-overlay/scripts/stage2-hook.sh
-ENV S6_BEHAVIOUR_IF_STAGE2_FAILS=2
-
 # 解压32位共享库
 RUN cd /tmp \
     && curl -fsSLO https://raw.githubusercontent.com/llnut/dnf_util/refs/heads/main/common_pkgs/lib.tgz \
@@ -73,7 +70,10 @@ RUN GATE_REPO="llnut/dnf-login" && GATE_TARGET="x86_64-unknown-linux-musl" && \
     tar -xzf "/tmp/${GATE_ASSET}" --strip-components=1 -C /usr/bin "dnf-gate-server-${GATE_VERSION}-${GATE_TARGET}/dnf-gate-server" && \
     rm -rf /tmp/*
 
-ENV MAIN_BRIDGE_IP='127.0.0.1' \
+ENV S6_STAGE2_HOOK=/etc/s6-overlay/scripts/stage2-hook.sh \
+    S6_BEHAVIOUR_IF_STAGE2_FAILS=1 \
+    PATH="${PATH}:/command" \
+    MAIN_BRIDGE_IP='127.0.0.1' \
     SERVER_GROUP_DB='cain' \
     SERVER_GROUP=3 \
     MAIN_MYSQL_HOST='' \

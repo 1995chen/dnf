@@ -1,6 +1,6 @@
 #!/bin/bash
 
-killall -9 secagent
+killall -q -9 secagent
 rm -rf secagent.pid
 
 # shellcheck source=../lib/tune.sh

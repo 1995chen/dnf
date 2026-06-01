@@ -26,7 +26,7 @@ handle_ip_change() {
             s6-rc -d change dnf-bridge
         fi
         kill_graceful 3 df_bridge_r df_channel_r
-        killall -9 df_game_r 2>/dev/null || true
+        killall -q -9 df_game_r || true
         sleep 1
         if [ -n "$MAIN_BRIDGE_IP" ]; then
             s6-rc -u change dnf-bridge

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 启动bridge服务
-killall -9 df_bridge_r
+killall -q -9 df_bridge_r
 rm -rf pid/*.pid
 echo "starting bridge..."
 # shellcheck source=../lib/tune.sh

@@ -46,7 +46,7 @@ kill_graceful() {
     shift
     local names=("$@")
     [ "${#names[@]}" -eq 0 ] && return 0
-    killall -15 "${names[@]}" 2>/dev/null || true
+    killall -q -15 "${names[@]}" || true
     local waited=0 name alive
     while [ "$waited" -lt "$timeout" ]; do
         alive=0
@@ -61,7 +61,7 @@ kill_graceful() {
         waited=$((waited + 1))
     done
     echo "kill_graceful: timeout after ${timeout}s, sending SIGKILL to ${names[*]}"
-    killall -9 "${names[@]}" 2>/dev/null || true
+    killall -q -9 "${names[@]}" || true
     sleep 1
     return 0
 }

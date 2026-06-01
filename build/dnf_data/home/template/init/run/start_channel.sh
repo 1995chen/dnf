@@ -2,7 +2,7 @@
 
 source /home/template/init/lib/common.sh
 
-killall -9 df_channel_r
+killall -q -9 df_channel_r
 rm -rf pid/*.pid
 MONITOR_PUBLIC_IP=$(cat /data/monitor_ip/MONITOR_PUBLIC_IP 2>/dev/null)
 if [ -z "$MONITOR_PUBLIC_IP" ]; then

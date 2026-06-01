@@ -77,14 +77,11 @@ ARG S6_OVERLAY_VERSION=3.2.3.0
 ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz /tmp/
 ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-x86_64.tar.xz /tmp/
 RUN apt-get update && apt-get install -y --no-install-recommends xz-utils \
- && tar -C / -Jxpf /tmp/s6-overlay-noarch.tar.xz \
- && tar -C / -Jxpf /tmp/s6-overlay-x86_64.tar.xz \
- && rm -f /tmp/s6-overlay-*.tar.xz \
- && apt-get purge -y --auto-remove xz-utils \
- && apt-get clean && rm -rf /var/lib/apt/lists/*
-
-ENV S6_STAGE2_HOOK=/etc/s6-overlay/scripts/stage2-hook.sh
-ENV S6_BEHAVIOUR_IF_STAGE2_FAILS=2
+    && tar -C / -Jxpf /tmp/s6-overlay-noarch.tar.xz \
+    && tar -C / -Jxpf /tmp/s6-overlay-x86_64.tar.xz \
+    && rm -f /tmp/s6-overlay-*.tar.xz \
+    && apt-get purge -y --auto-remove xz-utils \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # 解压32位共享库
 RUN cd /tmp \
@@ -112,7 +109,10 @@ RUN GATE_REPO="llnut/dnf-login" && GATE_TARGET="x86_64-unknown-linux-musl" && \
     tar -xzf "/tmp/${GATE_ASSET}" --strip-components=1 -C /usr/bin "dnf-gate-server-${GATE_VERSION}-${GATE_TARGET}/dnf-gate-server" && \
     rm -rf /tmp/*
 
-ENV MAIN_BRIDGE_IP='127.0.0.1' \
+ENV S6_STAGE2_HOOK=/etc/s6-overlay/scripts/stage2-hook.sh \
+    S6_BEHAVIOUR_IF_STAGE2_FAILS=1 \
+    PATH="${PATH}:/command" \
+    MAIN_BRIDGE_IP='127.0.0.1' \
     SERVER_GROUP_DB='cain' \
     SERVER_GROUP=3 \
     MAIN_MYSQL_HOST='' \

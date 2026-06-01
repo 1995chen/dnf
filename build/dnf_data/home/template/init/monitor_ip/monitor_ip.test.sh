@@ -72,7 +72,7 @@ chk "IP变化时停止dnf-channel" 1 "$(count 's6-rc -d change dnf-channel')"
 chk "IP变化时启动dnf-channel" 1 "$(count 's6-rc -u change dnf-channel')"
 chk "IP变化时重启 llnut 登录器网关" 1 "$(count 's6-svc -r /run/service/llnut_gate')"
 chk "IP变化时优雅关闭bridge和channel" 1 "$(count 'kill_graceful 3 df_bridge_r df_channel_r')"
-chk "IP变化时强杀game进程" 1 "$(count 'killall -9 df_game_r')"
+chk "IP变化时强杀game进程" 1 "$(count 'killall -q -9 df_game_r')"
 chk "无MAIN_BRIDGE_IP时不重启dnf-bridge" 0 "$(count 'dnf-bridge')"
 
 # IP 变化且有MAIN_BRIDGE_IP时，写入新IP到状态文件, 重启 dnf-bridge

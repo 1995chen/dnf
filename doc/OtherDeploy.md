@@ -281,12 +281,10 @@ CPU 数量影响以下参数：
 
 ```shell
 docker exec dnf s6-rc-db list all          # 查看全部服务
-docker exec dnf s6-rc -a list              # 查看已启动的服务
-docker exec dnf s6-rc -da list             # 查看已停止的服务
-docker exec dnf s6-svstat /run/service/X   # 查看服务状态
+docker exec dnf s6-svstat /run/service/X   # 查看单个服务状态
+docker exec dnf s6-svc -u /run/service/X   # 启动服务
+docker exec dnf s6-svc -d /run/service/X   # 停止服务
 docker exec dnf s6-svc -r /run/service/X   # 重启服务
-docker exec dnf s6-rc -u change Y          # 启动服务
-docker exec dnf s6-rc -d change Y          # 停止服务
 ```
 
 ## k8s部署
