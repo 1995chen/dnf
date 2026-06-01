@@ -1,1 +1,1 @@
-cmd:/home/template/init/lib/probe-port.sh /home/neople/bridge/cfg/server.cfg $MAIN_BRIDGE_IP
+cmd:/home/template/init/lib/probe-tcp-port.sh BRIDGE_TCP_PORT $MAIN_BRIDGE_IP

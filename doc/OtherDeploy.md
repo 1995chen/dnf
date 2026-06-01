@@ -124,6 +124,29 @@
 
 `MAIN_MYSQL_GAME_ALLOW_IP` 和 `MYSQL_GAME_ALLOW_IP` 不设置时，启动脚本从 mysql 的拒绝连接回包里解析 `game` 账号的授权地址。db 镜像的 my.cnf 默认开启 `skip-name-resolve`，解析到的始终是 IP。手动填写时也请使用 IP，不要用主机名。
 
+### 服务端监听端口
+
+| 环境变量名称 | 描述 | 默认值 |
+| ------- | ------- | ------- |
+| AUCTION_TCP_PORT | df_auction_r 端口 | 30803 |
+| BRIDGE_TCP_PORT | df_bridge_r 端口 | 7000 |
+| CHANNEL_TCP_PORT | df_channel_r 端口 | 7001 |
+| COMMUNITY_TCP_PORT | df_community_r 端口 | 31100 |
+| GUILD_TCP_PORT | df_guild_r 端口 | 30403 |
+| MANAGER_TCP_PORT | df_manager_r 端口 | 40403 |
+| MONITOR_TCP_PORT | df_monitor_r 端口 | 30303 |
+| POINT_TCP_PORT | df_point_r 端口，df_game_r 的 cera_auction 也连此端口 | 30603 |
+| RELAY_TCP_PORT | df_relay_r 端口，不同大区的端口不同 | 7<大区>00 |
+| DBMW_GUILD_TCP_PORT | dbmw_guild 端口 | 20403 |
+| DBMW_MNT_TCP_PORT | dbmw_mnt 端口 | 20203 |
+| DBMW_STAT_TCP_PORT | dbmw_stat 端口 | 20303 |
+| COSERVER_UDP_PORT | df_coserver_r 端口，df_game_r 的 doublecheck 也连此端口 | 30703 |
+| STATICS_UDP_PORT | df_statics_r 端口 | 30503 |
+| ZERGSVR_PORT | zergsvr 端口 | 9000 |
+| SECAGENT_CHANNEL_NUM | secagent 最大频道数 | 12 |
+| MAIN_DB_PROXY_PORT | 主库 proxy 本机监听端口 | 3307 |
+| SG_DB_PROXY_PORT | 大区库 proxy 本机监听端口 | 3306 |
+
 ### 等待 MySQL 启动就绪
 
 使用本地或远程数据库时，启动脚本会调用 `wait_for_mysql.sh` 轮询 MySQL，直到可连通再做 `GRANT` 和库初始化。以下环境变量控制等待策略。

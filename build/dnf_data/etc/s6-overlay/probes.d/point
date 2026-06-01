@@ -1,1 +1,1 @@
-cmd:/home/template/init/lib/probe-port.sh /home/neople/point/cfg/server.cfg
+cmd:/home/template/init/lib/probe-tcp-port.sh POINT_TCP_PORT

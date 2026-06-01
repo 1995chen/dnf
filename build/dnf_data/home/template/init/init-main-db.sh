@@ -72,21 +72,21 @@ echo "main db: flush privileges done."
 echo "main_db: reset db_connect config, server_group is $SERVER_GROUP"
 mysql -h "$CUR_MAIN_DB_HOST" -P "$CUR_MAIN_DB_PORT" -u root -p"$CUR_MAIN_DB_ROOT_PASSWORD" <<EOF
 use d_taiwan;
-update db_connect set db_ip="127.0.0.1", db_port="3307", db_name="d_taiwan", db_passwd="$DEC_GAME_PWD" where db_server_group=$SERVER_GROUP and db_type = 1;
-update db_connect set db_ip="127.0.0.1", db_port="3307", db_name="d_taiwan_secu", db_passwd="$DEC_GAME_PWD" where db_server_group=$SERVER_GROUP and db_type = 10;
-update db_connect set db_ip="127.0.0.1", db_port="3307", db_name="d_technical_report", db_passwd="$DEC_GAME_PWD" where db_server_group=$SERVER_GROUP and db_type = 15;
-update db_connect set db_ip="127.0.0.1", db_port="3306", db_name="d_guild", db_passwd="$DEC_GAME_PWD" where db_server_group=$SERVER_GROUP and db_type = 8;
-update db_connect set db_ip="127.0.0.1", db_port="3306", db_name="taiwan_$SERVER_GROUP_DB", db_passwd="$DEC_GAME_PWD" where db_server_group=$SERVER_GROUP and db_type=2;
-update db_connect set db_ip="127.0.0.1", db_port="3306", db_name="taiwan_${SERVER_GROUP_DB}_2nd", db_passwd="$DEC_GAME_PWD" where db_server_group=$SERVER_GROUP and db_type=3;
-update db_connect set db_ip="127.0.0.1", db_port="3306", db_name="taiwan_${SERVER_GROUP_DB}_log", db_passwd="$DEC_GAME_PWD" where db_server_group=$SERVER_GROUP and db_type=4;
-update db_connect set db_ip="127.0.0.1", db_port="3306", db_name="taiwan_${SERVER_GROUP_DB}_web", db_passwd="$DEC_GAME_PWD" where db_server_group=$SERVER_GROUP and db_type=5;
-update db_connect set db_ip="127.0.0.1", db_port="3306", db_name="taiwan_login", db_passwd="$DEC_GAME_PWD" where db_server_group=$SERVER_GROUP and db_type=6;
-update db_connect set db_ip="127.0.0.1", db_port="3306", db_name="taiwan_prod", db_passwd="$DEC_GAME_PWD" where db_server_group=$SERVER_GROUP and db_type=7;
-update db_connect set db_ip="127.0.0.1", db_port="3306", db_name="taiwan_game_event", db_passwd="$DEC_GAME_PWD" where db_server_group=$SERVER_GROUP and db_type=9;
-update db_connect set db_ip="127.0.0.1", db_port="3306", db_name="taiwan_login_play", db_passwd="$DEC_GAME_PWD" where db_server_group=$SERVER_GROUP and db_type=11;
-update db_connect set db_ip="127.0.0.1", db_port="3306", db_name="taiwan_${SERVER_GROUP_DB}_auction_gold", db_passwd="$DEC_GAME_PWD" where db_server_group=$SERVER_GROUP and db_type=12;
-update db_connect set db_ip="127.0.0.1", db_port="3306", db_name="taiwan_se_event", db_passwd="$DEC_GAME_PWD" where db_server_group=$SERVER_GROUP and db_type=13;
-update db_connect set db_ip="127.0.0.1", db_port="3306", db_name="taiwan_billing", db_passwd="$DEC_GAME_PWD" where db_server_group=$SERVER_GROUP and db_type=14;
+update db_connect set db_ip="127.0.0.1", db_port="$MAIN_DB_PROXY_PORT", db_name="d_taiwan", db_passwd="$DEC_GAME_PWD" where db_server_group=$SERVER_GROUP and db_type = 1;
+update db_connect set db_ip="127.0.0.1", db_port="$MAIN_DB_PROXY_PORT", db_name="d_taiwan_secu", db_passwd="$DEC_GAME_PWD" where db_server_group=$SERVER_GROUP and db_type = 10;
+update db_connect set db_ip="127.0.0.1", db_port="$MAIN_DB_PROXY_PORT", db_name="d_technical_report", db_passwd="$DEC_GAME_PWD" where db_server_group=$SERVER_GROUP and db_type = 15;
+update db_connect set db_ip="127.0.0.1", db_port="$SG_DB_PROXY_PORT", db_name="d_guild", db_passwd="$DEC_GAME_PWD" where db_server_group=$SERVER_GROUP and db_type = 8;
+update db_connect set db_ip="127.0.0.1", db_port="$SG_DB_PROXY_PORT", db_name="taiwan_$SERVER_GROUP_DB", db_passwd="$DEC_GAME_PWD" where db_server_group=$SERVER_GROUP and db_type=2;
+update db_connect set db_ip="127.0.0.1", db_port="$SG_DB_PROXY_PORT", db_name="taiwan_${SERVER_GROUP_DB}_2nd", db_passwd="$DEC_GAME_PWD" where db_server_group=$SERVER_GROUP and db_type=3;
+update db_connect set db_ip="127.0.0.1", db_port="$SG_DB_PROXY_PORT", db_name="taiwan_${SERVER_GROUP_DB}_log", db_passwd="$DEC_GAME_PWD" where db_server_group=$SERVER_GROUP and db_type=4;
+update db_connect set db_ip="127.0.0.1", db_port="$SG_DB_PROXY_PORT", db_name="taiwan_${SERVER_GROUP_DB}_web", db_passwd="$DEC_GAME_PWD" where db_server_group=$SERVER_GROUP and db_type=5;
+update db_connect set db_ip="127.0.0.1", db_port="$SG_DB_PROXY_PORT", db_name="taiwan_login", db_passwd="$DEC_GAME_PWD" where db_server_group=$SERVER_GROUP and db_type=6;
+update db_connect set db_ip="127.0.0.1", db_port="$SG_DB_PROXY_PORT", db_name="taiwan_prod", db_passwd="$DEC_GAME_PWD" where db_server_group=$SERVER_GROUP and db_type=7;
+update db_connect set db_ip="127.0.0.1", db_port="$SG_DB_PROXY_PORT", db_name="taiwan_game_event", db_passwd="$DEC_GAME_PWD" where db_server_group=$SERVER_GROUP and db_type=9;
+update db_connect set db_ip="127.0.0.1", db_port="$SG_DB_PROXY_PORT", db_name="taiwan_login_play", db_passwd="$DEC_GAME_PWD" where db_server_group=$SERVER_GROUP and db_type=11;
+update db_connect set db_ip="127.0.0.1", db_port="$SG_DB_PROXY_PORT", db_name="taiwan_${SERVER_GROUP_DB}_auction_gold", db_passwd="$DEC_GAME_PWD" where db_server_group=$SERVER_GROUP and db_type=12;
+update db_connect set db_ip="127.0.0.1", db_port="$SG_DB_PROXY_PORT", db_name="taiwan_se_event", db_passwd="$DEC_GAME_PWD" where db_server_group=$SERVER_GROUP and db_type=13;
+update db_connect set db_ip="127.0.0.1", db_port="$SG_DB_PROXY_PORT", db_name="taiwan_billing", db_passwd="$DEC_GAME_PWD" where db_server_group=$SERVER_GROUP and db_type=14;
 EOF
 # 测试并查询数据库连接设置
 echo "main_db: show db_connect config, server_group is $SERVER_GROUP"

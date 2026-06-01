@@ -1,1 +1,1 @@
-cmd:/home/template/init/lib/probe-socat-port.sh CUR_SG_DB_PROXY_PORT
+cmd:/home/template/init/lib/probe-tcp-port.sh CUR_SG_DB_PROXY_PORT

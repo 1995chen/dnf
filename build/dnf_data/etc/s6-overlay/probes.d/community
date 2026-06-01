@@ -1,1 +1,1 @@
-cmd:/home/template/init/lib/probe-port.sh /home/neople/community/cfg/server.cfg 127.0.0.1 port
+cmd:/home/template/init/lib/probe-tcp-port.sh COMMUNITY_TCP_PORT

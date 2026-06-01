@@ -103,24 +103,42 @@ fi
 echo "server group db: $CUR_SG_DB_HOST:$CUR_SG_DB_PORT allow ip $CUR_SG_DB_GAME_ALLOW_IP"
 echo "will use server group: $SERVER_GROUP_NAME"
 
+# 服务端默认监听端口
+# 30-init-data 将其替换进 cfg 的 __标记__, 端口探针直接读取这些配置
+for _port_def in \
+    "AUCTION_TCP_PORT=30803" "BRIDGE_TCP_PORT=7000" "CHANNEL_TCP_PORT=7001" \
+    "COMMUNITY_TCP_PORT=31100" "GUILD_TCP_PORT=30403" "MANAGER_TCP_PORT=40403" \
+    "MONITOR_TCP_PORT=30303" "POINT_TCP_PORT=30603" "RELAY_TCP_PORT=7${SERVER_GROUP}00" \
+    "DBMW_GUILD_TCP_PORT=20403" "DBMW_MNT_TCP_PORT=20203" "DBMW_STAT_TCP_PORT=20303" \
+    "COSERVER_UDP_PORT=30703" "STATICS_UDP_PORT=30503"; do
+    _name="${_port_def%%=*}"
+    printf -v "$_name" '%s' "${!_name:-${_port_def#*=}}"
+done
+
 # mysql proxy 本地监听端口
-main_proxy_cfg="${MAIN_PROXY_CFG:-/home/template/neople/game/cfg/server.template}"
-sg_proxy_cfg="${SG_PROXY_CFG:-/home/template/neople/auction/cfg/server.cfg}"
-read_cfg_port() {
-    local cfg="$1" field="$2"
-    [ -r "$cfg" ] || return 0
-    sed -n "s/^[[:space:]]*${field}[[:space:]]*=[[:space:]]*\([0-9][0-9]*\).*/\1/p" "$cfg" | head -n1
-}
+MAIN_DB_PROXY_PORT="${MAIN_DB_PROXY_PORT:-3307}"
+SG_DB_PROXY_PORT="${SG_DB_PROXY_PORT:-3306}"
+# 探针专用，为空表示该 proxy 不启动
 # shellcheck disable=SC2034
-CUR_MAIN_DB_PROXY_PORT=$([ -n "$CUR_MAIN_DB_HOST" ] && [ -n "$CUR_MAIN_DB_PORT" ] && read_cfg_port "$main_proxy_cfg" master_db_port)
-if [ -n "$CUR_MAIN_DB_HOST" ] && [ -n "$CUR_MAIN_DB_PORT" ] && [ -z "$CUR_MAIN_DB_PROXY_PORT" ]; then
-    echo "WARN: 主库已配置但从 $main_proxy_cfg 解析 master_db_port 失败, 主库 proxy 不会启动" >&2
-fi
+CUR_MAIN_DB_PROXY_PORT=$([ -n "$CUR_MAIN_DB_HOST" ] && [ -n "$CUR_MAIN_DB_PORT" ] && echo "$MAIN_DB_PROXY_PORT")
 # shellcheck disable=SC2034
-CUR_SG_DB_PROXY_PORT=$([ -n "$CUR_SG_DB_HOST" ] && [ -n "$CUR_SG_DB_PORT" ] && read_cfg_port "$sg_proxy_cfg" game_db_port)
-if [ -n "$CUR_SG_DB_HOST" ] && [ -n "$CUR_SG_DB_PORT" ] && [ -z "$CUR_SG_DB_PROXY_PORT" ]; then
-    echo "WARN: 大区库已配置但从 $sg_proxy_cfg 解析 game_db_port 失败, 大区库 proxy 不会启动" >&2
-fi
+CUR_SG_DB_PROXY_PORT=$([ -n "$CUR_SG_DB_HOST" ] && [ -n "$CUR_SG_DB_PORT" ] && echo "$SG_DB_PROXY_PORT")
+
+# secagent_config.xml 中的 gamesvr_channel_num_
+SECAGENT_CHANNEL_NUM="${SECAGENT_CHANNEL_NUM:-12}"
+
+# zergsvr 监听端口
+# 解析 zergsvrd.xml 的 self_cfg 获取 svr_type 与 svr_id,
+# 再用该 type 与 id 在 svcid.xml 获取默认端口, 用户可设置 ZERGSVR_PORT 覆盖
+zerg_cfg_dir="${ZERGSVR_CFG_DIR:-/home/template/neople/secsvr/zergsvr/cfg}"
+zerg_self=$(zerg_parse_self "$zerg_cfg_dir/zergsvrd.xml" 2>/dev/null)
+# shellcheck disable=SC2034
+ZERGSVR_SELF_TYPE="${zerg_self%% *}"
+# shellcheck disable=SC2034
+ZERGSVR_SELF_ID="${zerg_self##* }"
+zerg_default_port=$(svcid_lookup_port "$zerg_cfg_dir/svcid.xml" "$ZERGSVR_SELF_TYPE" "$ZERGSVR_SELF_ID" 2>/dev/null)
+ZERGSVR_PORT="${ZERGSVR_PORT:-$zerg_default_port}"
+echo "zergsvr self type=$ZERGSVR_SELF_TYPE id=$ZERGSVR_SELF_ID listen port=$ZERGSVR_PORT"
 
 # 加密GAME密码
 chmod 1777 /tmp
@@ -144,7 +162,12 @@ write_env() {
 for v in MAIN_BRIDGE_IP SERVER_GROUP SERVER_GROUP_NAME SERVER_GROUP_DB \
     CUR_MAIN_DB_HOST CUR_MAIN_DB_PORT CUR_MAIN_DB_ROOT_PASSWORD CUR_MAIN_DB_GAME_ALLOW_IP \
     CUR_SG_DB_HOST CUR_SG_DB_PORT CUR_SG_DB_ROOT_PASSWORD CUR_SG_DB_GAME_ALLOW_IP \
-    CUR_MAIN_DB_PROXY_PORT CUR_SG_DB_PROXY_PORT \
+    CUR_MAIN_DB_PROXY_PORT CUR_SG_DB_PROXY_PORT MAIN_DB_PROXY_PORT SG_DB_PROXY_PORT \
+    AUCTION_TCP_PORT BRIDGE_TCP_PORT CHANNEL_TCP_PORT COMMUNITY_TCP_PORT \
+    GUILD_TCP_PORT MANAGER_TCP_PORT MONITOR_TCP_PORT POINT_TCP_PORT RELAY_TCP_PORT \
+    DBMW_GUILD_TCP_PORT DBMW_MNT_TCP_PORT DBMW_STAT_TCP_PORT \
+    COSERVER_UDP_PORT STATICS_UDP_PORT \
+    SECAGENT_CHANNEL_NUM ZERGSVR_PORT ZERGSVR_SELF_TYPE ZERGSVR_SELF_ID \
     DNF_DB_GAME_PASSWORD DEC_GAME_PWD DNF_DB_USER_EXTENDED_QF \
     MALLOC_CONF MALLOC_CONF_32 MALLOC_CONF_64 \
     AUTO_PUBLIC_IP PUBLIC_IP \

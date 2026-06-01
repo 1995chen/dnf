@@ -110,6 +110,61 @@ sync_template_file() {
     echo "regenerate $name: template updated"
 }
 
+# 将文件中所有 __VAR__ 标记替换为对应环境变量值
+# 10-env-resolve.sh 已确保所有环境变量非空
+# 用法: substitute_port_markers <file>
+substitute_port_markers() {
+    local file="$1" v
+    for v in AUCTION_TCP_PORT BRIDGE_TCP_PORT CHANNEL_TCP_PORT COMMUNITY_TCP_PORT \
+        GUILD_TCP_PORT MANAGER_TCP_PORT MONITOR_TCP_PORT POINT_TCP_PORT RELAY_TCP_PORT \
+        DBMW_GUILD_TCP_PORT DBMW_MNT_TCP_PORT DBMW_STAT_TCP_PORT \
+        COSERVER_UDP_PORT STATICS_UDP_PORT \
+        MAIN_DB_PROXY_PORT SG_DB_PROXY_PORT; do
+        safe_sed "__${v}__" "${!v}" "$file"
+    done
+}
+
+# 从 zergsvrd.xml 的 self_svr_info 解析 self_cfg 的 svr_type 与 svr_id
+# 用法: zerg_parse_self <zergsvrd.xml>; 输出 "type id"
+zerg_parse_self() {
+    awk '
+        function num(s) { sub(/^[^>]*>/, "", s); sub(/<.*/, "", s); gsub(/[^0-9]/, "", s); return s }
+        /<self_svr_info[[:space:]>]/ { in_self = 1 }
+        in_self && /<svr_type[[:space:]>]/ { t = num($0) }
+        in_self && /<svr_id[[:space:]>]/   { i = num($0) }
+        /<\/self_svr_info>/ { if (in_self) { print t, i; exit } }
+    ' "$1"
+}
+
+# 根据 svr_type_ 与 svr_id_ 从 svcid.xml 获取监听端口
+# 用法: svcid_lookup_port <svcid.xml> <type> <id>; 输出端口
+svcid_lookup_port() {
+    awk -v wt="$2" -v wi="$3" '
+        function num(s) { sub(/^[^>]*>/, "", s); sub(/<.*/, "", s); gsub(/[^0-9]/, "", s); return s }
+        /<service_info_[[:space:]>]/ { ct = ""; ci = "" }
+        /<svr_type_[[:space:]>]/ { ct = num($0) }
+        /<svr_id_[[:space:]>]/   { ci = num($0) }
+        /<svr_port_[[:space:]>]/ { p = num($0); if (ct == wt && ci == wi) { print p; exit } }
+    ' "$1"
+}
+
+# 将 svcid.xml 中匹配 type 与 id 的 service_info_ 端口改为新端口
+# 用法: svcid_rewrite_port <svcid.xml> <type> <id> <new_port>
+svcid_rewrite_port() {
+    local file="$1" wt="$2" wi="$3" np="$4" tmp
+    tmp="${file}.tmp.$$"
+    awk -v wt="$wt" -v wi="$wi" -v np="$np" '
+        function num(s) { sub(/^[^>]*>/, "", s); sub(/<.*/, "", s); gsub(/[^0-9]/, "", s); return s }
+        /<service_info_[[:space:]>]/ { ct = ""; ci = "" }
+        /<svr_type_[[:space:]>]/ { ct = num($0) }
+        /<svr_id_[[:space:]>]/   { ci = num($0) }
+        /<svr_port_[[:space:]>]/ && ct == wt && ci == wi {
+            sub(/<svr_port_>[^<]*<\/svr_port_>/, "<svr_port_> " np " </svr_port_>")
+        }
+        { print }
+    ' "$file" >"$tmp" && mv "$tmp" "$file"
+}
+
 # 启动DBMW服务
 # 用法: start_dbmw "server_01"
 start_dbmw() {

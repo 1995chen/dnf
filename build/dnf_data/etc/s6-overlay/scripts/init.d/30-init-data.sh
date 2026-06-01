@@ -20,15 +20,25 @@ rm -rf "$neople_tmp_path"
 mkdir -p "$neople_path"
 cp -r "$template_neople_path" "$neople_tmp_path"
 while IFS= read -r -d '' cfg_file; do
-    safe_sed "GAME_PASSWORD" "$DNF_DB_GAME_PASSWORD" "$cfg_file"
-    safe_sed "DEC_GAME_PWD" "$DEC_GAME_PWD" "$cfg_file"
-    safe_sed "SERVER_GROUP_NAME" "$SERVER_GROUP_NAME" "$cfg_file"
-    safe_sed "SERVER_GROUP_DB" "$SERVER_GROUP_DB" "$cfg_file"
-    safe_sed "SERVER_GROUP" "$SERVER_GROUP" "$cfg_file"
+    safe_sed "__GAME_PASSWORD__" "$DNF_DB_GAME_PASSWORD" "$cfg_file"
+    safe_sed "__DEC_GAME_PWD__" "$DEC_GAME_PWD" "$cfg_file"
+    safe_sed "__SERVER_GROUP_NAME__" "$SERVER_GROUP_NAME" "$cfg_file"
+    safe_sed "__SERVER_GROUP_DB__" "$SERVER_GROUP_DB" "$cfg_file"
+    safe_sed "__SERVER_GROUP__" "$SERVER_GROUP" "$cfg_file"
+    substitute_port_markers "$cfg_file"
 done < <(find "$neople_tmp_path" -type f -name "*.cfg" -print0)
 while IFS= read -r -d '' tbl_file; do
-    safe_sed "SERVER_GROUP" "$SERVER_GROUP" "$tbl_file"
+    safe_sed "__SERVER_GROUP__" "$SERVER_GROUP" "$tbl_file"
+    substitute_port_markers "$tbl_file"
 done < <(find "$neople_tmp_path" -type f -name "*.tbl" -print0)
+
+secagent_xml="$neople_tmp_path/secsvr/zergsvr/cfg/secagent_config.xml"
+[ -f "$secagent_xml" ] && safe_sed "__SECAGENT_CHANNEL_NUM__" "$SECAGENT_CHANNEL_NUM" "$secagent_xml"
+
+svcid_xml="$neople_tmp_path/secsvr/zergsvr/cfg/svcid.xml"
+if [ -f "$svcid_xml" ] && [ -n "$ZERGSVR_SELF_TYPE" ] && [ -n "$ZERGSVR_SELF_ID" ] && [ -n "$ZERGSVR_PORT" ]; then
+    svcid_rewrite_port "$svcid_xml" "$ZERGSVR_SELF_TYPE" "$ZERGSVR_SELF_ID" "$ZERGSVR_PORT"
+fi
 
 # 这里是为了保住日志文件目录，将日志文件挂载到宿主机外，因此采用复制而不是 mv
 cp -rf "$neople_tmp_path"/* "$neople_path"

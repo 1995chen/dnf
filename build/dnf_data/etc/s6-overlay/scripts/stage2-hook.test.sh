@@ -24,7 +24,9 @@ chk() {
 }
 
 # 运行 stage2-hook, 用 S6_OVERLAY_PATH 绕过 with-contenv shebang
-S6_OVERLAY_PATH="$WORK" SERVER_GROUP=3 OPEN_CHANNEL='11,52' bash "$HOOK" >/dev/null 2>&1
+CENV="$WORK/container_env"
+S6_OVERLAY_PATH="$WORK" CONTAINER_ENV_PATH="$CENV" \
+    SERVER_GROUP=3 OPEN_CHANNEL='11,52' bash "$HOOK" >/dev/null 2>&1
 chk "stage2-hook 退出码" 0 "$?"
 
 # 动态生成 game_xxx 配置
@@ -33,6 +35,13 @@ chk "生成 game_siroco52" yes "$([ -d "$WORK/s6-rc.d/game_siroco52" ] && echo y
 chk "生成 probes.d/game_siroco11" yes "$([ -f "$WORK/probes.d/game_siroco11" ] && echo yes || echo no)"
 chk "替换 game run 占位符" 0 "$(grep -c '__[A-Z_]*__' "$WORK/s6-rc.d/game_siroco11/run" 2>/dev/null)"
 chk "设置 game_siroco11 默认启动" yes "$([ -f "$WORK/s6-rc.d/user/contents.d/game_siroco11" ] && echo yes || echo no)"
+
+# 频道端口环境变量 = SERVER_GROUP00<频道号>
+chk "game_siroco11 端口环境变量" "30011" "$(cat "$CENV/GAME_SIROCO11_TCP_PORT" 2>/dev/null)"
+chk "game_siroco52 端口环境变量" "30052" "$(cat "$CENV/GAME_SIROCO52_TCP_PORT" 2>/dev/null)"
+chk "probes.d/game_siroco11 使用 env 探针" \
+    "cmd:/home/template/init/lib/probe-tcp-port.sh GAME_SIROCO11_TCP_PORT" \
+    "$(cat "$WORK/probes.d/game_siroco11" 2>/dev/null)"
 
 # 每个常驻服务都应生成 <svc>-log
 missing=""

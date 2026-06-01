@@ -102,5 +102,16 @@ chk "基于最新版本自定义-msg" "keep customized t, not overwritten" "$msg
 chk "基于最新版本自定义-无需备份" 0 "$(bak_count "$d/t")"
 chk "基于最新版本自定义-target保持不变" "my-custom" "$(cat "$d/t")"
 
+# substitute_port_markers: 将文件中标记替换为对应环境变量值, 未知标记保持不变
+spm="$WORK/spm.cfg"
+printf 'a=__AUCTION_TCP_PORT__\nb=__COSERVER_UDP_PORT__\nc=__MAIN_DB_PROXY_PORT__\nd=__CHANNEL_TCP_PORT__\nkeep=__UNKNOWN_TOKEN__\n' >"$spm"
+AUCTION_TCP_PORT=30803 COSERVER_UDP_PORT=30703 MAIN_DB_PROXY_PORT=3307 CHANNEL_TCP_PORT=7001 \
+    substitute_port_markers "$spm"
+chk "端口替换 auction" "a=30803" "$(grep '^a=' "$spm")"
+chk "端口替换 coserver" "b=30703" "$(grep '^b=' "$spm")"
+chk "端口替换 proxy" "c=3307" "$(grep '^c=' "$spm")"
+chk "端口替换 channel" "d=7001" "$(grep '^d=' "$spm")"
+chk "未知标记保持不变" "keep=__UNKNOWN_TOKEN__" "$(grep '^keep=' "$spm")"
+
 echo "pass=$pass failed=$failed"
 [ "$failed" -eq 0 ]

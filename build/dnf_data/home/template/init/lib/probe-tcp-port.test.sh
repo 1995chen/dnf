@@ -1,11 +1,11 @@
 #!/bin/bash
-# probe-socat-port.sh 测试脚本
+# probe-tcp-port.sh 测试脚本
 
 SCRIPT_PATH=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
-PROBE="${SCRIPT_PATH}/probe-socat-port.sh"
+PROBE="${SCRIPT_PATH}/probe-tcp-port.sh"
 
 if ! command -v socat >/dev/null 2>&1; then
-    echo "probe-socat-port.test: socat is required but not installed" >&2
+    echo "probe-tcp-port.test: socat is required but not installed" >&2
     exit 1
 fi
 WORK=$(mktemp -d)
@@ -107,7 +107,7 @@ ok "自定义 host 参数" env PROXY_PORT="$P" bash "$PROBE" PROXY_PORT 127.0.0.
 
 echo "== 端口变量为空或未定义: 就绪 =="
 ok "变量为空: 就绪" env PROXY_PORT= bash "$PROBE" PROXY_PORT
-ok "变量未定义: 未就绪" env -u PROXY_PORT bash "$PROBE" PROXY_PORT
+ok "变量未定义: 就绪" env -u PROXY_PORT bash "$PROBE" PROXY_PORT
 
 echo "== 端口变量已设但端口未监听: 未就绪 =="
 no "端口未监听: 未就绪" env PROXY_PORT="$DP" bash "$PROBE" PROXY_PORT

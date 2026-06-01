@@ -1,1 +1,1 @@
-cmd:/home/template/init/lib/probe-port.sh /home/neople/dbmw_guild/cfg/server_02.cfg 127.0.0.1 tcp_port
+cmd:/home/template/init/lib/probe-tcp-port.sh DBMW_GUILD_TCP_PORT

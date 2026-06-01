@@ -1,1 +1,1 @@
-cmd:/home/template/init/lib/probe-port.sh /home/neople/relay/cfg/relay_200.cfg
+cmd:/home/template/init/lib/probe-tcp-port.sh RELAY_TCP_PORT

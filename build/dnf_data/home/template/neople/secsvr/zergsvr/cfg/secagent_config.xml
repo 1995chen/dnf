@@ -40,6 +40,6 @@
 		<tk_data_path_>./cfg/base_cfg/TK0001.dat</tk_data_path_>
 	</sanlix_checker_conf_>
 	<if_check_rpcode_hash_>1</if_check_rpcode_hash_>
-	<gamesvr_channel_num_>12</gamesvr_channel_num_>
+	<gamesvr_channel_num_>__SECAGENT_CHANNEL_NUM__</gamesvr_channel_num_>
 	<channel_recv_times_>1</channel_recv_times_>
 </config>

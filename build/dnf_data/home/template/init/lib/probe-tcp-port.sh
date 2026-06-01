@@ -1,17 +1,17 @@
 #!/bin/bash
-# socat 就绪探针
-# 用法: probe-socat-port.sh <端口变量名> [host]
+# TCP 端口就绪探针, 端口取自环境变量
+# 用法: probe-tcp-port.sh <端口变量名> [host]
 
 portvar="$1"
 host="${2:-127.0.0.1}"
 
 if [ -z "$portvar" ]; then
-    echo "probe-socat-port: usage: probe-socat-port.sh <port-env-var> [host]" >&2
+    echo "probe-tcp-port: usage: probe-tcp-port.sh <port-env-var> [host]" >&2
     exit 2
 fi
 case "$portvar" in
 *[!A-Za-z0-9_]*)
-    echo "probe-socat-port: invalid var name '$portvar'" >&2
+    echo "probe-tcp-port: invalid var name '$portvar'" >&2
     exit 2
     ;;
 esac
@@ -21,7 +21,7 @@ port="${!portvar}"
 [ -z "$port" ] && exit 0
 case "$port" in
 *[!0-9]*)
-    echo "probe-socat-port: $portvar='$port' is not a numeric port" >&2
+    echo "probe-tcp-port: $portvar='$port' is not a numeric port" >&2
     exit 1
     ;;
 esac

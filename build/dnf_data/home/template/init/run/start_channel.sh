@@ -12,10 +12,10 @@ fi
 # 生成配置文件
 rm -rf /tmp/channel.cfg
 cp /home/template/neople/channel/cfg/server.cfg /tmp/channel.cfg
-safe_sed "MAIN_BRIDGE_IP" "$MAIN_BRIDGE_IP" /tmp/channel.cfg
-# 重设PUBLIC_IP和server group
-safe_sed "PUBLIC_IP" "$MONITOR_PUBLIC_IP" /tmp/channel.cfg
-safe_sed "SERVER_GROUP" "$SERVER_GROUP" /tmp/channel.cfg
+safe_sed "__MAIN_BRIDGE_IP__" "$MAIN_BRIDGE_IP" /tmp/channel.cfg
+safe_sed "__PUBLIC_IP__" "$MONITOR_PUBLIC_IP" /tmp/channel.cfg
+safe_sed "__SERVER_GROUP__" "$SERVER_GROUP" /tmp/channel.cfg
+substitute_port_markers /tmp/channel.cfg
 cp /tmp/channel.cfg /home/neople/channel/cfg/channel.cfg
 # 清理cfg文件
 rm -rf /tmp/channel.cfg

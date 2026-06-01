@@ -3,6 +3,7 @@
 
 s6rc_path="${S6_OVERLAY_PATH:-/etc/s6-overlay}/s6-rc.d"
 probes_path="${S6_OVERLAY_PATH:-/etc/s6-overlay}/probes.d"
+container_env_path="${CONTAINER_ENV_PATH:-/run/s6/container_environment}"
 
 # SERVER_GROUP_NAME
 # shellcheck disable=SC2034
@@ -40,6 +41,8 @@ find "${s6rc_path}/dnf-channel/contents.d" -maxdepth 1 -type f \
     -name "game_${SERVER_GROUP_NAME}*" -delete
 find "${probes_path}" -maxdepth 1 -type f \
     -name "game_${SERVER_GROUP_NAME}*" -delete
+find "${container_env_path}" -maxdepth 1 -type f \
+    -name "GAME_${SERVER_GROUP_NAME^^}*_TCP_PORT" -delete 2>/dev/null
 
 # 根据 OPEN_CHANNEL 生成 game_xxx 频道目录
 if [ -n "$OPEN_CHANNEL" ]; then
@@ -73,8 +76,13 @@ if [ -n "$OPEN_CHANNEL" ]; then
 
             : >"${s6rc_path}/user/contents.d/$svc"
             : >"${s6rc_path}/dnf-channel/contents.d/$svc"
-            printf 'cmd:/home/template/init/lib/probe-port.sh /home/neople/game/cfg/%s%s.cfg 127.0.0.1 tcp_port\n' \
-                "$SERVER_GROUP_NAME" "$num" >"${probes_path}/$svc"
+
+            game_port="${SERVER_GROUP}00${num}"
+            game_port_var="${svc^^}_TCP_PORT"
+            mkdir -p "${container_env_path}"
+            printf '%s' "$game_port" >"${container_env_path}/${game_port_var}"
+            printf 'cmd:/home/template/init/lib/probe-tcp-port.sh %s\n' \
+                "$game_port_var" >"${probes_path}/$svc"
             continue
         fi
         echo "[stage2-hook] invalid channel number: $num" >&2

@@ -20,10 +20,10 @@ printf '#!/bin/bash\n' >"$mysqld_present"
 chmod +x "$mysqld_present"
 mysqld_absent="$WORK/no-such-mysqld"
 
-main_proxy_cfg="$WORK/main_proxy.cfg"
-printf 'master_db_ip = 127.0.0.1\nmaster_db_port = 3307\n' >"$main_proxy_cfg"
-sg_proxy_cfg="$WORK/sg_proxy.cfg"
-printf 'game_db_ip = 127.0.0.1\ngame_db_port = 3306\nauction_db_port = 3306\n' >"$sg_proxy_cfg"
+zerg_dir="$WORK/zergcfg"
+mkdir -p "$zerg_dir"
+printf '<zerg_config>\n\t<self_cfg>\n\t\t<self_svr_info>\n\t\t\t<svr_type>30</svr_type>\n\t\t\t<svr_id>570011</svr_id>\n\t\t</self_svr_info>\n\t</self_cfg>\n</zerg_config>\n' >"$zerg_dir/zergsvrd.xml"
+printf '<svcid_config>\n\t<service_info_>\n\t\t<svr_type_> 31 </svr_type_>\n\t\t<svr_id_> 570001 </svr_id_>\n\t\t<svr_port_> 9000 </svr_port_>\n\t</service_info_>\n\t<service_info_>\n\t\t<svr_type_> 30 </svr_type_>\n\t\t<svr_id_> 570011 </svr_id_>\n\t\t<svr_port_> 9000 </svr_port_>\n\t</service_info_>\n</svcid_config>\n' >"$zerg_dir/svcid.xml"
 
 failed=0
 pass=0
@@ -78,8 +78,7 @@ chk "主库/大区库分离: 大区库用 MYSQL_HOST" "sg.db" "$(getenv CUR_SG_D
 chk "主库/大区库分离: 大区库 port" "3306" "$(getenv CUR_SG_DB_PORT)"
 
 # 主库/大区库一体化: 无 host/port 且本地 mysqld 存在时，默认使用 127.0.0.1:4000
-run_resolve "$mysqld_present" SERVER_GROUP=3 DNF_DB_ROOT_PASSWORD=secret \
-    MAIN_PROXY_CFG="$main_proxy_cfg" SG_PROXY_CFG="$sg_proxy_cfg"
+run_resolve "$mysqld_present" SERVER_GROUP=3 DNF_DB_ROOT_PASSWORD=secret
 rc=$?
 chk "主库/大区库一体化: 退出码" 0 "$rc"
 chk "主库/大区库一体化: 默认主库 host" "127.0.0.1" "$(getenv CUR_MAIN_DB_HOST)"
@@ -87,30 +86,44 @@ chk "主库/大区库一体化: 默认主库 port" "4000" "$(getenv CUR_MAIN_DB_
 chk "主库/大区库一体化: 主库密码" "secret" "$(getenv CUR_MAIN_DB_ROOT_PASSWORD)"
 chk "主库/大区库一体化: 默认 allow_ip" "127.0.0.1" "$(getenv CUR_MAIN_DB_GAME_ALLOW_IP)"
 chk "主库/大区库一体化: 大区库默认 host" "127.0.0.1" "$(getenv CUR_SG_DB_HOST)"
-chk "主库/大区库一体化: 主库 proxy 监听端口" "3307" "$(getenv CUR_MAIN_DB_PROXY_PORT)"
-chk "主库/大区库一体化: 大区库 proxy 监听端口" "3306" "$(getenv CUR_SG_DB_PROXY_PORT)"
+chk "主库/大区库一体化: 主库 proxy 监听端口默认 3307" "3307" "$(getenv CUR_MAIN_DB_PROXY_PORT)"
+chk "主库/大区库一体化: 大区库 proxy 监听端口默认 3306" "3306" "$(getenv CUR_SG_DB_PROXY_PORT)"
 
-# proxy 监听端口从 cfg 解析，改 cfg 端口后解析结果发生变化
-printf 'master_db_port = 9999\n' >"$WORK/alt_main.cfg"
-printf 'game_db_port = 8888\n' >"$WORK/alt_sg.cfg"
+# 各服务端组件默认端口，不同大区的 relay 端口由 SERVER_GROUP 拼接
+chk "框架端口: auction 默认 30803" "30803" "$(getenv AUCTION_TCP_PORT)"
+chk "框架端口: channel 默认 7001" "7001" "$(getenv CHANNEL_TCP_PORT)"
+chk "框架端口: manager 默认 40403" "40403" "$(getenv MANAGER_TCP_PORT)"
+chk "框架端口: relay 随大区 7SG00" "7300" "$(getenv RELAY_TCP_PORT)"
+chk "框架端口: coserver 默认 30703" "30703" "$(getenv COSERVER_UDP_PORT)"
+chk "框架端口: statics 默认 30503" "30503" "$(getenv STATICS_UDP_PORT)"
+
+# 默认端口可被环境变量覆盖
 run_resolve "$mysqld_present" SERVER_GROUP=3 DNF_DB_ROOT_PASSWORD=secret \
-    MAIN_PROXY_CFG="$WORK/alt_main.cfg" SG_PROXY_CFG="$WORK/alt_sg.cfg"
-chk "proxy 端口随 cfg 变化: 主库 master_db_port" "9999" "$(getenv CUR_MAIN_DB_PROXY_PORT)"
-chk "proxy 端口随 cfg 变化: 大区库 game_db_port" "8888" "$(getenv CUR_SG_DB_PROXY_PORT)"
+    MAIN_DB_PROXY_PORT=19999 SG_DB_PROXY_PORT=18888 AUCTION_TCP_PORT=12345
+chk "自定义端口: 主库 proxy 端口" "19999" "$(getenv CUR_MAIN_DB_PROXY_PORT)"
+chk "自定义端口: 大区库 proxy 端口" "18888" "$(getenv CUR_SG_DB_PROXY_PORT)"
+chk "自定义端口: auction 端口" "12345" "$(getenv AUCTION_TCP_PORT)"
 
-# 主库已配置但 cfg 无对应配置项: proxy 端口为空, 显示告警信息
-run_resolve "$mysqld_present" SERVER_GROUP=3 DNF_DB_ROOT_PASSWORD=secret \
-    MAIN_PROXY_CFG="$WORK/no-such.cfg" SG_PROXY_CFG="$sg_proxy_cfg"
-chk "cfg 缺失: 主库 proxy 端口为空" "" "$(getenv CUR_MAIN_DB_PROXY_PORT)"
-chk "cfg 缺失: 打印 WARN 到 stderr" yes "$(grep -q 'WARN.*master_db_port' "$WORK/last.err" && echo yes || echo no)"
-chk "cfg 缺失: 不影响大区库 cfg 解析" "3306" "$(getenv CUR_SG_DB_PROXY_PORT)"
-
-# 仅配置 host 缺 port: 即使 cfg 有端口也不启动 proxy
-run_resolve "$mysqld_absent" SERVER_GROUP=3 MYSQL_HOST=only.host DNF_DB_ROOT_PASSWORD=secret \
-    MAIN_PROXY_CFG="$main_proxy_cfg" SG_PROXY_CFG="$sg_proxy_cfg"
+# 仅配置 host 缺 port: 该库视为未配置, proxy 监听端口为空, 不启动
+run_resolve "$mysqld_absent" SERVER_GROUP=3 MYSQL_HOST=only.host DNF_DB_ROOT_PASSWORD=secret
 chk "仅配置 host 缺 port: 退出码" 0 "$?"
 chk "仅配置 host 缺 port: 主库 proxy 端口为空" "" "$(getenv CUR_MAIN_DB_PROXY_PORT)"
 chk "仅配置 host 缺 port: 大区库 proxy 端口为空" "" "$(getenv CUR_SG_DB_PROXY_PORT)"
+
+# secagent 频道数: 默认 12, 可被覆盖
+run_resolve "$mysqld_present" SERVER_GROUP=3 DNF_DB_ROOT_PASSWORD=secret
+chk "secagent 频道数默认 12" "12" "$(getenv SECAGENT_CHANNEL_NUM)"
+run_resolve "$mysqld_present" SERVER_GROUP=3 DNF_DB_ROOT_PASSWORD=secret SECAGENT_CHANNEL_NUM=7
+chk "secagent 频道数可覆盖" "7" "$(getenv SECAGENT_CHANNEL_NUM)"
+
+# zergsvr 监听端口: 解析 zergsvrd self 取 (type,id), 再查 svcid 端口作为默认值
+run_resolve "$mysqld_present" SERVER_GROUP=3 DNF_DB_ROOT_PASSWORD=secret ZERGSVR_CFG_DIR="$zerg_dir"
+chk "zergsvr self type" "30" "$(getenv ZERGSVR_SELF_TYPE)"
+chk "zergsvr self id" "570011" "$(getenv ZERGSVR_SELF_ID)"
+chk "zergsvr 端口默认从 svcid 解析" "9000" "$(getenv ZERGSVR_PORT)"
+run_resolve "$mysqld_present" SERVER_GROUP=3 DNF_DB_ROOT_PASSWORD=secret \
+    ZERGSVR_CFG_DIR="$zerg_dir" ZERGSVR_PORT=9999
+chk "zergsvr 端口可覆盖" "9999" "$(getenv ZERGSVR_PORT)"
 
 # 无本地 mysqld -> 退出 1
 run_resolve "$mysqld_absent" SERVER_GROUP=3 DNF_DB_ROOT_PASSWORD=secret
