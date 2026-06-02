@@ -61,7 +61,7 @@ RUN GATE_REPO="llnut/dnf-login" && GATE_TARGET="x86_64-unknown-linux-musl" && \
 
 ENV S6_STAGE2_HOOK=/etc/s6-overlay/scripts/stage2-hook.sh \
     S6_BEHAVIOUR_IF_STAGE2_FAILS=1 \
-    PATH="${PATH}:/command" \
+    PATH="/command:${PATH}" \
     MAIN_BRIDGE_IP='127.0.0.1' \
     SERVER_GROUP_DB='cain' \
     SERVER_GROUP=3 \

@@ -1,4 +1,5 @@
 #!/command/execlineb -P
 with-contenv
+fdmove -c 2 1
 cd /home/template/init/scheduler
 /home/template/init/scheduler/scheduler.sh

@@ -35,14 +35,8 @@ RUN dpkg --add-architecture i386 && \
     apt-get update && apt-get install -y --no-install-recommends \
     curl ca-certificates openssl \
     libc6:i386 libstdc++6:i386 zlib1g:i386 \
-    # 32位字体渲染
-    libfreetype6:i386 libfontconfig1:i386 \
-    libssl3t64:i386 \
     libjemalloc2:i386 \
     socat \
-    # 32位SSL符号链接
-    && ln -sf /usr/lib/i386-linux-gnu/libssl.so.3 /lib/i386-linux-gnu/libssl.so.6 2>/dev/null || true \
-    && ln -sf /usr/lib/i386-linux-gnu/libcrypto.so.3 /lib/i386-linux-gnu/libcrypto.so.6 2>/dev/null || true \
     # 安装32位jemalloc
     && cp -L /usr/lib/i386-linux-gnu/libjemalloc.so.2 /usr/lib/libjemalloc32.so.2 \
     && apt-get clean && rm -rf /var/lib/apt/lists/* /root/.cache
@@ -86,7 +80,7 @@ RUN GATE_REPO="llnut/dnf-login" && GATE_TARGET="x86_64-unknown-linux-musl" && \
 
 ENV S6_STAGE2_HOOK=/etc/s6-overlay/scripts/stage2-hook.sh \
     S6_BEHAVIOUR_IF_STAGE2_FAILS=1 \
-    PATH="${PATH}:/command" \
+    PATH="/command:${PATH}" \
     MAIN_BRIDGE_IP='127.0.0.1' \
     SERVER_GROUP_DB='cain' \
     SERVER_GROUP=3 \

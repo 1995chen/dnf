@@ -1,4 +1,5 @@
 #!/command/execlineb -P
 with-contenv
-cd /usr/bin
+fdmove -c 2 1
+cd /data
 /home/template/init/run/start_gate.sh

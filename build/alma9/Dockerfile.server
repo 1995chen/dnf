@@ -58,15 +58,9 @@ RUN microdnf --setopt=install_weak_deps=0 install -y epel-release && \
     microdnf --setopt=install_weak_deps=0 install -y \
     tar gzip openssl \
     libstdc++ libxcrypt-compat \
-    glibc.i686 libstdc++.i686 zlib.i686 libgcc.i686 nss-softokn-freebl.i686 \
-    # 32位字体渲染
-    freetype.i686 fontconfig.i686 \
-    openssl-libs.i686 \
+    glibc.i686 libstdc++.i686 zlib.i686 libgcc.i686 \
     jemalloc \
     socat \
-    # 32位SSL符号链接
-    && ln -sf /usr/lib/libssl.so.3 /usr/lib/libssl.so.6 \
-    && ln -sf /usr/lib/libcrypto.so.3 /usr/lib/libcrypto.so.6 \
     # 安装64位jemalloc
     && cp -L /usr/lib64/libjemalloc.so.2 /usr/lib/libjemalloc.so.2 \
     && microdnf clean all && rm -rf /root/.cache
@@ -120,7 +114,7 @@ RUN GATE_REPO="llnut/dnf-login" && GATE_TARGET="x86_64-unknown-linux-musl" && \
 
 ENV S6_STAGE2_HOOK=/etc/s6-overlay/scripts/stage2-hook.sh \
     S6_BEHAVIOUR_IF_STAGE2_FAILS=1 \
-    PATH="${PATH}:/command" \
+    PATH="/command:${PATH}" \
     MAIN_BRIDGE_IP='127.0.0.1' \
     SERVER_GROUP_DB='cain' \
     SERVER_GROUP=3 \

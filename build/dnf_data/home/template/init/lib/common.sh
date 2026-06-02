@@ -78,6 +78,12 @@ run_or_exit() {
     fi
 }
 
+# 比较两个文件内容是否一致, 一致返回 0
+files_identical() {
+    [ -f "$1" ] && [ -f "$2" ] || return 1
+    [ "$(cksum < "$1")" = "$(cksum < "$2")" ]
+}
+
 # 同步模板文件
 # 用法: sync_template_file SRC TARGET REF
 sync_template_file() {
@@ -90,16 +96,16 @@ sync_template_file() {
         echo "init $name success"
         return 0
     fi
-    if cmp -s "$src" "$target"; then
+    if files_identical "$src" "$target"; then
         cp -f "$src" "$ref"
         echo "$name have already inited, do nothing!"
         return 0
     fi
-    if [ -f "$ref" ] && cmp -s "$src" "$ref"; then
+    if files_identical "$src" "$ref"; then
         echo "keep customized $name, not overwritten"
         return 0
     fi
-    if [ ! -f "$ref" ] || ! cmp -s "$target" "$ref"; then
+    if [ ! -f "$ref" ] || ! files_identical "$target" "$ref"; then
         ts=$(date +'%Y%m%d-%H%M%S')
         backup="${target}.${ts}.bak"
         cp -f "$target" "$backup"
