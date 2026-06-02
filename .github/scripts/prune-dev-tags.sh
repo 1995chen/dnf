@@ -14,7 +14,7 @@ DOCKERHUB_TOKEN=${DOCKERHUB_TOKEN:-}
 DOCKERHUB_TAG_PAGE_LIMIT=${DOCKERHUB_TAG_PAGE_LIMIT:-100}
 DOCKERHUB_JWT=${DOCKERHUB_JWT:-}
 DELETE_VERIFY_ATTEMPTS=${DELETE_VERIFY_ATTEMPTS:-3}
-DELETE_VERIFY_SLEEP=${DELETE_VERIFY_SLEEP:-5}
+DELETE_VERIFY_SLEEP=${DELETE_VERIFY_SLEEP:-3}
 
 OS_LIST=(debian13 ubuntu26 alma9 centos7)
 
@@ -180,6 +180,12 @@ verify_tag_deleted() {
 
     attempt=1
     while [ "$attempt" -le "$DELETE_VERIFY_ATTEMPTS" ]; do
+        # Wait before each check so the registry can propagate the delete.
+        if ! sleep "$DELETE_VERIFY_SLEEP"; then
+            error "failed while waiting to verify ${repo}:${tag}"
+            return 1
+        fi
+
         if ! "$lister" "$repo" "$tags_file"; then
             return 1
         fi
@@ -196,10 +202,6 @@ verify_tag_deleted() {
 
         if [ "$attempt" -lt "$DELETE_VERIFY_ATTEMPTS" ]; then
             echo "  tag still visible after delete, retrying verification (${attempt}/${DELETE_VERIFY_ATTEMPTS})"
-            if ! sleep "$DELETE_VERIFY_SLEEP"; then
-                error "failed while waiting to verify ${repo}:${tag}"
-                return 1
-            fi
         fi
 
         attempt=$((attempt + 1))
