@@ -3,8 +3,16 @@
 IMAGE_PATH=${IMAGE_PATH:-llnut/dnf}
 RETENTION_DAYS=${RETENTION_DAYS:-30}
 DRY_RUN=${DRY_RUN:-false}
-REGCTL_BIN=${REGCTL_BIN:-regctl}
 GH_BIN=${GH_BIN:-gh}
+CURL_BIN=${CURL_BIN:-curl}
+QUAY_API_BASE=${QUAY_API_BASE:-https://quay.io/api/v1}
+QUAY_API_TOKEN=${QUAY_API_TOKEN:-}
+QUAY_TAG_PAGE_LIMIT=${QUAY_TAG_PAGE_LIMIT:-100}
+DOCKERHUB_API_BASE=${DOCKERHUB_API_BASE:-https://hub.docker.com/v2}
+DOCKERHUB_USERNAME=${DOCKERHUB_USERNAME:-}
+DOCKERHUB_TOKEN=${DOCKERHUB_TOKEN:-}
+DOCKERHUB_TAG_PAGE_LIMIT=${DOCKERHUB_TAG_PAGE_LIMIT:-100}
+DOCKERHUB_JWT=${DOCKERHUB_JWT:-}
 DELETE_VERIFY_ATTEMPTS=${DELETE_VERIFY_ATTEMPTS:-3}
 DELETE_VERIFY_SLEEP=${DELETE_VERIFY_SLEEP:-5}
 
@@ -151,49 +159,38 @@ validate_delete_verification_settings() {
     fi
 }
 
-tag_exists_in_repo() {
-    local repo=$1
-    local tag=$2
-    local tmp_dir=$3
-    local repo_key tags_file grep_rc
+write_auth_header() {
+    local file=$1 value=$2
+
+    if ! printf 'Authorization: %s\n' "$value" >"$file"; then
+        error "failed to write auth header file ${file}"
+        return 1
+    fi
+
+    return 0
+}
+
+verify_tag_deleted() {
+    local repo=$1 tag=$2 tmp_dir=$3 lister=$4
+    local attempt repo_key tags_file grep_rc
 
     repo_key=${repo//\//_}
     repo_key=${repo_key//:/_}
     tags_file="${tmp_dir}/${repo_key}.verify.tags"
 
-    if ! "$REGCTL_BIN" tag ls "$repo" >"$tags_file"; then
-        error "failed to verify tags for ${repo}"
-        return 2
-    fi
-
-    grep -qFx "$tag" "$tags_file"
-    grep_rc=$?
-    if [ "$grep_rc" -eq 0 ]; then
-        return 0
-    fi
-    if [ "$grep_rc" -eq 1 ]; then
-        return 1
-    fi
-
-    error "failed to inspect verification tag list for ${repo}"
-    return 2
-}
-
-verify_tag_deleted() {
-    local repo=$1
-    local tag=$2
-    local tmp_dir=$3
-    local attempt exists_rc
-
     attempt=1
     while [ "$attempt" -le "$DELETE_VERIFY_ATTEMPTS" ]; do
-        tag_exists_in_repo "$repo" "$tag" "$tmp_dir"
-        exists_rc=$?
+        if ! "$lister" "$repo" "$tags_file"; then
+            return 1
+        fi
 
-        if [ "$exists_rc" -eq 1 ]; then
+        grep -qFx "$tag" "$tags_file"
+        grep_rc=$?
+        if [ "$grep_rc" -eq 1 ]; then
             return 0
         fi
-        if [ "$exists_rc" -ne 0 ]; then
+        if [ "$grep_rc" -ne 0 ]; then
+            error "failed to inspect verification tag list for ${repo}"
             return 1
         fi
 
@@ -226,7 +223,6 @@ ghcr_api_base() {
     esac
 }
 
-# GHCR has no registry v2 manifest delete, so regctl cannot prune it.
 delete_stale_ghcr() {
     local repo=$1 keep_file=$2 tmp_dir=$3
     local rest owner pkg base versions versions_err repo_key
@@ -305,27 +301,93 @@ delete_stale_ghcr() {
     done <"$versions"
 }
 
-prune_repo() {
-    local repo=$1
-    local keep_file=$2
-    local tmp_dir=$3
-    local repo_key tags_file stale_file tag
+list_quay_active_tags() {
+    local repo=$1 out_file=$2
+    local rest page page_file hdr_file http_code has_more page_count url
 
-    echo "Scanning ${repo}"
-    case "$repo" in
-    ghcr.io/*)
-        delete_stale_ghcr "$repo" "$keep_file" "$tmp_dir"
+    rest=${repo#quay.io/}
+
+    if ! : >"$out_file"; then
+        error "failed to initialize quay tag list for ${repo}"
+        return 1
+    fi
+
+    hdr_file="${out_file}.hdr"
+    if ! write_auth_header "$hdr_file" "Bearer ${QUAY_API_TOKEN}"; then
+        return 1
+    fi
+
+    page=1
+    page_file="${out_file}.page"
+    while true; do
+        url="${QUAY_API_BASE}/repository/${rest}/tag/?onlyActiveTags=true&limit=${QUAY_TAG_PAGE_LIMIT}&page=${page}"
+        if ! http_code=$("$CURL_BIN" -sS -o "$page_file" -w '%{http_code}' \
+            -H "@${hdr_file}" \
+            -H "Accept: application/json" \
+            "$url"); then
+            error "failed to query quay tags for ${repo}"
+            return 1
+        fi
+
+        if [ "$http_code" != "200" ]; then
+            error "quay tag listing for ${repo} returned HTTP ${http_code}"
+            cat "$page_file" >&2
+            return 1
+        fi
+
+        if ! jq -r '.tags[].name' "$page_file" >>"$out_file"; then
+            error "failed to parse quay tag list for ${repo}"
+            return 1
+        fi
+
+        page_count=$(jq -r '.tags | length' "$page_file")
+        if [ "$page_count" = "0" ]; then
+            break
+        fi
+
+        has_more=$(jq -r '.has_additional // false' "$page_file")
+        if [ "$has_more" != "true" ]; then
+            break
+        fi
+        page=$((page + 1))
+    done
+
+    return 0
+}
+
+delete_stale_quay() {
+    local repo=$1 keep_file=$2 tmp_dir=$3
+    local rest repo_key tags_file stale_file hdr_file tag http_code url
+
+    if ! command -v "$CURL_BIN" >/dev/null 2>&1; then
+        error "required command not found: ${CURL_BIN}"
+        FAILED=$((FAILED + 1))
         return 0
-        ;;
-    esac
+    fi
+    if ! command -v jq >/dev/null 2>&1; then
+        error "required command not found: jq"
+        FAILED=$((FAILED + 1))
+        return 0
+    fi
+    if [ -z "$QUAY_API_TOKEN" ]; then
+        error "QUAY_API_TOKEN is required to prune ${repo}"
+        FAILED=$((FAILED + 1))
+        return 0
+    fi
 
+    rest=${repo#quay.io/}
     repo_key=${repo//\//_}
     repo_key=${repo_key//:/_}
     tags_file="${tmp_dir}/${repo_key}.tags"
     stale_file="${tmp_dir}/${repo_key}.stale"
+    hdr_file="${tmp_dir}/${repo_key}.auth.hdr"
 
-    if ! "$REGCTL_BIN" tag ls "$repo" >"$tags_file"; then
-        error "failed to list tags for ${repo}"
+    if ! write_auth_header "$hdr_file" "Bearer ${QUAY_API_TOKEN}"; then
+        FAILED=$((FAILED + 1))
+        return 0
+    fi
+
+    if ! list_quay_active_tags "$repo" "$tags_file"; then
         FAILED=$((FAILED + 1))
         return 0
     fi
@@ -351,17 +413,238 @@ prune_repo() {
         fi
 
         echo "  DELETE ${repo}:${tag}"
-        if "$REGCTL_BIN" tag delete --ignore-missing "${repo}:${tag}"; then
-            if verify_tag_deleted "$repo" "$tag" "$tmp_dir"; then
+        url="${QUAY_API_BASE}/repository/${rest}/tag/${tag}"
+        if ! http_code=$("$CURL_BIN" -sS -o /dev/null -w '%{http_code}' \
+            -X DELETE \
+            -H "@${hdr_file}" \
+            "$url"); then
+            FAILED=$((FAILED + 1))
+            echo "  delete request failed for ${repo}:${tag}" >&2
+            continue
+        fi
+
+        case "$http_code" in
+        200 | 201 | 202 | 204)
+            if verify_tag_deleted "$repo" "$tag" "$tmp_dir" list_quay_active_tags; then
                 DELETED=$((DELETED + 1))
             else
                 FAILED=$((FAILED + 1))
             fi
-        else
+            ;;
+        404)
+            echo "  tag already absent: ${repo}:${tag}"
+            DELETED=$((DELETED + 1))
+            ;;
+        *)
             FAILED=$((FAILED + 1))
-            echo "  delete failed for ${repo}:${tag}" >&2
-        fi
+            echo "  delete for ${repo}:${tag} returned HTTP ${http_code}" >&2
+            ;;
+        esac
     done <"$stale_file"
+}
+
+dockerhub_login() {
+    local tmp_dir=$1
+    local req_file resp_file http_code
+
+    if [ -n "$DOCKERHUB_JWT" ]; then
+        return 0
+    fi
+    if [ -z "$DOCKERHUB_USERNAME" ] || [ -z "$DOCKERHUB_TOKEN" ]; then
+        error "DOCKERHUB_USERNAME and DOCKERHUB_TOKEN are required to prune Docker Hub"
+        return 1
+    fi
+
+    req_file="${tmp_dir}/dockerhub.login.req"
+    resp_file="${tmp_dir}/dockerhub.login.resp"
+
+    if ! jq -n --arg u "$DOCKERHUB_USERNAME" --arg p "$DOCKERHUB_TOKEN" \
+        '{username: $u, password: $p}' >"$req_file"; then
+        error "failed to build Docker Hub login request"
+        return 1
+    fi
+
+    if ! http_code=$("$CURL_BIN" -sS -o "$resp_file" -w '%{http_code}' \
+        -X POST \
+        -H "Content-Type: application/json" \
+        --data "@${req_file}" \
+        "${DOCKERHUB_API_BASE}/users/login/"); then
+        error "failed to request Docker Hub login token"
+        return 1
+    fi
+
+    if [ "$http_code" != "200" ]; then
+        error "Docker Hub login returned HTTP ${http_code}"
+        return 1
+    fi
+
+    if ! DOCKERHUB_JWT=$(jq -r '.token // empty' "$resp_file"); then
+        error "failed to parse Docker Hub login token"
+        return 1
+    fi
+
+    if [ -z "$DOCKERHUB_JWT" ]; then
+        error "Docker Hub login response did not contain a token"
+        return 1
+    fi
+
+    return 0
+}
+
+list_dockerhub_tags() {
+    local repo=$1 out_file=$2
+    local page page_file hdr_file http_code next page_count url
+
+    if ! : >"$out_file"; then
+        error "failed to initialize Docker Hub tag list for ${repo}"
+        return 1
+    fi
+
+    hdr_file="${out_file}.hdr"
+    if ! write_auth_header "$hdr_file" "JWT ${DOCKERHUB_JWT}"; then
+        return 1
+    fi
+
+    page=1
+    page_file="${out_file}.page"
+    while true; do
+        url="${DOCKERHUB_API_BASE}/repositories/${repo}/tags/?page_size=${DOCKERHUB_TAG_PAGE_LIMIT}&page=${page}"
+        if ! http_code=$("$CURL_BIN" -sS -o "$page_file" -w '%{http_code}' \
+            -H "@${hdr_file}" \
+            "$url"); then
+            error "failed to query Docker Hub tags for ${repo}"
+            return 1
+        fi
+
+        if [ "$http_code" != "200" ]; then
+            error "Docker Hub tag listing for ${repo} returned HTTP ${http_code}"
+            cat "$page_file" >&2
+            return 1
+        fi
+
+        if ! jq -r '.results[].name' "$page_file" >>"$out_file"; then
+            error "failed to parse Docker Hub tag list for ${repo}"
+            return 1
+        fi
+
+        page_count=$(jq -r '.results | length' "$page_file")
+        if [ "$page_count" = "0" ]; then
+            break
+        fi
+
+        next=$(jq -r '.next // empty' "$page_file")
+        if [ -z "$next" ]; then
+            break
+        fi
+        page=$((page + 1))
+    done
+
+    return 0
+}
+
+delete_stale_dockerhub() {
+    local repo=$1 keep_file=$2 tmp_dir=$3
+    local repo_key tags_file stale_file hdr_file tag http_code url
+
+    if ! command -v "$CURL_BIN" >/dev/null 2>&1; then
+        error "required command not found: ${CURL_BIN}"
+        FAILED=$((FAILED + 1))
+        return 0
+    fi
+    if ! command -v jq >/dev/null 2>&1; then
+        error "required command not found: jq"
+        FAILED=$((FAILED + 1))
+        return 0
+    fi
+    if ! dockerhub_login "$tmp_dir"; then
+        FAILED=$((FAILED + 1))
+        return 0
+    fi
+
+    repo_key=${repo//\//_}
+    repo_key=${repo_key//:/_}
+    tags_file="${tmp_dir}/${repo_key}.tags"
+    stale_file="${tmp_dir}/${repo_key}.stale"
+    hdr_file="${tmp_dir}/${repo_key}.auth.hdr"
+
+    if ! write_auth_header "$hdr_file" "JWT ${DOCKERHUB_JWT}"; then
+        FAILED=$((FAILED + 1))
+        return 0
+    fi
+
+    if ! list_dockerhub_tags "$repo" "$tags_file"; then
+        FAILED=$((FAILED + 1))
+        return 0
+    fi
+
+    if ! plan_stale_tags "$keep_file" <"$tags_file" >"$stale_file"; then
+        error "failed to plan stale tags for ${repo}"
+        FAILED=$((FAILED + 1))
+        return 0
+    fi
+
+    if [ ! -s "$stale_file" ]; then
+        echo "  no stale dev commit tags"
+        return 0
+    fi
+
+    while IFS= read -r tag; do
+        [ -n "$tag" ] || continue
+        SELECTED=$((SELECTED + 1))
+
+        if is_true "$DRY_RUN"; then
+            echo "  [dry-run] DELETE ${repo}:${tag}"
+            continue
+        fi
+
+        echo "  DELETE ${repo}:${tag}"
+        url="${DOCKERHUB_API_BASE}/repositories/${repo}/tags/${tag}/"
+        if ! http_code=$("$CURL_BIN" -sS -o /dev/null -w '%{http_code}' \
+            -X DELETE \
+            -H "@${hdr_file}" \
+            "$url"); then
+            FAILED=$((FAILED + 1))
+            echo "  delete request failed for ${repo}:${tag}" >&2
+            continue
+        fi
+
+        case "$http_code" in
+        200 | 202 | 204)
+            if verify_tag_deleted "$repo" "$tag" "$tmp_dir" list_dockerhub_tags; then
+                DELETED=$((DELETED + 1))
+            else
+                FAILED=$((FAILED + 1))
+            fi
+            ;;
+        404)
+            echo "  tag already absent: ${repo}:${tag}"
+            DELETED=$((DELETED + 1))
+            ;;
+        *)
+            FAILED=$((FAILED + 1))
+            echo "  delete for ${repo}:${tag} returned HTTP ${http_code}" >&2
+            ;;
+        esac
+    done <"$stale_file"
+}
+
+prune_repo() {
+    local repo=$1
+    local keep_file=$2
+    local tmp_dir=$3
+
+    echo "Scanning ${repo}"
+    case "$repo" in
+    ghcr.io/*)
+        delete_stale_ghcr "$repo" "$keep_file" "$tmp_dir"
+        ;;
+    quay.io/*)
+        delete_stale_quay "$repo" "$keep_file" "$tmp_dir"
+        ;;
+    *)
+        delete_stale_dockerhub "$repo" "$keep_file" "$tmp_dir"
+        ;;
+    esac
 }
 
 main() {
@@ -369,11 +652,6 @@ main() {
     validate_delete_verification_settings
 
     local keep_file repo
-    if ! command -v "$REGCTL_BIN" >/dev/null 2>&1; then
-        error "required command not found: ${REGCTL_BIN}"
-        exit 1
-    fi
-
     if ! tmp_dir=$(mktemp -d); then
         error "failed to create temporary directory"
         exit 1
