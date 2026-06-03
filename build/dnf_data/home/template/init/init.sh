@@ -71,14 +71,10 @@ else
     echo "libhook.so have already inited, do nothing!"
 fi
 
-# 判断frida.js文件是否初始化过
-if [ ! -f "/data/frida.js" ]; then
-    # 拷贝frida.js文件到持久化目录
-    cp /home/template/init/frida.js /data/
-    echo "init frida.js success"
-else
-    echo "frida.js have already inited, do nothing!"
-fi
+# 更新时自动备份升级 frida.js
+frida_ref_path=/data/.frida-template
+mkdir -p "$frida_ref_path"
+sync_template_file /home/template/init/frida.js /data/frida.js "$frida_ref_path/frida.js"
 
 # 判断monitor_ip脚本是否初始化[get_public_ip.sh]
 if [ ! -f "/data/monitor_ip/get_public_ip.sh" ]; then

@@ -14,9 +14,9 @@
 # Description:       A WireGuard-based mesh network that connects your devices into a single private network.
 ### END INIT INFO
 
-cmd="/usr/bin/netbird "service" "run" "--config" "/data/netbird/config.json" "--log-level" "info" "--management-url" "NB_MANAGEMENT_URL" "--log-file" "/data/log/netbird/client.log""
+cmd="/usr/bin/netbird service run --config /data/netbird/config.json --log-level info --management-url NB_MANAGEMENT_URL --log-file /data/log/netbird/client.log"
 
-name=$(basename $(readlink -f $0))
+name=$(basename "$(readlink -f "$0")")
 pid_file="/var/run/$name.pid"
 log_dir="/data/log/netbird"
 stdout_log="$log_dir/$name.log"
@@ -24,19 +24,20 @@ stderr_log="$log_dir/$name.err"
 
 if [ ! -d "$log_dir" ]; then
     mkdir -p "$log_dir"
-    if grep -r $name $log_dir >/dev/null; then
-        chmod 750 $log_dir
+    if grep -r "$name" "$log_dir" >/dev/null; then
+        chmod 750 "$log_dir"
     fi
 fi
 
-[ -e /etc/sysconfig/$name ] && . /etc/sysconfig/$name
+# shellcheck source=/dev/null
+[ -e "/etc/sysconfig/$name" ] && . "/etc/sysconfig/$name"
 
 get_pid() {
     cat "$pid_file"
 }
 
 is_running() {
-    [ -f "$pid_file" ] && cat /proc/$(get_pid)/stat >/dev/null 2>&1
+    [ -f "$pid_file" ] && cat "/proc/$(get_pid)/stat" >/dev/null 2>&1
 }
 
 case "$1" in
@@ -56,13 +57,13 @@ start)
     ;;
 stop)
     if is_running; then
-        echo -n "Stopping $name.."
-        kill $(get_pid)
-        for i in $(seq 1 10); do
+        printf '%s' "Stopping $name.."
+        kill "$(get_pid)"
+        for _ in $(seq 1 10); do
             if ! is_running; then
                 break
             fi
-            echo -n "."
+            printf '.'
             sleep 1
         done
         echo

@@ -81,7 +81,7 @@ run_or_exit() {
 # 比较两个文件内容是否一致, 一致返回 0
 files_identical() {
     [ -f "$1" ] && [ -f "$2" ] || return 1
-    [ "$(cksum < "$1")" = "$(cksum < "$2")" ]
+    [ "$(cksum <"$1")" = "$(cksum <"$2")" ]
 }
 
 # 同步模板文件

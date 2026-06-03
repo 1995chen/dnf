@@ -1,5 +1,5 @@
 #!/command/execlineb -P
 with-contenv
-fdmove -c 2 1
 cd /home/template/init/tailscale
+fdmove -c 2 1
 /home/template/init/tailscale/start_tailscale.sh

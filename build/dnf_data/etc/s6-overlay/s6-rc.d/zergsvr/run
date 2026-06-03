@@ -1,7 +1,7 @@
 #!/command/execlineb -P
 with-contenv
-fdmove -c 2 1
 s6-notifyoncheck -T 600000 -n 0 -w 500 -t 10000 -c "/home/template/init/lib/s6-runprobe zergsvr"
 fdclose 3
 cd /home/neople/secsvr/zergsvr
+fdmove -c 2 1
 /data/run/start_zergsvr.sh

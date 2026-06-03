@@ -3,5 +3,11 @@
 # $1 为 run 脚本退出码，被信号杀掉时为 256。
 # 返回 125 让 s6-supervise 标记该服务为正常退出无需重启，否则需要重启。
 
-[ "$1" = 0 ] && exit 125
+notify() { (echo "$@" >/proc/1/fd/1) 2>/dev/null || true; }
+svc=${PWD##*/}
+if [ "$1" = 0 ]; then
+    notify "[svc] ${svc} stopped (exit 0), no restart"
+    exit 125
+fi
+notify "[svc] ${svc} down (code=$1 sig=$2)"
 exit 0
