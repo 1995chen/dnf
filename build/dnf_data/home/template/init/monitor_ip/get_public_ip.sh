@@ -8,6 +8,7 @@ IP_REGEX="^${OCTET}(\.${OCTET}){3}$"
 
 urls=(
     "https://v4.ident.me"
+    "https://v4.ip.wtf"
     "https://ipv4.icanhazip.com"
     "https://api.ipify.org"
     "https://ifconfig.me"

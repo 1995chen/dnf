@@ -20,8 +20,8 @@ echo "waiting for mysql at ${MYSQL_HOST}:${MYSQL_PORT} ..."
 # 失败才算未就绪。这里不验证凭据。
 wfm_ready() {
     local out
-    out="$(mysqladmin ping -h "$MYSQL_HOST" -P "$MYSQL_PORT" \
-        -u root -p"$MYSQL_PASSWORD" --connect-timeout=3 2>&1)"
+    out="$(MYSQL_PWD="$MYSQL_PASSWORD" mysqladmin ping -h "$MYSQL_HOST" -P "$MYSQL_PORT" \
+        -u root --connect-timeout=3 2>&1)"
     case "$out" in
     *alive* | *"Access denied"* | *"not allowed to connect"*) return 0 ;;
     *) return 1 ;;

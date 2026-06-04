@@ -47,13 +47,13 @@ for db_name in "${SG_DB_LIST[@]}"; do
     echo "prepare init $db_name....."
     # 希洛克数据库要特殊处理,因为其他组件会提前初始化这个数据库导致跳过首次初始化
     if [ "$db_name" == "taiwan_siroco" ]; then
-        check_result=$(mysql -h "$CUR_SG_DB_HOST" -P "$CUR_SG_DB_PORT" -u root -p"$CUR_SG_DB_ROOT_PASSWORD" -e "select * from taiwan_siroco.account_cargo limit 1;" 2>&1)
+        check_result=$(MYSQL_PWD="$CUR_SG_DB_ROOT_PASSWORD" mysql -h "$CUR_SG_DB_HOST" -P "$CUR_SG_DB_PORT" -u root -e "select * from taiwan_siroco.account_cargo limit 1;" 2>&1)
         error_code=$?
         if [ "$error_code" -ne 0 ]; then
             mysql_error_code=$(echo "$check_result" | grep -oP "ERROR \K[0-9]+" | head -1)
             if [ "$mysql_error_code" == "1146" ]; then
                 echo "sg: need re-init taiwan_siroco."
-                mysql -h "$CUR_SG_DB_HOST" -P "$CUR_SG_DB_PORT" -u root -p"$CUR_SG_DB_ROOT_PASSWORD" <<EOF
+                MYSQL_PWD="$CUR_SG_DB_ROOT_PASSWORD" mysql -h "$CUR_SG_DB_HOST" -P "$CUR_SG_DB_PORT" -u root <<EOF
             CREATE SCHEMA IF NOT EXISTS $db_name DEFAULT CHARACTER SET utf8;
             use $db_name;
             source /home/template/init/init_sql/taiwan_cain.sql;
@@ -65,7 +65,7 @@ EOF
         fi
     fi
 
-    check_result=$(mysql -h "$CUR_SG_DB_HOST" -P "$CUR_SG_DB_PORT" -u root -p"$CUR_SG_DB_ROOT_PASSWORD" -e "use $db_name" 2>&1)
+    check_result=$(MYSQL_PWD="$CUR_SG_DB_ROOT_PASSWORD" mysql -h "$CUR_SG_DB_HOST" -P "$CUR_SG_DB_PORT" -u root -e "use $db_name" 2>&1)
     error_code=$?
     if [ "$error_code" -eq 0 ]; then
         echo "server group db: $db_name already inited."
@@ -74,7 +74,7 @@ EOF
         if [ "$mysql_error_code" == "1049" ]; then
             # 从映射表查找SQL文件,未匹配则回退到同名SQL文件
             sql_file="${DB_SQL_MAP[$db_name]:-$db_name.sql}"
-            mysql -h "$CUR_SG_DB_HOST" -P "$CUR_SG_DB_PORT" -u root -p"$CUR_SG_DB_ROOT_PASSWORD" <<EOF
+            MYSQL_PWD="$CUR_SG_DB_ROOT_PASSWORD" mysql -h "$CUR_SG_DB_HOST" -P "$CUR_SG_DB_PORT" -u root <<EOF
               CREATE SCHEMA $db_name DEFAULT CHARACTER SET utf8;
               use $db_name;
               source /home/template/init/init_sql/$sql_file;
@@ -90,7 +90,7 @@ done
 
 # game账户连接大区数据库需要配置game账户权限[主数据库和大区数据库可能是独立的需要单独配置]
 echo "server group db: flush privileges....."
-mysql -h "$CUR_SG_DB_HOST" -P "$CUR_SG_DB_PORT" -u root -p"$CUR_SG_DB_ROOT_PASSWORD" <<EOF
+MYSQL_PWD="$CUR_SG_DB_ROOT_PASSWORD" mysql -h "$CUR_SG_DB_HOST" -P "$CUR_SG_DB_PORT" -u root <<EOF
 delete from mysql.user where user='game' and host not in ('127.0.0.1', 'localhost');
 flush privileges;
 grant all privileges on *.* to 'game'@'127.0.0.1' identified by '$DNF_DB_GAME_PASSWORD';
@@ -100,7 +100,7 @@ flush privileges;
 EOF
 # 测试并查询数据库连接设置
 echo "server group db: show db_connect config, server_group is $SERVER_GROUP"
-mysql -h "$CUR_SG_DB_HOST" -P "$CUR_SG_DB_PORT" -u game -p"$DNF_DB_GAME_PASSWORD" <<EOF
+MYSQL_PWD="$DNF_DB_GAME_PASSWORD" mysql -h "$CUR_SG_DB_HOST" -P "$CUR_SG_DB_PORT" -u game <<EOF
 select gc_type, gc_ip, gc_channel from taiwan_$SERVER_GROUP_DB.game_channel where gc_type=$SERVER_GROUP;
 EOF
 
@@ -110,7 +110,7 @@ EXTENDED_USERS=()
 IFS=$',' read -ra EXTENDED_USERS <<<"$DNF_DB_USER_EXTENDED_QF"
 for db_user_extended in "${EXTENDED_USERS[@]}"; do
     echo "server group db: extended user: ${db_user_extended}, flush privileges....."
-    mysql -h "$CUR_SG_DB_HOST" -P "$CUR_SG_DB_PORT" -u root -p"$CUR_SG_DB_ROOT_PASSWORD" <<EOF
+    MYSQL_PWD="$CUR_SG_DB_ROOT_PASSWORD" mysql -h "$CUR_SG_DB_HOST" -P "$CUR_SG_DB_PORT" -u root <<EOF
 delete from mysql.user where user='$db_user_extended' and host not in ('127.0.0.1', 'localhost');
 flush privileges;
 grant all privileges on *.* to '$db_user_extended'@'127.0.0.1' identified by '$DNF_DB_GAME_PASSWORD';
@@ -120,7 +120,7 @@ flush privileges;
 EOF
     # 测试并查询数据库连接设置
     echo "server group db: using extended user $db_user_extended to show db_connect config, server_group is $SERVER_GROUP"
-    mysql -h "$CUR_SG_DB_HOST" -P "$CUR_SG_DB_PORT" -u "$db_user_extended" -p"$DNF_DB_GAME_PASSWORD" <<EOF
+    MYSQL_PWD="$DNF_DB_GAME_PASSWORD" mysql -h "$CUR_SG_DB_HOST" -P "$CUR_SG_DB_PORT" -u "$db_user_extended" <<EOF
 select gc_type, gc_ip, gc_channel from taiwan_$SERVER_GROUP_DB.game_channel where gc_type=$SERVER_GROUP;
 EOF
 done

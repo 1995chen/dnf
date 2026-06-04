@@ -133,6 +133,7 @@ add_log_subservice() {
     echo longrun >"$log_path/type"
     printf '%s\n' "$svc" >"$log_path/consumer-for"
     printf '%s\n' "$log_svc" >"$main_path/producer-for"
+    printf '%s\n' "${svc}-pipeline" >"$log_path/pipeline-name"
     printf '3\n' >"$log_path/notification-fd"
 
     # 依赖 dnf-bootstrap, 确保在 20-cleanup 的 rm -rf /data/log/* 之后启动,
@@ -147,7 +148,7 @@ chmod 0755 /data/log/${svc} 2>/dev/null || true
 exec s6-log -bd3 -- T n10 s1048576 /data/log/${svc}
 EOF
     chmod +x "$log_path/run"
-    : >"${s6rc_path}/user/contents.d/$log_svc"
+    : >"${s6rc_path}/user/contents.d/${svc}-pipeline"
 }
 
 for entry in "${s6rc_path}"/*/; do

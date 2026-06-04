@@ -19,7 +19,7 @@ MAIN_DB_LIST=("d_taiwan" "d_taiwan_secu" "d_technical_report" "tw")
 
 for db_name in "${MAIN_DB_LIST[@]}"; do
     echo "prepare init $db_name....."
-    check_result=$(mysql -h "$CUR_MAIN_DB_HOST" -P "$CUR_MAIN_DB_PORT" -u root -p"$CUR_MAIN_DB_ROOT_PASSWORD" -e "use $db_name" 2>&1)
+    check_result=$(MYSQL_PWD="$CUR_MAIN_DB_ROOT_PASSWORD" mysql -h "$CUR_MAIN_DB_HOST" -P "$CUR_MAIN_DB_PORT" -u root -e "use $db_name" 2>&1)
     error_code=$?
     if [ "$error_code" -eq 0 ]; then
         echo "main db: $db_name already inited."
@@ -27,7 +27,7 @@ for db_name in "${MAIN_DB_LIST[@]}"; do
         mysql_error_code=$(echo "$check_result" | grep -oP "ERROR \K[0-9]+" | head -1)
         if [ "$mysql_error_code" == "1049" ]; then
             echo "main db: prepare to init remote mysql service dnf data."
-            mysql -h "$CUR_MAIN_DB_HOST" -P "$CUR_MAIN_DB_PORT" -u root -p"$CUR_MAIN_DB_ROOT_PASSWORD" <<EOF
+            MYSQL_PWD="$CUR_MAIN_DB_ROOT_PASSWORD" mysql -h "$CUR_MAIN_DB_HOST" -P "$CUR_MAIN_DB_PORT" -u root <<EOF
           CREATE SCHEMA $db_name DEFAULT CHARACTER SET utf8;
           use $db_name;
           source /home/template/init/init_sql/$db_name.sql;
@@ -43,7 +43,7 @@ done
 # 主数据库需要初始化d_taiwan.db_connect中的数据库连接配置
 # 配置game账户权限
 echo "main db: flush privileges....."
-mysql -h "$CUR_MAIN_DB_HOST" -P "$CUR_MAIN_DB_PORT" -u root -p"$CUR_MAIN_DB_ROOT_PASSWORD" <<EOF
+MYSQL_PWD="$CUR_MAIN_DB_ROOT_PASSWORD" mysql -h "$CUR_MAIN_DB_HOST" -P "$CUR_MAIN_DB_PORT" -u root <<EOF
 delete from mysql.user where user='game' and host not in ('127.0.0.1', 'localhost');
 flush privileges;
 grant all privileges on *.* to 'game'@'127.0.0.1' identified by '$DNF_DB_GAME_PASSWORD';
@@ -57,7 +57,7 @@ EXTENDED_USERS=()
 IFS=$',' read -ra EXTENDED_USERS <<<"$DNF_DB_USER_EXTENDED_QF"
 for db_user_extended in "${EXTENDED_USERS[@]}"; do
     echo "main db: extended user ${db_user_extended}, flush privileges....."
-    mysql -h "$CUR_MAIN_DB_HOST" -P "$CUR_MAIN_DB_PORT" -u root -p"$CUR_MAIN_DB_ROOT_PASSWORD" <<EOF
+    MYSQL_PWD="$CUR_MAIN_DB_ROOT_PASSWORD" mysql -h "$CUR_MAIN_DB_HOST" -P "$CUR_MAIN_DB_PORT" -u root <<EOF
 delete from mysql.user where user='$db_user_extended' and host not in ('127.0.0.1', 'localhost');
 flush privileges;
 grant all privileges on *.* to '$db_user_extended'@'127.0.0.1' identified by '$DNF_DB_GAME_PASSWORD';
@@ -70,7 +70,7 @@ done
 echo "main db: flush privileges done."
 # 重置当前大区的主数据库d_taiwan.db_connect表配置
 echo "main_db: reset db_connect config, server_group is $SERVER_GROUP"
-mysql -h "$CUR_MAIN_DB_HOST" -P "$CUR_MAIN_DB_PORT" -u root -p"$CUR_MAIN_DB_ROOT_PASSWORD" <<EOF
+MYSQL_PWD="$CUR_MAIN_DB_ROOT_PASSWORD" mysql -h "$CUR_MAIN_DB_HOST" -P "$CUR_MAIN_DB_PORT" -u root <<EOF
 use d_taiwan;
 update db_connect set db_ip="127.0.0.1", db_port="$MAIN_DB_PROXY_PORT", db_name="d_taiwan", db_passwd="$DEC_GAME_PWD" where db_server_group=$SERVER_GROUP and db_type = 1;
 update db_connect set db_ip="127.0.0.1", db_port="$MAIN_DB_PROXY_PORT", db_name="d_taiwan_secu", db_passwd="$DEC_GAME_PWD" where db_server_group=$SERVER_GROUP and db_type = 10;
@@ -90,7 +90,7 @@ update db_connect set db_ip="127.0.0.1", db_port="$SG_DB_PROXY_PORT", db_name="t
 EOF
 # 测试并查询数据库连接设置
 echo "main_db: show db_connect config, server_group is $SERVER_GROUP"
-mysql -h "$CUR_MAIN_DB_HOST" -P "$CUR_MAIN_DB_PORT" -u game -p"$DNF_DB_GAME_PASSWORD" <<EOF
+MYSQL_PWD="$DNF_DB_GAME_PASSWORD" mysql -h "$CUR_MAIN_DB_HOST" -P "$CUR_MAIN_DB_PORT" -u game <<EOF
 select db_name, db_ip, db_port, db_passwd from d_taiwan.db_connect where db_server_group=$SERVER_GROUP;
 EOF
 echo "main_db: init server group-$SERVER_GROUP($SERVER_GROUP_DB) done."

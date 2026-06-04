@@ -46,8 +46,9 @@ for url in "${urls[@]}"; do
     if [[ "$cleaned" =~ $IP_REGEX ]]; then
         green "  OK:   $url -> $cleaned"
     else
-        red "  FAIL: $url returned non-IPv4 payload: $(printf '%s' "$raw" | head -c 120)"
-        exit 1
+        yellow "  SKIP: $url returned non-IPv4 payload: $(printf '%s' "$raw" | head -c 120)"
+        endpoint_failures=$((endpoint_failures + 1))
+        continue
     fi
 done
 

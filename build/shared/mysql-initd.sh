@@ -33,14 +33,15 @@ mysql_initd_main() {
         mkdir -p /var/run/mysqld /var/log/mysql
         chown mysql:mysql /var/run/mysqld /var/log/mysql /var/lib/mysql
         chmod 750 /var/run/mysqld
-        /usr/local/mysql/bin/mysqld_safe --defaults-file=/etc/my.cnf "$@" &
+        /usr/local/mysql/bin/mysqld_safe --defaults-file=/etc/my.cnf "$@" \
+            </dev/null >>/var/log/mysql/mysqld_safe.log 2>&1 &
         mysql_initd_wait
         exit $?
         ;;
     stop)
         # 优先用配置的 root 密码做优雅关闭
         if [ -n "$DNF_DB_ROOT_PASSWORD" ]; then
-            "$MYSQLADMIN" -u root -p"$DNF_DB_ROOT_PASSWORD" --socket="$SOCKET" shutdown 2>/dev/null
+            MYSQL_PWD="$DNF_DB_ROOT_PASSWORD" "$MYSQLADMIN" -u root --socket="$SOCKET" shutdown 2>/dev/null
         else
             "$MYSQLADMIN" -u root --socket="$SOCKET" shutdown 2>/dev/null
         fi

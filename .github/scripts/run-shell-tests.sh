@@ -17,6 +17,22 @@ while IFS= read -r -d '' f; do
 done < <(find . -name '*.sh' -not -path './.git/*' -print0 | sort -z)
 
 echo
+echo "== scripts/binaries must be executable =="
+for f in \
+    build/dnf_data/etc/s6-overlay/scripts/dnf-bootstrap.sh \
+    build/dnf_data/etc/s6-overlay/scripts/stage2-hook.sh \
+    build/dnf_data/etc/s6-overlay/scripts/finish-default-once \
+    build/dnf_data/TeaEncrypt \
+    build/dnf_data/etc/s6-overlay/scripts/init.d/*.sh; do
+    case "$f" in *.test.sh) continue ;; esac
+    [ -f "$f" ] || continue
+    if [ ! -x "$f" ]; then
+        echo "NOT EXECUTABLE  $f"
+        red=1
+    fi
+done
+
+echo
 echo "== unit: every *.test.sh, gated on exit code =="
 while IFS= read -r -d '' t; do
     if out=$(bash "$t" 2>&1); then
@@ -44,17 +60,21 @@ if command -v shellcheck >/dev/null 2>&1; then
         build/dnf_data/etc/s6-overlay/scripts/stage2-hook.sh
         build/dnf_data/etc/s6-overlay/scripts/stage2-hook.test.sh
         build/dnf_data/etc/s6-overlay/scripts/dnf-bootstrap.sh
+        build/dnf_data/etc/s6-overlay/scripts/dnf-bootstrap.test.sh
+        build/dnf_data/etc/s6-overlay/scripts/finish-default-once
+        build/dnf_data/etc/s6-overlay/scripts/finish-default-once.test.sh
         build/dnf_data/etc/s6-overlay/scripts/init.d/10-env-resolve.sh
         build/dnf_data/etc/s6-overlay/scripts/init.d/10-env-resolve.test.sh
         build/dnf_data/etc/s6-overlay/scripts/init.d/20-cleanup.sh
         build/dnf_data/etc/s6-overlay/scripts/init.d/30-init-data.sh
         build/dnf_data/etc/s6-overlay/scripts/init.d/30-init-data.test.sh
+        build/dnf_data/etc/s6-overlay/scripts/init.d/30-init-db.sh
         build/dnf_data/home/template/init/run/start_gate.sh
         build/dnf_data/home/template/init/lib/probe-secbus.sh
         build/dnf_data/home/template/init/lib/tune.sh
         build/dnf_data/home/template/init/lib/common.sh
         build/dnf_data/home/template/init/lib/common.test.sh
-        build/dnf_data/home/template/init/init.sh
+        build/dnf_data/home/template/init/init-local-db.sh
         build/dnf_data/home/template/init/scheduler/scheduler.sh
         build/dnf_data/home/template/init/scheduler/scheduler.test.sh
         build/dnf_data/home/template/init/scheduler/restore-db.sh

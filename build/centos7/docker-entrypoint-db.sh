@@ -56,7 +56,7 @@ EOF
     exit 1
 fi
 
-/usr/bin/mysqladmin -u root -p"$DNF_DB_ROOT_PASSWORD" --socket="$SOCKET" shutdown || true
+MYSQL_PWD="$DNF_DB_ROOT_PASSWORD" /usr/bin/mysqladmin -u root --socket="$SOCKET" shutdown || true
 for _ in $(seq 1 30); do
     [ ! -S "$SOCKET" ] && break
     sleep 1

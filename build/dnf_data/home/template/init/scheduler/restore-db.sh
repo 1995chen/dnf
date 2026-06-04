@@ -57,7 +57,7 @@ if [ "${DB_RESTORE_CONFIRM:-}" != "yes" ]; then
 fi
 
 echo "[db-restore] restoring, this overwrites current data ..."
-gzip -dc "$file" | mysql -h "$CUR_SG_DB_HOST" -P "$CUR_SG_DB_PORT" -u root -p"$CUR_SG_DB_ROOT_PASSWORD"
+gzip -dc "$file" | MYSQL_PWD="$CUR_SG_DB_ROOT_PASSWORD" mysql -h "$CUR_SG_DB_HOST" -P "$CUR_SG_DB_PORT" -u root
 zrc=${PIPESTATUS[0]}
 mrc=${PIPESTATUS[1]}
 if [ "$zrc" -ne 0 ] || [ "$mrc" -ne 0 ]; then

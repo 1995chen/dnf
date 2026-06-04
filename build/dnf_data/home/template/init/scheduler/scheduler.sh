@@ -3,7 +3,7 @@
 # 每个任务可单独配置启动后是否立刻执行，否则下次再执行
 
 sg_mysql() {
-    mysql -h "$CUR_SG_DB_HOST" -P "$CUR_SG_DB_PORT" -u game -p"$DNF_DB_GAME_PASSWORD" "$@"
+    MYSQL_PWD="$DNF_DB_GAME_PASSWORD" mysql -h "$CUR_SG_DB_HOST" -P "$CUR_SG_DB_PORT" -u game "$@"
 }
 
 # 创建当月和下月的拍卖行与金币寄售表
@@ -80,7 +80,7 @@ backup_databases() {
     errf="$dir/.dump.err"
     echo "[db-backup] dump ${#dbs[@]} database(s) to $out"
     # 原样导出, 防止恢复后不兼容:
-    mysqldump -h "$CUR_SG_DB_HOST" -P "$CUR_SG_DB_PORT" -u game -p"$DNF_DB_GAME_PASSWORD" \
+    MYSQL_PWD="$DNF_DB_GAME_PASSWORD" mysqldump -h "$CUR_SG_DB_HOST" -P "$CUR_SG_DB_PORT" -u game \
         --single-transaction --default-character-set=binary --hex-blob --routines \
         --databases "${dbs[@]}" 2>"$errf" | gzip >"$out"
     rc=${PIPESTATUS[0]}

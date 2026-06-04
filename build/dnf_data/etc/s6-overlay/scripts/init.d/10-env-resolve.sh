@@ -142,7 +142,6 @@ echo "zergsvr self type=$ZERGSVR_SELF_TYPE id=$ZERGSVR_SELF_ID listen port=$ZERG
 
 # 加密GAME密码
 chmod 1777 /tmp
-chmod +x "$teaencrypt_file"
 DNF_DB_GAME_PASSWORD=${DNF_DB_GAME_PASSWORD:0:8}
 DEC_GAME_PWD=$("$teaencrypt_file" "$DNF_DB_GAME_PASSWORD")
 echo "game pwd key: ${DEC_GAME_PWD:0:4}..."

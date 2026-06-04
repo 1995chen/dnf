@@ -1,13 +1,44 @@
 #!/bin/bash
 
-# $1 为 run 脚本退出码，被信号杀掉时为 256。
-# 返回 125 让 s6-supervise 标记该服务为正常退出无需重启，否则需要重启。
+# s6-supervise 调用时会传四个参数:
+# $1: exit_code, $2: 信号编号, $3: 服务名, $4: 进程组 ID
+# 返回 125 让 s6-supervise 视为正常退出无需重启, 其他返回值会触发重启。
 
-notify() { (echo "$@" >/proc/1/fd/1) 2>/dev/null || true; }
-svc=${PWD##*/}
+notify_target="${DNF_SVC_NOTIFY_TARGET:-/proc/1/fd/1}"
+
+notify() { (echo "$@" >"$notify_target") 2>/dev/null || true; }
+
+svc="${3:-$PWD}"
+svc="${svc##*/}"
+
+# 正常退出: 不重启
 if [ "$1" = 0 ]; then
     notify "[svc] ${svc} stopped (exit 0), no restart"
     exit 125
 fi
-notify "[svc] ${svc} down (code=$1 sig=$2)"
-exit 0
+
+if [ "$1" = 256 ]; then
+    # 进程组 ID 为空或 0/1 时跳过, 否则 kill -9 -- -0/-1 会误杀当前进程组或全部进程
+    case "$4" in
+    '' | 0 | 1) ;;
+    *) kill -9 -- "-$4" 2>/dev/null ;;
+    esac
+    sig="$2"
+    signame=$(kill -l "$sig" 2>/dev/null || printf '%s' "$sig")
+
+    # 将 IOT 统一为 ABRT
+    [ "$signame" = IOT ] && signame=ABRT
+
+    case "$sig" in
+    4 | 6 | 7 | 8 | 11)
+        # SIGILL/ABRT/BUS/FPE/SEGV: 进程崩溃
+        notify "[svc] ${svc} crashed (SIG${signame}), restarting"
+        ;;
+    *)
+        notify "[svc] ${svc} killed by SIG${signame}, restarting"
+        ;;
+    esac
+else
+    # 进程异常退出
+    notify "[svc] ${svc} exited abnormally (code=${1}), restarting"
+fi

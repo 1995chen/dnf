@@ -12,6 +12,9 @@ trap 'rm -rf "$WORK"' EXIT
 cp -a "${SRC_PATH}/s6-rc.d" "${WORK}/s6-rc.d"
 cp -a "${SRC_PATH}/probes.d" "${WORK}/probes.d"
 
+mkdir -p "${WORK}/s6-rc.d/base/contents.d"
+echo bundle >"${WORK}/s6-rc.d/base/type"
+
 failed=0
 pass=0
 chk() {
@@ -52,6 +55,9 @@ for d in "$WORK"/s6-rc.d/*/; do
     [ -d "$WORK/s6-rc.d/${s}-log" ] || missing="${missing} ${s}:缺-log"
     [ -e "$WORK/s6-rc.d/${s}-log/dependencies.d/dnf-bootstrap" ] || missing="${missing} ${s}-log:缺dnf-bootstrap依赖"
     [ -e "$d/producer-for" ] || missing="${missing} ${s}:缺producer-for"
+    [ "$(cat "$WORK/s6-rc.d/${s}-log/pipeline-name" 2>/dev/null)" = "${s}-pipeline" ] || missing="${missing} ${s}-log:缺pipeline-name"
+    [ -e "$WORK/s6-rc.d/user/contents.d/${s}-pipeline" ] || missing="${missing} ${s}:pipeline未加入bundle"
+    [ -e "$WORK/s6-rc.d/user/contents.d/${s}-log" ] && missing="${missing} ${s}-log:不应直接加入bundle"
 done
 chk "常驻服务均有带 dnf-bootstrap 依赖的 -log" "" "$missing"
 
