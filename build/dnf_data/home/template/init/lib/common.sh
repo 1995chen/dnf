@@ -116,6 +116,88 @@ sync_template_file() {
     echo "regenerate $name: template updated"
 }
 
+# 创建 /home/neople 目录
+#
+# 配置类 cfg/tbl/xml/template 文件从 template 复制
+# 二进制与只读文件按文件名或后缀创建指向 template 的软链接
+# 其它文件按大小分类处理，大于等于阈值则使用软链接，小于阈值则复制
+#
+# template 的软链接与特殊文件原样复制
+#
+# 阈值默认为 512K
+#
+# 用法: build_neople_tree SRC DST [MIN_LINK_BYTES]
+build_neople_tree() {
+    local src="$1" dst="$2" min_link_bytes="${3:-524288}"
+    local d f rel sz base action s
+    if ! mkdir -p "$dst"; then
+        echo "ERROR: build_neople_tree mkdir failed for $dst" >&2
+        return 1
+    fi
+    while IFS= read -r -d '' d; do
+        [ "$d" = "$src" ] && continue
+        rel="${d#"$src"/}"
+        if ! mkdir -p "$dst/$rel"; then
+            echo "ERROR: build_neople_tree mkdir failed for $dst/$rel" >&2
+            return 1
+        fi
+    done < <(find "$src" -type d -print0)
+    while IFS= read -r -d '' f; do
+        rel="${f#"$src"/}"
+        # 先删除已有的文件，防止重复运行时将内容写回 template
+        if ! rm -f "$dst/$rel"; then
+            echo "ERROR: build_neople_tree rm failed for $rel" >&2
+            return 1
+        fi
+        base="${rel##*/}"
+        case "$base" in
+        # 配置文件需要动态生成，需要复制，否则会污染 template
+        *.cfg | *.tbl | *.xml | *.template)
+            action='copy'
+            ;;
+        # 运行时被进程读写的文件, 需要复制
+        iteminfo.dat | channel_info.etc)
+            action='copy'
+            ;;
+        # 只读的二进制与数据文件, 无视大小一律使用软链接
+        df_* | secagent | zergsvr | gunnersvr | \
+            *.so | *.so.* | *.exe | *.ttf | *.ttc | \
+            *.mhe | *.dib | *.dat | *.bin | *.hsb | *.key | *.etc | *.str)
+            action='link'
+            ;;
+        # 其它文件按大小分类处理，大于等于阈值则使用软链接，小于阈值则复制
+        *)
+            sz=$(stat -c %s "$f" 2>/dev/null || echo 0)
+            if [ "$sz" -ge "$min_link_bytes" ]; then action='link'; else action='copy'; fi
+            ;;
+        esac
+        if [ "$action" = link ]; then
+            if ! ln -sfn "$f" "$dst/$rel"; then
+                echo "ERROR: build_neople_tree symlink failed for $rel" >&2
+                return 1
+            fi
+        else
+            if ! cp -pf "$f" "$dst/$rel"; then
+                echo "ERROR: build_neople_tree copy failed for $rel" >&2
+                return 1
+            fi
+        fi
+    done < <(find "$src" -type f -print0)
+    # template 里的软链与特殊文件(fifo等)按原样复制, 保留软链接与文件类型
+    while IFS= read -r -d '' s; do
+        rel="${s#"$src"/}"
+        if ! rm -f "$dst/$rel"; then
+            echo "ERROR: build_neople_tree rm failed for $rel" >&2
+            return 1
+        fi
+        if ! cp -a "$s" "$dst/$rel"; then
+            echo "ERROR: build_neople_tree copy special failed for $rel" >&2
+            return 1
+        fi
+    done < <(find "$src" ! -type d ! -type f -print0)
+    return 0
+}
+
 # 将文件中所有 __VAR__ 标记替换为对应环境变量值
 # 10-env-resolve.sh 已确保所有环境变量非空
 # 用法: substitute_port_markers <file>

@@ -29,6 +29,21 @@ echo junk >"$tpl_path/game/old.log"
 echo junk >"$tpl_path/game/old.pid"
 echo junk >"$tpl_path/game/core.999"
 
+dd if=/dev/zero of="$tpl_path/game/bigbin.so" bs=1024 count=1100 2>/dev/null
+dd if=/dev/zero of="$tpl_path/game/old-big.log" bs=1024 count=1100 2>/dev/null
+
+printf 'grp=__SERVER_GROUP__\n' >"$tpl_path/game/cfg/big.cfg"
+dd if=/dev/zero bs=1024 count=1200 2>/dev/null | tr '\0' x >>"$tpl_path/game/cfg/big.cfg"
+
+printf 'x' >"$tpl_path/game/small.dib"
+
+mkdir -p "$tpl_path/point" "$tpl_path/auction"
+: >"$tpl_path/point/iteminfo.dat"
+printf 'itemdata' >"$tpl_path/auction/iteminfo.dat"
+
+mkdir -p "$tpl_path/game/channel_info"
+printf 'chinfo' >"$tpl_path/game/channel_info/channel_info.etc"
+
 # 创建 dbmw 目录
 mkdir -p "$tpl_path/dbmw_guild/cfg" "$tpl_path/dbmw_mnt/cfg" "$tpl_path/dbmw_stat/cfg"
 
@@ -65,7 +80,6 @@ dest_path="$WORK/neople"
 run_hook() {
     DNF_LIB_PATH="$LIB_PATH" \
         TEMPLATE_NEOPLE_PATH="$tpl_path" \
-        NEOPLE_TMP_PATH="$WORK/template/neople-tmp" \
         NEOPLE_PATH="$dest_path" \
         DATA_PATH="$data_path" \
         TEMPLATE_INIT_PATH="$tinit" \
@@ -109,12 +123,21 @@ chk "tbl 端口标记替换" "tbl_port=30503" "$(grep tbl_port "$dest_path/game/
 chk "清理 .log" no "$(exists "$dest_path/game/old.log")"
 chk "清理 .pid" no "$(exists "$dest_path/game/old.pid")"
 chk "清理 core.*" no "$(exists "$dest_path/game/core.999")"
+chk "清理大日志文件软链接" no "$(exists "$dest_path/game/old-big.log")"
 chk "Script.pvf 软链接存在" yes "$(exists "$dest_path/game/Script.pvf")"
 chk "Script.pvf 软链接指向 /data/Script.pvf" "$data_path/Script.pvf" "$(readlink "$dest_path/game/Script.pvf")"
 chk "df_game_r 软链接存在" yes "$(exists "$dest_path/game/df_game_r")"
 chk "df_game_r 软链接指向 /data/df_game_r" "$data_path/df_game_r" "$(readlink "$dest_path/game/df_game_r")"
 chk "复制 publickey.pem" yes "$(exists "$dest_path/game/publickey.pem")"
-chk "清理临时目录" no "$(exists "$WORK/template/neople-tmp")"
+chk "大文件使用 /home/template 软链接" "$tpl_path/game/bigbin.so" "$(readlink "$dest_path/game/bigbin.so")"
+chk "大文件为软链接" yes "$([ -L "$dest_path/game/bigbin.so" ] && echo yes || echo no)"
+chk "cfg 小文件不使用软链接" no "$([ -L "$dest_path/game/cfg/test.cfg" ] && echo yes || echo no)"
+chk "大配置不使用软链接" no "$([ -L "$dest_path/game/cfg/big.cfg" ] && echo yes || echo no)"
+chk "大配置文件替换正常" "grp=3" "$(grep '^grp=' "$dest_path/game/cfg/big.cfg")"
+chk "小只读文件使用软链接 .dib" yes "$([ -L "$dest_path/game/small.dib" ] && echo yes || echo no)"
+chk "iteminfo.dat 复制到 point" no "$([ -L "$dest_path/point/iteminfo.dat" ] && echo yes || echo no)"
+chk "iteminfo.dat 复制到 auction" no "$([ -L "$dest_path/auction/iteminfo.dat" ] && echo yes || echo no)"
+chk "channel_info.etc 复制到 game" no "$([ -L "$dest_path/game/channel_info/channel_info.etc" ] && echo yes || echo no)"
 chk "dbmw_guild 软链接存在" yes "$(exists "$dest_path/dbmw_guild/df_dbmw_r")"
 chk "dbmw_mnt 软链接存在" yes "$(exists "$dest_path/dbmw_mnt/df_dbmw_r")"
 chk "dbmw_stat 软链接存在" yes "$(exists "$dest_path/dbmw_stat/df_dbmw_r")"

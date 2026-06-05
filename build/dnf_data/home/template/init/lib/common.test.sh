@@ -113,5 +113,121 @@ chk "端口替换 proxy" "c=3307" "$(grep '^c=' "$spm")"
 chk "端口替换 channel" "d=7001" "$(grep '^d=' "$spm")"
 chk "未知标记保持不变" "keep=__UNKNOWN_TOKEN__" "$(grep '^keep=' "$spm")"
 
+# build_neople_tree: 大文件为指向 src 的软链接，小文件为真实文件
+bnt_src="$WORK/bnt/src"
+bnt_dst="$WORK/bnt/dst"
+mkdir -p "$bnt_src/cfg" "$bnt_src/empty"
+printf 'cfg-data\n' >"$bnt_src/cfg/a.cfg"
+printf '%0100d' 0 >"$bnt_src/big.bin"
+printf '#!/bin/sh\necho hi\n' >"$bnt_src/run.sh"
+chmod 755 "$bnt_src/run.sh"
+mkdir -p "$bnt_dst/empty" "$bnt_dst/cfg"
+printf 'mounted-log\n' >"$bnt_dst/empty/live.log"
+printf 'STALE\n' >"$bnt_dst/cfg/a.cfg"
+printf 'STALE\n' >"$bnt_dst/big.bin"
+build_neople_tree "$bnt_src" "$bnt_dst" 64
+chk "bnt: 小文件为真实文件" "no" "$([ -L "$bnt_dst/cfg/a.cfg" ] && echo yes || echo no)"
+chk "bnt: template 文件覆盖旧文件" "cfg-data" "$(cat "$bnt_dst/cfg/a.cfg" 2>/dev/null)"
+chk "bnt: 大文件为软链接" "yes" "$([ -L "$bnt_dst/big.bin" ] && echo yes || echo no)"
+chk "bnt: 旧文件被替换为软链接" "$bnt_src/big.bin" "$(readlink "$bnt_dst/big.bin")"
+chk "bnt: 软链接可读到源内容" "$(cat "$bnt_src/big.bin")" "$(cat "$bnt_dst/big.bin" 2>/dev/null)"
+chk "bnt: 目录为真实目录" "yes" "$([ -d "$bnt_dst/cfg" ] && [ ! -L "$bnt_dst/cfg" ] && echo yes || echo no)"
+chk "bnt: 保留可执行权限" "yes" "$([ -x "$bnt_dst/run.sh" ] && echo yes || echo no)"
+chk "bnt: template 中不存在的文件应保留" "mounted-log" "$(cat "$bnt_dst/empty/live.log" 2>/dev/null)"
+
+envchg_src="$WORK/envchg/src"
+envchg_dst="$WORK/envchg/dst"
+mkdir -p "$envchg_src"
+printf 'grp=__SERVER_GROUP__\n' >"$envchg_src/x.cfg"
+build_neople_tree "$envchg_src" "$envchg_dst"
+safe_sed "__SERVER_GROUP__" "3" "$envchg_dst/x.cfg"
+chk "envchg: 首次替换为 3" "grp=3" "$(cat "$envchg_dst/x.cfg" 2>/dev/null)"
+build_neople_tree "$envchg_src" "$envchg_dst"
+safe_sed "__SERVER_GROUP__" "5" "$envchg_dst/x.cfg"
+chk "envchg: 改环境变量再次运行后替换为 5" "grp=5" "$(cat "$envchg_dst/x.cfg" 2>/dev/null)"
+chk "envchg: 旧配置应被清除" "no" "$(grep -q '^grp=3' "$envchg_dst/x.cfg" && echo yes || echo no)"
+
+# build_neople_tree: 小于阈值的文件应复制
+bnt_src2="$WORK/bnt2/src"
+bnt_dst2="$WORK/bnt2/dst"
+mkdir -p "$bnt_src2"
+printf 'tiny\n' >"$bnt_src2/t"
+build_neople_tree "$bnt_src2" "$bnt_dst2"
+chk "bnt: 小于阈值的文件使用复制" "no" "$([ -L "$bnt_dst2/t" ] && echo yes || echo no)"
+chk "bnt: 小于阈值的文件复制后内容正确" "tiny" "$(cat "$bnt_dst2/t" 2>/dev/null)"
+
+# build_neople_tree: 已经存在的软链接若因体积变小后小于阈值，应使用复制
+bnt3_src="$WORK/bnt3/src"
+bnt3_dst="$WORK/bnt3/dst"
+mkdir -p "$bnt3_src" "$bnt3_dst"
+printf 'new-content\n' >"$bnt3_src/x"
+printf 'sentinel-content\n' >"$WORK/bnt3/sentinel"
+ln -s "$WORK/bnt3/sentinel" "$bnt3_dst/x"
+build_neople_tree "$bnt3_src" "$bnt3_dst"
+chk "bnt: 旧软链转文件" "no" "$([ -L "$bnt3_dst/x" ] && echo yes || echo no)"
+chk "bnt: 旧软链转文件-内容正确" "new-content" "$(cat "$bnt3_dst/x" 2>/dev/null)"
+chk "bnt: 旧软链转文件-源文件内容不受影响" "sentinel-content" "$(cat "$WORK/bnt3/sentinel" 2>/dev/null)"
+
+# build_neople_tree: 配置类文件使用复制
+bnt4_src="$WORK/bnt4/src"
+bnt4_dst="$WORK/bnt4/dst"
+mkdir -p "$bnt4_src/cfg"
+dd if=/dev/zero of="$bnt4_src/cfg/big.cfg" bs=1024 count=8 2>/dev/null
+dd if=/dev/zero of="$bnt4_src/big.xml" bs=1024 count=8 2>/dev/null
+dd if=/dev/zero of="$bnt4_src/big.bin" bs=1024 count=8 2>/dev/null
+build_neople_tree "$bnt4_src" "$bnt4_dst" 64
+chk "bnt: 大 cfg 文件仍使用复制" "no" "$([ -L "$bnt4_dst/cfg/big.cfg" ] && echo yes || echo no)"
+chk "bnt: 大 xml 文件仍使用复制" "no" "$([ -L "$bnt4_dst/big.xml" ] && echo yes || echo no)"
+chk "bnt: 其他大文件使用软链接" "yes" "$([ -L "$bnt4_dst/big.bin" ] && echo yes || echo no)"
+
+# build_neople_tree: 未知类型小文件处理
+bnt5_src="$WORK/bnt5/src"
+bnt5_dst="$WORK/bnt5/dst"
+mkdir -p "$bnt5_src"
+printf 'x' >"$bnt5_src/small.unknown"
+dd if=/dev/zero of="$bnt5_src/big.unknown" bs=1024 count=600 2>/dev/null
+build_neople_tree "$bnt5_src" "$bnt5_dst"
+chk "bnt: 未知小文件使用复制" "no" "$([ -L "$bnt5_dst/small.unknown" ] && echo yes || echo no)"
+chk "bnt: 未知大文件使用软链接" "yes" "$([ -L "$bnt5_dst/big.unknown" ] && echo yes || echo no)"
+
+# build_neople_tree: 只读文件无视大小一律使用软链接
+bnt6_src="$WORK/bnt6/src"
+bnt6_dst="$WORK/bnt6/dst"
+mkdir -p "$bnt6_src"
+printf 'x' >"$bnt6_src/df_relay_r"
+printf 'x' >"$bnt6_src/a.dib"
+printf 'x' >"$bnt6_src/libx.so.1.0.2"
+printf 'x' >"$bnt6_src/game.exe"
+printf 'x' >"$bnt6_src/iteminfo.dat"
+printf 'x' >"$bnt6_src/channel_info.etc"
+build_neople_tree "$bnt6_src" "$bnt6_dst"
+chk "bnt: df_* 文件使用软链接" "yes" "$([ -L "$bnt6_dst/df_relay_r" ] && echo yes || echo no)"
+chk "bnt: .dib 文件使用软链接" "yes" "$([ -L "$bnt6_dst/a.dib" ] && echo yes || echo no)"
+chk "bnt: .so 文件使用软链接" "yes" "$([ -L "$bnt6_dst/libx.so.1.0.2" ] && echo yes || echo no)"
+chk "bnt: .exe 文件使用软链接" "yes" "$([ -L "$bnt6_dst/game.exe" ] && echo yes || echo no)"
+chk "bnt: iteminfo.dat 使用复制" "no" "$([ -L "$bnt6_dst/iteminfo.dat" ] && echo yes || echo no)"
+chk "bnt: channel_info.etc 使用复制" "no" "$([ -L "$bnt6_dst/channel_info.etc" ] && echo yes || echo no)"
+
+# build_neople_tree: 阈值边界测试，等于阈值使用软链接, 小一字节就使用复制
+bnt7_src="$WORK/bnt7/src"
+bnt7_dst="$WORK/bnt7/dst"
+mkdir -p "$bnt7_src"
+dd if=/dev/zero of="$bnt7_src/at" bs=524288 count=1 2>/dev/null
+dd if=/dev/zero of="$bnt7_src/below" bs=524287 count=1 2>/dev/null
+build_neople_tree "$bnt7_src" "$bnt7_dst"
+chk "bnt: 大小等于阈值的文件使用软链接" "yes" "$([ -L "$bnt7_dst/at" ] && echo yes || echo no)"
+chk "bnt: 小于阈值一字节的文件就复制" "no" "$([ -L "$bnt7_dst/below" ] && echo yes || echo no)"
+
+# build_neople_tree: 模板中的软链接与特殊文件按原样复制, 保留软链接与文件类型
+bnt8_src="$WORK/bnt8/src"
+bnt8_dst="$WORK/bnt8/dst"
+mkdir -p "$bnt8_src"
+ln -s /dev/null "$bnt8_src/oddlink"
+mkfifo "$bnt8_src/myfifo"
+build_neople_tree "$bnt8_src" "$bnt8_dst"
+chk "bnt: 模板软链接复制为软链接" "yes" "$([ -L "$bnt8_dst/oddlink" ] && echo yes || echo no)"
+chk "bnt: 软链接目标保持一致" "/dev/null" "$(readlink "$bnt8_dst/oddlink")"
+chk "bnt: fifo 特殊文件原样复制" "yes" "$([ -p "$bnt8_dst/myfifo" ] && echo yes || echo no)"
+
 echo "pass=$pass failed=$failed"
 [ "$failed" -eq 0 ]

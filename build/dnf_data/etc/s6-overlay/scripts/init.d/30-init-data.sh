@@ -2,7 +2,6 @@
 # shellcheck shell=bash
 
 template_neople_path="${TEMPLATE_NEOPLE_PATH:-/home/template/neople}"
-neople_tmp_path="${NEOPLE_TMP_PATH:-/home/template/neople-tmp}"
 neople_path="${NEOPLE_PATH:-/home/neople}"
 data_path="${DATA_PATH:-/data}"
 template_init_path="${TEMPLATE_INIT_PATH:-/home/template/init}"
@@ -73,9 +72,13 @@ sync_template_file "$template_init_path/scheduler/user-script.sh" \
     "$data_path/scheduler/user-script.sh" \
     "$scheduler_ref_path/user-script.sh"
 
-rm -rf "$neople_tmp_path"
 mkdir -p "$neople_path"
-cp -r "$template_neople_path" "$neople_tmp_path"
+# 针对 /home/template/neople 中不小于 512KB 的非配置文件，使用软链接代替复制，配置文件和小文件则直接复制
+if ! build_neople_tree "$template_neople_path" "$neople_path"; then
+    echo "ERROR: failed to build neople tree" >&2
+    exit 1
+fi
+
 while IFS= read -r -d '' cfg_file; do
     safe_sed "__GAME_PASSWORD__" "$DNF_DB_GAME_PASSWORD" "$cfg_file"
     safe_sed "__DEC_GAME_PWD__" "$DEC_GAME_PWD" "$cfg_file"
@@ -83,27 +86,23 @@ while IFS= read -r -d '' cfg_file; do
     safe_sed "__SERVER_GROUP_DB__" "$SERVER_GROUP_DB" "$cfg_file"
     safe_sed "__SERVER_GROUP__" "$SERVER_GROUP" "$cfg_file"
     substitute_port_markers "$cfg_file"
-done < <(find "$neople_tmp_path" -type f -name "*.cfg" -print0)
+done < <(find "$neople_path" -type f -name "*.cfg" -print0)
 while IFS= read -r -d '' tbl_file; do
     safe_sed "__SERVER_GROUP__" "$SERVER_GROUP" "$tbl_file"
     substitute_port_markers "$tbl_file"
-done < <(find "$neople_tmp_path" -type f -name "*.tbl" -print0)
+done < <(find "$neople_path" -type f -name "*.tbl" -print0)
 
-secagent_xml="$neople_tmp_path/secsvr/zergsvr/cfg/secagent_config.xml"
+secagent_xml="$neople_path/secsvr/zergsvr/cfg/secagent_config.xml"
 [ -f "$secagent_xml" ] && safe_sed "__SECAGENT_CHANNEL_NUM__" "$SECAGENT_CHANNEL_NUM" "$secagent_xml"
 
-svcid_xml="$neople_tmp_path/secsvr/zergsvr/cfg/svcid.xml"
+svcid_xml="$neople_path/secsvr/zergsvr/cfg/svcid.xml"
 if [ -f "$svcid_xml" ] && [ -n "$ZERGSVR_SELF_TYPE" ] && [ -n "$ZERGSVR_SELF_ID" ] && [ -n "$ZERGSVR_PORT" ]; then
     svcid_rewrite_port "$svcid_xml" "$ZERGSVR_SELF_TYPE" "$ZERGSVR_SELF_ID" "$ZERGSVR_PORT"
 fi
 
-# 这里是为了保住日志文件目录，将日志文件挂载到宿主机外，因此采用复制而不是 mv
-cp -rf "$neople_tmp_path"/* "$neople_path"
-find "$neople_path" -name '*.log' -type f -delete
-find "$neople_path" -name '*.pid' -type f -delete
-find "$neople_path" -name 'core.*' -type f -delete
-chmod 755 -R "$neople_path"
-rm -rf "$neople_tmp_path"
+find "$neople_path" -name '*.log' -xtype f -delete
+find "$neople_path" -name '*.pid' -xtype f -delete
+find "$neople_path" -name 'core.*' -xtype f -delete
 
 ensure_link() {
     [ "$(readlink "$2" 2>/dev/null)" = "$1" ] && return 0
