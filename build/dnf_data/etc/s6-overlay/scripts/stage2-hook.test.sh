@@ -53,13 +53,13 @@ for d in "$WORK"/s6-rc.d/*/; do
     case "$s" in *-log | game_template | user | dnf-bridge | dnf-channel) continue ;; esac
     [ -f "$d/type" ] && [ "$(cat "$d/type")" = longrun ] || continue
     [ -d "$WORK/s6-rc.d/${s}-log" ] || missing="${missing} ${s}:缺-log"
-    [ -e "$WORK/s6-rc.d/${s}-log/dependencies.d/dnf-bootstrap" ] || missing="${missing} ${s}-log:缺dnf-bootstrap依赖"
+    [ -e "$WORK/s6-rc.d/${s}-log/dependencies.d/cleanup" ] || missing="${missing} ${s}-log:缺cleanup依赖"
     [ -e "$d/producer-for" ] || missing="${missing} ${s}:缺producer-for"
     [ "$(cat "$WORK/s6-rc.d/${s}-log/pipeline-name" 2>/dev/null)" = "${s}-pipeline" ] || missing="${missing} ${s}-log:缺pipeline-name"
     [ -e "$WORK/s6-rc.d/user/contents.d/${s}-pipeline" ] || missing="${missing} ${s}:pipeline未加入bundle"
     [ -e "$WORK/s6-rc.d/user/contents.d/${s}-log" ] && missing="${missing} ${s}-log:不应直接加入bundle"
 done
-chk "常驻服务均有带 dnf-bootstrap 依赖的 -log" "" "$missing"
+chk "常驻服务均有带 cleanup 依赖的 -log" "" "$missing"
 
 # 用 s6-rc-compile 验证服务端依赖关系正确性
 if command -v s6-rc-compile >/dev/null 2>&1; then

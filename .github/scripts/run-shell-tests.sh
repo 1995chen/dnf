@@ -19,8 +19,10 @@ done < <(find . -name '*.sh' -not -path './.git/*' -print0 | sort -z)
 echo
 echo "== scripts/binaries must be executable =="
 for f in \
-    build/dnf_data/etc/s6-overlay/scripts/dnf-bootstrap.sh \
     build/dnf_data/etc/s6-overlay/scripts/stage2-hook.sh \
+    build/dnf_data/etc/s6-overlay/scripts/mysql-init.sh \
+    build/dnf_data/etc/s6-overlay/scripts/mysql-run.sh \
+    build/dnf_data/etc/s6-overlay/s6-rc.d/mysql/run \
     build/dnf_data/etc/s6-overlay/scripts/finish-default-once \
     build/dnf_data/TeaEncrypt \
     build/dnf_data/etc/s6-overlay/scripts/init.d/*.sh; do
@@ -58,23 +60,24 @@ if command -v shellcheck >/dev/null 2>&1; then
         build/dnf_data/home/template/init/lib/probe-tcp-port.test.sh
         build/dnf_data/home/template/init/lib/zerg-resolve.test.sh
         build/dnf_data/etc/s6-overlay/scripts/stage2-hook.sh
+        build/dnf_data/etc/s6-overlay/scripts/mysql-init.sh
+        build/dnf_data/etc/s6-overlay/scripts/mysql-run.sh
         build/dnf_data/etc/s6-overlay/scripts/stage2-hook.test.sh
-        build/dnf_data/etc/s6-overlay/scripts/dnf-bootstrap.sh
-        build/dnf_data/etc/s6-overlay/scripts/dnf-bootstrap.test.sh
         build/dnf_data/etc/s6-overlay/scripts/finish-default-once
         build/dnf_data/etc/s6-overlay/scripts/finish-default-once.test.sh
-        build/dnf_data/etc/s6-overlay/scripts/init.d/10-env-resolve.sh
-        build/dnf_data/etc/s6-overlay/scripts/init.d/10-env-resolve.test.sh
-        build/dnf_data/etc/s6-overlay/scripts/init.d/20-cleanup.sh
-        build/dnf_data/etc/s6-overlay/scripts/init.d/30-init-data.sh
-        build/dnf_data/etc/s6-overlay/scripts/init.d/30-init-data.test.sh
-        build/dnf_data/etc/s6-overlay/scripts/init.d/30-init-db.sh
+        build/dnf_data/etc/s6-overlay/scripts/init.d/env-resolve.sh
+        build/dnf_data/etc/s6-overlay/scripts/init.d/env-resolve.test.sh
+        build/dnf_data/etc/s6-overlay/scripts/init.d/cleanup.sh
+        build/dnf_data/etc/s6-overlay/scripts/init.d/init-data.sh
+        build/dnf_data/etc/s6-overlay/scripts/init.d/init-data.test.sh
+        build/dnf_data/etc/s6-overlay/scripts/init.d/init-db.sh
         build/dnf_data/home/template/init/run/start_gate.sh
         build/dnf_data/home/template/init/lib/probe-secbus.sh
         build/dnf_data/home/template/init/lib/tune.sh
         build/dnf_data/home/template/init/lib/common.sh
         build/dnf_data/home/template/init/lib/common.test.sh
-        build/dnf_data/home/template/init/init-local-db.sh
+        build/dnf_data/home/template/init/lib/mysql.sh
+        build/dnf_data/home/template/init/lib/mysql.test.sh
         build/dnf_data/home/template/init/scheduler/scheduler.sh
         build/dnf_data/home/template/init/scheduler/scheduler.test.sh
         build/dnf_data/home/template/init/scheduler/restore-db.sh
@@ -85,7 +88,7 @@ if command -v shellcheck >/dev/null 2>&1; then
         build/dnf_data/home/template/init/monitor_ip/get_public_ip.test.sh
         build/dnf_data/home/template/init/monitor_ip/monitor_ip.sh
         build/dnf_data/home/template/init/monitor_ip/monitor_ip.test.sh
-        build/shared/mysql-initd.sh
+        build/dnf_data/db-entrypoint.sh
     )
     if shellcheck -s bash -S style -e SC1091 "${sc_targets[@]}"; then
         echo "shellcheck clean"

@@ -33,8 +33,10 @@ RUN cd /tmp && \
     test -x /usr/sbin/mysqld || ln -sf "$(which mysqld)" /usr/sbin/mysqld && \
     rm -rf /tmp/*
 
-COPY build/dnf_data/home/template/init/lib/common.sh /home/template/init/lib/common.sh
-COPY build/dnf_data/home/template/init/lib/tune.sh /home/template/init/lib/tune.sh
+COPY build/dnf_data/home/template/init/lib/common.sh \
+     build/dnf_data/home/template/init/lib/mysql.sh \
+     build/dnf_data/home/template/init/lib/tune.sh \
+     /home/template/init/lib/
 
 COPY build/dnf_data/etc/my.cnf /etc/
 
@@ -48,8 +50,8 @@ RUN sed -i 's|^#skip-locking$|skip-locking|g; \
             /^log-error=/d; \
             /^pid-file=/d' /etc/my.cnf
 
-COPY --chmod=0755 build/centos7/docker-entrypoint-db.sh /docker-entrypoint.sh
+COPY --chmod=0755 build/dnf_data/db-entrypoint.sh /db-entrypoint.sh
 
 VOLUME /var/lib/mysql
 EXPOSE 4000
-CMD ["/bin/bash", "/docker-entrypoint.sh"]
+CMD ["/bin/bash", "/db-entrypoint.sh"]

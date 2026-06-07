@@ -13,12 +13,9 @@ RUN MYSQL=mysql-5.7.44-linux-glibc2.12-x86_64 && \
     curl -fsSLO https://downloads.mysql.com/archives/get/p/23/file/${MYSQL}.tar.gz && \
     tar -zxf ${MYSQL}.tar.gz && \
     mkdir -p /mysql/bin /mysql/lib /mysql/share /mysql/allocator && \
-    cp ${MYSQL}/bin/mysql ${MYSQL}/bin/mysqld ${MYSQL}/bin/mysqld_safe \
-       ${MYSQL}/bin/mysqladmin ${MYSQL}/bin/mysqldump ${MYSQL}/bin/my_print_defaults \
-       ${MYSQL}/bin/mysql_ssl_rsa_setup ${MYSQL}/bin/resolveip /mysql/bin/ && \
-    strip /mysql/bin/mysql /mysql/bin/mysqld /mysql/bin/mysqladmin \
-          /mysql/bin/mysqldump /mysql/bin/my_print_defaults \
-          /mysql/bin/mysql_ssl_rsa_setup /mysql/bin/resolveip && \
+    cp ${MYSQL}/bin/mysql ${MYSQL}/bin/mysqld \
+       ${MYSQL}/bin/mysqladmin ${MYSQL}/bin/mysqldump /mysql/bin/ && \
+    strip /mysql/bin/mysql /mysql/bin/mysqld /mysql/bin/mysqladmin /mysql/bin/mysqldump && \
     cp -a ${MYSQL}/lib/*.so* /mysql/lib/ && \
     strip --strip-unneeded /mysql/lib/*.so* && \
     cp -L /usr/lib64/libjemalloc.so.2 /mysql/allocator/libjemalloc.so.2 && \
@@ -50,24 +47,23 @@ RUN microdnf install -y \
     && microdnf clean all
 
 # MySQL符号链接和初始化脚本
-RUN for bin in mysql mysqld_safe mysqladmin mysqldump my_print_defaults; do \
+RUN for bin in mysql mysqladmin mysqldump; do \
         ln -sf /usr/local/mysql/bin/$bin /usr/bin/$bin; \
     done \
     && ln -sf /usr/local/mysql/bin/mysqld /usr/sbin/mysqld \
     && echo '/usr/local/mysql/lib' > /etc/ld.so.conf.d/mysql.conf && ldconfig \
     && rm -rf /tmp/* /var/tmp/*
 
-COPY --chmod=0755 build/shared/service-wrapper.sh /usr/sbin/service
-COPY --chmod=0755 build/shared/mysql-install-db.sh /usr/bin/mysql_install_db
-COPY --chmod=0755 build/shared/mysql-initd.sh /etc/init.d/mysql
 
-COPY build/dnf_data/home/template/init/lib/common.sh /home/template/init/lib/common.sh
-COPY build/dnf_data/home/template/init/lib/tune.sh /home/template/init/lib/tune.sh
+COPY build/dnf_data/home/template/init/lib/common.sh \
+     build/dnf_data/home/template/init/lib/mysql.sh \
+     build/dnf_data/home/template/init/lib/tune.sh \
+     /home/template/init/lib/
 
 COPY build/dnf_data/etc/my.cnf /etc/
 
-COPY --chmod=0755 build/shared/docker-entrypoint-db.sh /docker-entrypoint.sh
+COPY --chmod=0755 build/dnf_data/db-entrypoint.sh /db-entrypoint.sh
 
 VOLUME /var/lib/mysql
 EXPOSE 4000
-CMD ["/bin/bash", "/docker-entrypoint.sh"]
+CMD ["/bin/bash", "/db-entrypoint.sh"]

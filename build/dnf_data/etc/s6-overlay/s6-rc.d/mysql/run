@@ -1,0 +1,4 @@
+#!/command/execlineb -P
+with-contenv
+fdmove -c 2 1
+bash /etc/s6-overlay/scripts/mysql-run.sh

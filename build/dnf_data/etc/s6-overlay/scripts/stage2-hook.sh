@@ -107,7 +107,8 @@ if [ -d /data/s6-rc.d ]; then
         ptype=$(cat "${s6rc_path}/$plugin_name/type" 2>/dev/null)
         if [ "$ptype" = longrun ] || [ "$ptype" = oneshot ]; then
             mkdir -p "${s6rc_path}/$plugin_name/dependencies.d"
-            : >"${s6rc_path}/$plugin_name/dependencies.d/dnf-bootstrap"
+            : >"${s6rc_path}/$plugin_name/dependencies.d/env-resolve"
+            : >"${s6rc_path}/$plugin_name/dependencies.d/cleanup"
         fi
         if [ ! -e "$plugin_path/.disabled" ]; then
             : >"${s6rc_path}/user/contents.d/$plugin_name"
@@ -136,10 +137,10 @@ add_log_subservice() {
     printf '%s\n' "${svc}-pipeline" >"$log_path/pipeline-name"
     printf '3\n' >"$log_path/notification-fd"
 
-    # 依赖 dnf-bootstrap, 确保在 20-cleanup 的 rm -rf /data/log/* 之后启动,
+    # 依赖 cleanup, 确保在 cleanup 的 rm -rf /data/log/* 之后启动,
     # 否则 s6-log 建好日志目录后会被 cleanup 删掉, 日志写进已删除的 inode。
     mkdir -p "$log_path/dependencies.d"
-    : >"$log_path/dependencies.d/dnf-bootstrap"
+    : >"$log_path/dependencies.d/cleanup"
 
     cat >"$log_path/run" <<EOF
 #!/bin/bash

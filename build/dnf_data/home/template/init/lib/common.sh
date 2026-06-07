@@ -199,7 +199,7 @@ build_neople_tree() {
 }
 
 # 将文件中所有 __VAR__ 标记替换为对应环境变量值
-# 10-env-resolve.sh 已确保所有环境变量非空
+# env-resolve.sh 已确保所有环境变量非空
 # 用法: substitute_port_markers <file>
 substitute_port_markers() {
     local file="$1" v

@@ -1,0 +1,1 @@
+/command/with-contenv bash /etc/s6-overlay/scripts/mysql-init.sh
