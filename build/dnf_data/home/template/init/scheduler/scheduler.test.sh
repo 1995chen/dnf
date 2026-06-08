@@ -91,41 +91,23 @@ chk "保留当月 ${keep_cur}" no "$(grep -qE "auction_history_${keep_cur}\`" "$
 chk "不删 auction_history" no "$(grep -qE "auction_history\`" "$DROPLOG" && echo yes || echo no)"
 chk "不删 auction_average_price" no "$(grep -q "auction_average_price" "$DROPLOG" && echo yes || echo no)"
 
-# backup_databases 默认关闭
-DUMPLOG="$WORK/dump.log"
-: >"$DUMPLOG"
-mysqldump() {
-    echo called >>"$DUMPLOG"
-    return 0
-}
+CALLLOG="$WORK/dbtool.log"
+stub_tool="$WORK/db-tool.sh"
+cat >"$stub_tool" <<EOF
+#!/bin/bash
+echo "\$*" >>"$CALLLOG"
+EOF
+chmod +x "$stub_tool"
+DB_TOOL="$stub_tool"
+
+: >"$CALLLOG"
 unset DB_BACKUP_ENABLE
 backup_databases
-chk "默认关闭自动备份数据库功能" 0 "$(wc -l <"$DUMPLOG")"
+chk "默认关闭时不触发数据库备份" 0 "$(grep -c . "$CALLLOG")"
 
-# backup_databases 开启时，若导出失败应删除损坏文件
-BK="$WORK/backup"
-DB_BACKUP_ENABLE=true
-DB_BACKUP_DIR="$BK"
-sg_mysql() { case "$*" in *"SHOW DATABASES"*) printf 'd_taiwan\ntaiwan_cain\n' ;; esac }
-mysqldump() {
-    echo "ERROR: simulated dump failure" >&2
-    return 2
-}
-backup_databases >/dev/null 2>&1
-chk "备份失败不保留损坏文件" 0 "$(find "$BK" -name 'dnf-*.sql.gz' 2>/dev/null | wc -l)"
-
-# backup_databases 开启时，只保留 KEEP 份备份数据
-mysqldump() {
-    echo "-- simulated dump"
-    return 0
-}
-DB_BACKUP_KEEP=2
-mkdir -p "$BK"
-for t in 20260101-000000 20260102-000000 20260103-000000; do
-    echo x | gzip >"$BK/dnf-$t.sql.gz"
-done
-backup_databases >/dev/null 2>&1
-chk "成功备份后只保留 KEEP 份数据" 2 "$(find "$BK" -name 'dnf-*.sql.gz' | wc -l)"
+: >"$CALLLOG"
+DB_BACKUP_ENABLE=true backup_databases
+chk "开启时调用 db-tool backup 备份数据库" yes "$(grep -qx backup "$CALLLOG" && echo yes || echo no)"
 
 echo "pass=$pass failed=$failed"
 [ "$failed" -eq 0 ]

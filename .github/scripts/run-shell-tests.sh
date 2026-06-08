@@ -25,6 +25,7 @@ for f in \
     build/dnf_data/etc/s6-overlay/s6-rc.d/mysql/run \
     build/dnf_data/etc/s6-overlay/scripts/finish-default-once \
     build/dnf_data/TeaEncrypt \
+    build/dnf_data/home/template/init/scheduler/db-tool.sh \
     build/dnf_data/etc/s6-overlay/scripts/init.d/*.sh; do
     case "$f" in *.test.sh) continue ;; esac
     [ -f "$f" ] || continue
@@ -80,8 +81,8 @@ if command -v shellcheck >/dev/null 2>&1; then
         build/dnf_data/home/template/init/lib/mysql.test.sh
         build/dnf_data/home/template/init/scheduler/scheduler.sh
         build/dnf_data/home/template/init/scheduler/scheduler.test.sh
-        build/dnf_data/home/template/init/scheduler/restore-db.sh
-        build/dnf_data/home/template/init/scheduler/restore-db.test.sh
+        build/dnf_data/home/template/init/scheduler/db-tool.sh
+        build/dnf_data/home/template/init/scheduler/db-tool.test.sh
         build/dnf_data/home/template/init/scheduler/user-script.sh
         build/dnf_data/home/template/init/wait-for-mysql.sh
         build/dnf_data/home/template/init/monitor_ip/get_public_ip.sh

@@ -362,20 +362,26 @@ environment:
   # - DB_BACKUP_DIR=/data/backup
 ```
 
+若要手动执行数据库备份，可执行如下命令：
+
+```bash
+docker exec dnf db-tool backup
+```
+
 ### 数据库恢复
 
-若要恢复备份的数据库，可进入容器执行 `restore-db.sh`。考虑到此操作比较危险，脚本默认只会显示将要使用的备份文件以及被还原的库。若要真正触发还原，需设置 `DB_RESTORE_CONFIRM=yes`。
+若要恢复备份的数据库，可进入容器执行 `db-tool restore`。考虑到此操作比较危险，脚本默认只会显示将要使用的备份文件以及被还原的库。若要真正触发还原，需设置 `DB_RESTORE_CONFIRM=yes`。
 
 将要使用的备份文件以及被还原的库：
 
 ```bash
-docker exec dnf /home/template/init/scheduler/restore-db.sh latest
+docker exec dnf db-tool restore latest
 ```
 
 确认无误后再执行：
 
 ```bash
-docker exec -e DB_RESTORE_CONFIRM=yes dnf /home/template/init/scheduler/restore-db.sh latest
+docker exec -e DB_RESTORE_CONFIRM=yes dnf db-tool restore latest
 ```
 
 脚本参数：

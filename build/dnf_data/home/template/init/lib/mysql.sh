@@ -57,7 +57,7 @@ mysql_init_method() {
 # 初始化 mysql 数据
 mysql_first_boot_init() {
     local mysqld="${MYSQLD_BIN:-/usr/sbin/mysqld}"
-    if [ "$(mysql_init_method "$("$mysqld" --version 2>/dev/null)")" = install-db ]; then
+    if [ "$(mysql_init_method "$("$mysqld" --no-defaults --version 2>/dev/null)")" = install-db ]; then
         mysql_install_db --user=mysql
     else
         "$mysqld" --defaults-file=/etc/my.cnf --initialize-insecure --user=mysql --datadir=/var/lib/mysql

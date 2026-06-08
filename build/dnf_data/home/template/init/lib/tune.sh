@@ -241,9 +241,10 @@ tune_apply_malloc_conf_32() {
 
 tune_detect_mysql_family() {
     local bin out
-    for bin in /usr/local/mysql/bin/mysqld /usr/sbin/mysqld /usr/bin/mysqld; do
+    for bin in "${MYSQLD_BIN:-}" /usr/local/mysql/bin/mysqld /usr/sbin/mysqld /usr/bin/mysqld; do
+        [ -n "$bin" ] || continue
         if [ -x "$bin" ]; then
-            out=$("$bin" --version 2>/dev/null || true)
+            out=$("$bin" --no-defaults --version 2>/dev/null || true)
             case "$out" in
             *"Ver 5.0."*)
                 echo 50

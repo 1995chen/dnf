@@ -58,49 +58,9 @@ prune_auction_tables() {
 }
 
 # 数据库定期备份, DB_BACKUP_ENABLE=true 时开启
-# 备份路径为 DB_BACKUP_DIR, 只保留最近 DB_BACKUP_KEEP 份
 backup_databases() {
     [ "${DB_BACKUP_ENABLE:-false}" = "true" ] || return 0
-    if ! command -v mysqldump >/dev/null 2>&1; then
-        echo "[db-backup] mysqldump not found, skip" >&2
-        return 0
-    fi
-    local dir="${DB_BACKUP_DIR:-/data/backup}" ts out errf keep f i rc
-    local -a dbs backups
-    mkdir -p "$dir"
-    # 只备份非系统库
-    mapfile -t dbs < <(sg_mysql -N -e "SHOW DATABASES;" 2>/dev/null |
-        grep -vxE 'information_schema|performance_schema|mysql|sys')
-    if [ "${#dbs[@]}" -eq 0 ]; then
-        echo "[db-backup] no user databases found, skip" >&2
-        return 0
-    fi
-    ts=$(date +'%Y%m%d-%H%M%S')
-    out="$dir/dnf-${ts}.sql.gz"
-    errf="$dir/.dump.err"
-    echo "[db-backup] dump ${#dbs[@]} database(s) to $out"
-    # 原样导出, 防止恢复后不兼容:
-    MYSQL_PWD="$DNF_DB_GAME_PASSWORD" mysqldump -h "$CUR_SG_DB_HOST" -P "$CUR_SG_DB_PORT" -u game \
-        --single-transaction --default-character-set=binary --hex-blob --routines \
-        --databases "${dbs[@]}" 2>"$errf" | gzip >"$out"
-    rc=${PIPESTATUS[0]}
-    if [ "$rc" -ne 0 ]; then
-        echo "[db-backup] mysqldump failed (rc=$rc), remove partial $out" >&2
-        sed 's/^/[db-backup] /' "$errf" >&2
-        rm -f "$out" "$errf"
-        return 1
-    fi
-    rm -f "$errf"
-    echo "[db-backup] done: $out"
-    # 文件名带时间戳, 保留前 keep 份
-    keep="${DB_BACKUP_KEEP:-7}"
-    while IFS= read -r f; do
-        backups+=("$f")
-    done < <(for p in "$dir"/dnf-*.sql.gz; do [ -e "$p" ] && echo "$p"; done | sort -r)
-    for ((i = keep; i < ${#backups[@]}; i++)); do
-        echo "[db-backup] prune ${backups[$i]}"
-        rm -f "${backups[$i]}"
-    done
+    bash "${DB_TOOL:-/home/template/init/scheduler/db-tool.sh}" backup
 }
 
 # 用法: run_due NAME INTERVAL FUNC

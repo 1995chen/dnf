@@ -464,6 +464,28 @@ out=$(env -u MALLOC_CONF -u MALLOC_CONF_32 -u MALLOC_CONF_64 \
 ')
 check "切换为64位后 MC == M64" "$out" "B"
 
+echo "== tune_detect_mysql_family 获取 mysql 版本时忽略配置文件 =="
+# 不带 --no-defaults 时模拟 mysql 5.0 读 my.cnf 因 !includedir 目录不存在而崩溃
+fam_dir=$(mktemp -d)
+cat >"$fam_dir/mysqld" <<'STUB'
+#!/bin/bash
+nd=0
+for a in "$@"; do
+    [ "$a" = "--no-defaults" ] && nd=1
+done
+if [ "$nd" = 0 ]; then
+    echo "mysqld: Can't read dir of '/data/my.cnf.d' (Errcode: 2)" >&2
+    echo "Fatal error in defaults handling. Program aborted" >&2
+    exit 1
+fi
+echo "mysqld  Ver 5.0.95-community for unknown-linux-gnu on x86_64"
+exit 0
+STUB
+chmod +x "$fam_dir/mysqld"
+check "mysql 5.0 获取版本时不受 my.cnf 影响" \
+    "$(MYSQLD_BIN="$fam_dir/mysqld" tune_detect_mysql_family)" "50"
+rm -rf "$fam_dir"
+
 echo
 echo "pass=$pass failed=$failed"
 [ "$failed" -eq 0 ]
