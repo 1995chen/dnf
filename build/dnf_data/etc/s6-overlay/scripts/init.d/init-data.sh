@@ -79,6 +79,9 @@ if ! build_neople_tree "$template_neople_path" "$neople_path"; then
     exit 1
 fi
 
+# 创建 game/history, 避免多频道并发创建此目录时崩溃
+mkdir -p "$neople_path/game/history"
+
 while IFS= read -r -d '' cfg_file; do
     safe_sed "__GAME_PASSWORD__" "$DNF_DB_GAME_PASSWORD" "$cfg_file"
     safe_sed "__DEC_GAME_PWD__" "$DEC_GAME_PWD" "$cfg_file"

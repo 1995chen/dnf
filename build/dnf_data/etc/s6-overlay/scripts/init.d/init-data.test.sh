@@ -129,6 +129,7 @@ chk "Script.pvf 软链接指向 /data/Script.pvf" "$data_path/Script.pvf" "$(rea
 chk "df_game_r 软链接存在" yes "$(exists "$dest_path/game/df_game_r")"
 chk "df_game_r 软链接指向 /data/df_game_r" "$data_path/df_game_r" "$(readlink "$dest_path/game/df_game_r")"
 chk "复制 publickey.pem" yes "$(exists "$dest_path/game/publickey.pem")"
+chk "创建 game/history 目录" yes "$([ -d "$dest_path/game/history" ] && echo yes || echo no)"
 chk "大文件使用 /home/template 软链接" "$tpl_path/game/bigbin.so" "$(readlink "$dest_path/game/bigbin.so")"
 chk "大文件为软链接" yes "$([ -L "$dest_path/game/bigbin.so" ] && echo yes || echo no)"
 chk "cfg 小文件不使用软链接" no "$([ -L "$dest_path/game/cfg/test.cfg" ] && echo yes || echo no)"
