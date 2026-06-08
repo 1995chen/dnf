@@ -43,7 +43,7 @@ mkdir -p /data/log /data/mysql /data/data
 # DNF_DB_ROOT_PASSWORD  mysql root 密码，容器启动时会自动将 root 密码修改为此值
 # GATE_AES_KEY     dnf-gate-server AES 通讯密钥，需与登录器配置一致，可通过 openssl rand -hex 32 生成
 # --memory=1g      限制容器使用 1G 物理内存，可根据实际情况适当增加
-# --shm-size=8g    【不可删除】docker 默认 64M 太小，必须增大才能保证运行
+# --shm-size=1g    【不可删除】docker 默认 64M 太小，必须增大才能保证运行
 # 注意：镜像名中的 debian13 应与上一步拉取的版本一致
 docker run -d \
   -e PUBLIC_IP=x.x.x.x \
@@ -68,7 +68,7 @@ docker run -d \
   --cpus=1 \
   --memory=1g \
   --memory-swap=-1 \
-  --shm-size=8g \
+  --shm-size=1g \
   --name=dnf \
   llnut/dnf:debian13-qf1031-latest
 ```

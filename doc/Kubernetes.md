@@ -60,7 +60,7 @@ spec:
       - name: memory
         emptyDir:
           medium: Memory
-          sizeLimit: 8Gi
+          sizeLimit: 1Gi
 
       containers:
       - name: dnf

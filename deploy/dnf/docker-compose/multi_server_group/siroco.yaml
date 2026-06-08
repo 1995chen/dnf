@@ -25,8 +25,8 @@ services:
       # - MYSQL_GAME_ALLOW_IP=%
       # dnf-gate-server配置（auth连接主节点DB，端口无需对外暴露）
       - GATE_AES_KEY=a1b2c3d4e5f6789012345678901234567890abcdef0123456789abcdef012345
-    # shm_size: 8g【不可删除】，docker默认为64M较小，需要增加才能保证运行
-    shm_size: 8g
+    # shm_size: 1g【不可删除】，docker默认为64M较小，需要增加才能保证运行
+    shm_size: 1g
     memswap_limit: -1
     mem_limit: 1g
     cpus: '1.0'
