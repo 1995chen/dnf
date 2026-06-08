@@ -117,6 +117,7 @@ cmd_restore() {
         return 1
     fi
     echo "[db-restore] done"
+    echo "[db-restore] restart the container to load the new data: docker restart <container>"
 }
 
 usage() {

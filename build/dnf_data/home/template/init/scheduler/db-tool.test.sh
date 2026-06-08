@@ -38,7 +38,7 @@ case "$*" in
 *)
     cat >/dev/null
     echo called >>"$MYSQL_CALL_LOG"
-    [ "${MYSQL_FAIL:-}" = yes ] && exit 1
+    if [ "${MYSQL_FAIL:-}" = yes ]; then exit 1; fi
     ;;
 esac
 EOF
@@ -97,8 +97,9 @@ chk "恢复计划: 不调用 mysql" 0 "$(grep -c . "$WORK/mysql.log")"
 chk "恢复计划: 提示 DRY-RUN" yes "$(echo "$out" | grep -q "DRY-RUN" && echo yes || echo no)"
 
 : >"$WORK/mysql.log"
-run env DB_RESTORE_CONFIRM=yes bash "$TOOL" restore latest >/dev/null 2>&1
+out=$(run env DB_RESTORE_CONFIRM=yes bash "$TOOL" restore latest 2>&1)
 chk "真实恢复: 调用 mysql" 1 "$(grep -c . "$WORK/mysql.log")"
+chk "真实恢复: 提示重启服务端" yes "$(echo "$out" | grep -qi "restart the container" && echo yes || echo no)"
 
 # 当 gzip 解压成功但 mysql 执行失败时应返回非0, 防止 PIPESTATUS 误判为成功
 chk "恢复-mysql 失败返回非0" yes \

@@ -187,14 +187,40 @@ docker exec dnf s6-svc -r /run/service/<service-name>
 
 ### 从 CentOS 7 切换到 Debian 13 / Alma 9 / Ubuntu 26 镜像
 
-Debian 13、Alma 9、Ubuntu 26 三种镜像之间可以直接切换，无需清理数据。**但 CentOS 7 与这三种镜像互不兼容**，切换前必须清除所有挂载目录数据：
+Debian 13、Alma 9、Ubuntu 26 三种镜像之间可以直接切换，无需迁移数据。
 
-```bash
-docker stop dnf && docker rm dnf
-rm -rf /data/log/* /data/mysql/* /data/data/* # 路径按实际情况填写
-```
+CentOS 7 使用 MySQL 5.0，与其它三种镜像使用的 MySQL 5.7 不兼容，不能直接更换镜像。需要用内置的 `db-tool` 命令备份旧库数据再导入新库。操作方式如下（以下路径请按实际情况填写）:
 
-**清除后数据不可恢复，请提前备份。** 若不想清理数据，也可用数据库备份工具将旧库数据导入到新库。
+1. 自行启动 Centos 7 容器，待服务端启动完成后备份数据库：
+
+   ```shell
+   docker exec dnf db-tool backup
+   ```
+
+2. 关闭并删除 CentOS 7 容器，将 `/data/mysql` 目录改名（相当于清空数据库）：
+
+   ```shell
+   docker stop dnf && docker rm dnf
+   mv /data/mysql /data/mysql.centos7.bak
+   ```
+
+3. 启动 Debian 13 / Alma 9 / Ubuntu 26 镜像，等待服务端启动成功。
+
+4. 将备份的 Centos 7 数据恢复到新容器：
+
+   ```shell
+   # 先确认恢复计划是否正确
+   docker exec dnf db-tool restore
+
+   # 确认无误后，使用 DB_RESTORE_CONFIRM=yes 执行恢复动作
+   docker exec -e DB_RESTORE_CONFIRM=yes dnf db-tool restore
+   ```
+
+5. 重启容器，让服务端重新加载恢复后的数据：
+
+   ```shell
+   docker restart dnf
+   ```
 
 ---
 
