@@ -21,7 +21,6 @@ metadata:
   name: dnf
 data:
   dnf_public_ip: 192.168.0.203
-  gm_lander_version: "20180307"
 
 ---
 apiVersion: v1
@@ -29,11 +28,9 @@ kind: Secret
 type: Opaque
 metadata:
   name: dnf
-data:
-  mysql_root_password: ODg4ODg4ODg=
-  gm_account: Z21fdXNlcg==
-  gm_password: Z21fcGFzcw==
-  gm_connect_key: NzYzV1hSQlczUEZUQzNJWFBGV0g=
+stringData:
+  mysql_root_password: "88888888"
+  gate_aes_key: a1b2c3d4e5f6789012345678901234567890abcdef0123456789abcdef012345
 
 ---
 apiVersion: apps/v1
@@ -70,15 +67,11 @@ spec:
         - name: mysql
           containerPort: 3306
           protocol: TCP
-          hostPort: 3000 
-        - name: gate-tcp1
-          containerPort: 7600
+          hostPort: 3000
+        - name: gate-tcp
+          containerPort: 5505
           protocol: TCP
-          hostPort: 7600
-        - name: gate-tcp2
-          containerPort: 881
-          protocol: TCP
-          hostPort: 881
+          hostPort: 5505
         - name: channel-tcp1
           containerPort: 7001
           protocol: TCP
@@ -88,29 +81,29 @@ spec:
           protocol: UDP
           hostPort: 7001
         - name: game-tcp1
-          containerPort: 10011
+          containerPort: 30011
           protocol: TCP
-          hostPort: 10011
+          hostPort: 30011
         - name: game-tcp2
-          containerPort: 10052
+          containerPort: 30052
           protocol: TCP
-          hostPort: 10052
+          hostPort: 30052
         - name: game-udp1
-          containerPort: 11011
+          containerPort: 31011
           protocol: UDP
-          hostPort: 11011
+          hostPort: 31011
         - name: game-udp2
-          containerPort: 11052
+          containerPort: 31052
           protocol: UDP
-          hostPort: 11052
+          hostPort: 31052
         - name: relay-tcp1
-          containerPort: 7200
+          containerPort: 7300
           protocol: TCP
-          hostPort: 7200
+          hostPort: 7300
         - name: relay-udp1
-          containerPort: 7200
+          containerPort: 7300
           protocol: UDP
-          hostPort: 7200
+          hostPort: 7300
         - name: stun-udp1
           containerPort: 2311
           protocol: UDP
@@ -136,25 +129,10 @@ spec:
             secretKeyRef:
               key: mysql_root_password
               name: dnf
-        - name: GM_ACCOUNT
+        - name: GATE_AES_KEY
           valueFrom:
             secretKeyRef:
-              key: gm_account
-              name: dnf
-        - name: GM_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              key: gm_password
-              name: dnf
-        - name: GM_LANDER_VERSION
-          valueFrom:
-            configMapKeyRef:
-              key: gm_lander_version
-              name: dnf
-        - name: GM_CONNECT_KEY
-          valueFrom:
-            secretKeyRef:
-              key: gm_connect_key
+              key: gate_aes_key
               name: dnf
         volumeMounts:
         - mountPath: /data

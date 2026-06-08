@@ -4,6 +4,9 @@
 s6rc_path="${S6_OVERLAY_PATH:-/etc/s6-overlay}/s6-rc.d"
 probes_path="${S6_OVERLAY_PATH:-/etc/s6-overlay}/probes.d"
 container_env_path="${CONTAINER_ENV_PATH:-/run/s6/container_environment}"
+lib_path="${DNF_LIB_PATH:-/home/template/init/lib}"
+
+source "$lib_path/common.sh"
 
 # SERVER_GROUP_NAME
 # shellcheck disable=SC2034
@@ -45,49 +48,40 @@ find "${container_env_path}" -maxdepth 1 -type f \
     -name "GAME_${SERVER_GROUP_NAME^^}*_TCP_PORT" -delete 2>/dev/null
 
 # 根据 OPEN_CHANNEL 生成 game_xxx 频道目录
-if [ -n "$OPEN_CHANNEL" ]; then
-    numbers=$(echo "$OPEN_CHANNEL" | awk -F, \
-        '{for(i=1;i<=NF;i++){if($i~/-/){split($i,a,"-");for(j=a[1];j<=a[2];j++)printf j" "}else{printf $i" "}}}')
-    for num in $numbers; do
-        if [[ $num -eq 1 || $num -eq 6 || $num -eq 7 ||
-            ($num -ge 11 && $num -le 39) ||
-            ($num -ge 52 && $num -le 56) ]]; then
-            if [ "$num" -ge 11 ] && [ "$num" -le 51 ]; then
-                process_sequence=3
-            else
-                process_sequence=5
-            fi
-            if [[ $num -lt 10 ]]; then
-                num="0$num"
-            fi
-            svc="game_${SERVER_GROUP_NAME}${num}"
-            dst=${s6rc_path}/$svc
+while IFS= read -r num; do
+    [ -n "$num" ] || continue
+    if [ "$num" -ge 11 ] && [ "$num" -le 51 ]; then
+        process_sequence=3
+    else
+        process_sequence=5
+    fi
+    if [ "$num" -lt 10 ]; then
+        num="0$num"
+    fi
+    svc="game_${SERVER_GROUP_NAME}${num}"
+    dst=${s6rc_path}/$svc
 
-            if ! cp -a "${s6rc_path}/game_template" "$dst"; then
-                echo "[stage2-hook] failed to create $svc, skipping" >&2
-                continue
-            fi
-            sed -i \
-                -e "s/__SVC_NAME__/${svc}/g" \
-                -e "s/__CHANNEL_NUM__/${num}/g" \
-                -e "s/__PROCESS_SEQ__/${process_sequence}/g" \
-                "$dst/run"
-            chmod +x "$dst/run"
+    if ! cp -a "${s6rc_path}/game_template" "$dst"; then
+        echo "[stage2-hook] failed to create $svc, skipping" >&2
+        continue
+    fi
+    sed -i \
+        -e "s/__SVC_NAME__/${svc}/g" \
+        -e "s/__CHANNEL_NUM__/${num}/g" \
+        -e "s/__PROCESS_SEQ__/${process_sequence}/g" \
+        "$dst/run"
+    chmod +x "$dst/run"
 
-            : >"${s6rc_path}/user/contents.d/$svc"
-            : >"${s6rc_path}/dnf-channel/contents.d/$svc"
+    : >"${s6rc_path}/user/contents.d/$svc"
+    : >"${s6rc_path}/dnf-channel/contents.d/$svc"
 
-            game_port="${SERVER_GROUP}00${num}"
-            game_port_var="${svc^^}_TCP_PORT"
-            mkdir -p "${container_env_path}"
-            printf '%s' "$game_port" >"${container_env_path}/${game_port_var}"
-            printf 'cmd:/home/template/init/lib/probe-tcp-port.sh %s\n' \
-                "$game_port_var" >"${probes_path}/$svc"
-            continue
-        fi
-        echo "[stage2-hook] invalid channel number: $num" >&2
-    done
-fi
+    game_port="${SERVER_GROUP}00${num}"
+    game_port_var="${svc^^}_TCP_PORT"
+    mkdir -p "${container_env_path}"
+    printf '%s' "$game_port" >"${container_env_path}/${game_port_var}"
+    printf 'cmd:/home/template/init/lib/probe-tcp-port.sh %s\n' \
+        "$game_port_var" >"${probes_path}/$svc"
+done < <(enumerate_open_channels "$OPEN_CHANNEL")
 
 # 合并 /data/s6-rc.d/ 下的用户自定义配置
 if [ -d /data/s6-rc.d ]; then

@@ -6,6 +6,7 @@
 SCRIPT_PATH=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 HOOK="${SCRIPT_PATH}/stage2-hook.sh"
 SRC_PATH=$(cd -- "${SCRIPT_PATH}/.." &>/dev/null && pwd)
+LIB_PATH=$(cd -- "${SCRIPT_PATH}/../../../home/template/init/lib" &>/dev/null && pwd)
 
 WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
@@ -28,7 +29,7 @@ chk() {
 
 # 运行 stage2-hook, 用 S6_OVERLAY_PATH 绕过 with-contenv shebang
 CENV="$WORK/container_env"
-S6_OVERLAY_PATH="$WORK" CONTAINER_ENV_PATH="$CENV" \
+S6_OVERLAY_PATH="$WORK" CONTAINER_ENV_PATH="$CENV" DNF_LIB_PATH="$LIB_PATH" \
     SERVER_GROUP=3 OPEN_CHANNEL='11,52' bash "$HOOK" >/dev/null 2>&1
 chk "stage2-hook 退出码" 0 "$?"
 

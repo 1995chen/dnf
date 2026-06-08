@@ -110,10 +110,16 @@ chk "仅配置 host 缺 port: 退出码" 0 "$?"
 chk "仅配置 host 缺 port: 主库 proxy 端口为空" "" "$(getenv CUR_MAIN_DB_PROXY_PORT)"
 chk "仅配置 host 缺 port: 大区库 proxy 端口为空" "" "$(getenv CUR_SG_DB_PROXY_PORT)"
 
-# secagent 频道数: 默认 12, 可被覆盖
+# secagent 频道数: 未设置 OPEN_CHANNEL 时默认为 12
 run_resolve "$mysqld_present" SERVER_GROUP=3 DNF_DB_ROOT_PASSWORD=secret
-chk "secagent 频道数默认 12" "12" "$(getenv SECAGENT_CHANNEL_NUM)"
-run_resolve "$mysqld_present" SERVER_GROUP=3 DNF_DB_ROOT_PASSWORD=secret SECAGENT_CHANNEL_NUM=7
+chk "secagent 频道数: 未设置 OPEN_CHANNEL 时默认 12" "12" "$(getenv SECAGENT_CHANNEL_NUM)"
+run_resolve "$mysqld_present" SERVER_GROUP=3 DNF_DB_ROOT_PASSWORD=secret OPEN_CHANNEL=11,52
+chk "secagent 频道数: 2 频道为 2" "2" "$(getenv SECAGENT_CHANNEL_NUM)"
+run_resolve "$mysqld_present" SERVER_GROUP=3 DNF_DB_ROOT_PASSWORD=secret OPEN_CHANNEL=11-15
+chk "secagent 频道数: 11-15 取 5" "5" "$(getenv SECAGENT_CHANNEL_NUM)"
+run_resolve "$mysqld_present" SERVER_GROUP=3 DNF_DB_ROOT_PASSWORD=secret OPEN_CHANNEL="'1,8,40,11'"
+chk "secagent 频道数: 忽略非法频道" "2" "$(getenv SECAGENT_CHANNEL_NUM)"
+run_resolve "$mysqld_present" SERVER_GROUP=3 DNF_DB_ROOT_PASSWORD=secret OPEN_CHANNEL=11,52 SECAGENT_CHANNEL_NUM=7
 chk "secagent 频道数可覆盖" "7" "$(getenv SECAGENT_CHANNEL_NUM)"
 
 # zergsvr 监听端口: 解析 zergsvrd self 取 (type,id), 再查 svcid 端口作为默认值
@@ -169,6 +175,35 @@ run_resolve "$mysqld_present" SERVER_GROUP=3 DNF_DB_ROOT_PASSWORD=secret TS_AUTH
 chk "write_env 语义: 空字符串写空文件" yes "$(exists "$envdir/TS_AUTH_KEY")"
 chk "write_env 语义: 文件内容为空" "" "$(getenv TS_AUTH_KEY)"
 chk "write_env 语义: 空变量不写文件" no "$(exists "$envdir/TS_LOGIN_SERVER")"
+
+# CLIENT_POOL_SIZE
+is_pos_int() { [[ "$1" =~ ^[0-9]+$ ]] && [ "$1" -gt 0 ] && echo yes || echo no; }
+# 未设置时 tune 按性能自动计算并写入
+run_resolve "$mysqld_present" SERVER_GROUP=3 DNF_DB_ROOT_PASSWORD=secret
+chk "CLIENT_POOL_SIZE: 自动计算值已写入" yes "$(exists "$envdir/CLIENT_POOL_SIZE")"
+chk "CLIENT_POOL_SIZE: 自动计算结果为正整数" yes "$(is_pos_int "$(getenv CLIENT_POOL_SIZE)")"
+# 指定性能配置时使用其配置计算值
+run_resolve "$mysqld_present" SERVER_GROUP=3 DNF_DB_ROOT_PASSWORD=secret TUNE_PROFILE=xlarge
+chk "CLIENT_POOL_SIZE: xlarge 配置为 1000" "1000" "$(getenv CLIENT_POOL_SIZE)"
+# 自定义 CLIENT_POOL_SIZE
+run_resolve "$mysqld_present" SERVER_GROUP=3 DNF_DB_ROOT_PASSWORD=secret CLIENT_POOL_SIZE=300
+chk "CLIENT_POOL_SIZE: 自定义的值正常传递" "300" "$(getenv CLIENT_POOL_SIZE)"
+# strip_quotes 处理带引号的值
+run_resolve "$mysqld_present" SERVER_GROUP=3 DNF_DB_ROOT_PASSWORD=secret CLIENT_POOL_SIZE="'600'"
+chk "CLIENT_POOL_SIZE: 去除引号后写入" "600" "$(getenv CLIENT_POOL_SIZE)"
+# 显式清空后为空字符串
+run_resolve "$mysqld_present" SERVER_GROUP=3 DNF_DB_ROOT_PASSWORD=secret CLIENT_POOL_SIZE=
+chk "CLIENT_POOL_SIZE: 显式清空写空文件" yes "$(exists "$envdir/CLIENT_POOL_SIZE")"
+chk "CLIENT_POOL_SIZE: 清空后内容为空" "" "$(getenv CLIENT_POOL_SIZE)"
+
+# DNF_DB_ROOT_PASSWORD
+run_resolve "$mysqld_present" SERVER_GROUP=3 DNF_DB_ROOT_PASSWORD=rootpw
+chk "DNF_DB_ROOT_PASSWORD: 写入 container_environment" yes "$(exists "$envdir/DNF_DB_ROOT_PASSWORD")"
+chk "DNF_DB_ROOT_PASSWORD: 自定义的值正常传递" "rootpw" "$(getenv DNF_DB_ROOT_PASSWORD)"
+# strip_quotes 处理带引号的值
+run_resolve "$mysqld_present" SERVER_GROUP=3 DNF_DB_ROOT_PASSWORD="'quotedpw'"
+chk "DNF_DB_ROOT_PASSWORD: 去除引号后写入" "quotedpw" "$(getenv DNF_DB_ROOT_PASSWORD)"
+chk "DNF_DB_ROOT_PASSWORD: 与 CUR_MAIN_DB_ROOT_PASSWORD 一致" "$(getenv CUR_MAIN_DB_ROOT_PASSWORD)" "$(getenv DNF_DB_ROOT_PASSWORD)"
 
 echo "pass=$pass failed=$failed"
 [ "$failed" -eq 0 ]

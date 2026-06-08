@@ -229,5 +229,24 @@ chk "bnt: 模板软链接复制为软链接" "yes" "$([ -L "$bnt8_dst/oddlink" ]
 chk "bnt: 软链接目标保持一致" "/dev/null" "$(readlink "$bnt8_dst/oddlink")"
 chk "bnt: fifo 特殊文件原样复制" "yes" "$([ -p "$bnt8_dst/myfifo" ] && echo yes || echo no)"
 
+# enumerate_open_channels: 解析频道编号
+chk "ocl: 普通列表" "11 52" "$(enumerate_open_channels '11,52' | tr '\n' ' ' | sed 's/ $//')"
+chk "ocl: 区间列表" "11 12 13" "$(enumerate_open_channels '11-13' | tr '\n' ' ' | sed 's/ $//')"
+chk "ocl: 列表与区间混合" "1 6 7 11 12" "$(enumerate_open_channels '1,6,7,11-12' | tr '\n' ' ' | sed 's/ $//')"
+chk "ocl: 过滤非法频道号" "1 11" "$(enumerate_open_channels '1,8,40,11,99' | tr '\n' ' ' | sed 's/ $//')"
+chk "ocl: 去重" "11 52" "$(enumerate_open_channels '11,52,11' | tr '\n' ' ' | sed 's/ $//')"
+chk "ocl: 去掉引号" "11 52" "$(enumerate_open_channels "'11,52'" | tr '\n' ' ' | sed 's/ $//')"
+chk "ocl: 过滤非法字符" "11" "$(enumerate_open_channels 'abc,11' | tr '\n' ' ' | sed 's/ $//')"
+chk "ocl: 逗号后接空格" "11 52" "$(enumerate_open_channels '11, 52' | tr '\n' ' ' | sed 's/ $//')"
+chk "ocl: 区间混合空格" "11 12 13" "$(enumerate_open_channels '11 - 13' | tr '\n' ' ' | sed 's/ $//')"
+chk "ocl: 编号首尾带空格" "11 52" "$(enumerate_open_channels ' 11 , 52 ' | tr '\n' ' ' | sed 's/ $//')"
+
+# count_open_channels: 计算频道数
+chk "coc: 普通列表数量" "2" "$(count_open_channels '11,52')"
+chk "coc: 区间数量" "5" "$(count_open_channels '11-15')"
+chk "coc: 含非法频道数量" "2" "$(count_open_channels '1,8,40,11')"
+chk "coc: 逗号后接空格数量" "2" "$(count_open_channels '11, 52')"
+chk "coc: 为空则数量为 0" "0" "$(count_open_channels '')"
+
 echo "pass=$pass failed=$failed"
 [ "$failed" -eq 0 ]

@@ -212,6 +212,34 @@ substitute_port_markers() {
     done
 }
 
+# 解析 OPEN_CHANNEL 频道编号
+# 用法: enumerate_open_channels "<OPEN_CHANNEL>"
+enumerate_open_channels() {
+    local spec="$1"
+    spec="${spec//\'/}"
+    spec="${spec//\"/}"
+    [ -n "$spec" ] || return 0
+    printf '%s\n' "$spec" | awk -F, '
+        {
+            for (i = 1; i <= NF; i++) {
+                gsub(/^[ \t]+|[ \t]+$/, "", $i)
+                if ($i ~ /^[0-9]+[ \t]*-[ \t]*[0-9]+$/) { split($i, r, "-"); lo = r[1] + 0; hi = r[2] + 0 }
+                else if ($i ~ /^[0-9]+$/)               { lo = $i; hi = $i }
+                else                                    { continue }
+                for (n = lo; n <= hi; n++) {
+                    if ((n == 1 || n == 6 || n == 7 || (n >= 11 && n <= 39) || (n >= 52 && n <= 56)) && !seen[n]++)
+                        print n
+                }
+            }
+        }'
+}
+
+# 计算 OPEN_CHANNEL 频道数
+# 用法: count_open_channels "<OPEN_CHANNEL>"
+count_open_channels() {
+    enumerate_open_channels "$1" | grep -c .
+}
+
 # 从 zergsvrd.xml 的 self_svr_info 解析 self_cfg 的 svr_type 与 svr_id
 # 用法: zerg_parse_self <zergsvrd.xml>; 输出 "type id"
 zerg_parse_self() {
