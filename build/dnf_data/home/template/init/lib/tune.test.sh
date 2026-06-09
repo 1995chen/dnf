@@ -157,7 +157,49 @@ echo "== tune_compute_mysql_vars 5.0 vs 5.7 字段名 =="
 check "MySQL 50 用 table_cache" "$(get_mysql_var table_cache nano $((2 * GiB)) 2 50)" 128
 check "MySQL 57 用 table_open_cache" "$(get_mysql_var table_open_cache nano $((2 * GiB)) 2 57)" 128
 check "MySQL 50 不输出 innodb_buffer_pool_size" "$(get_mysql_var innodb_buffer_pool_size nano $((2 * GiB)) 2 50)" ""
-check "MySQL 57 输出 innodb_buffer_pool_size" "$(get_mysql_var innodb_buffer_pool_size nano $((2 * GiB)) 2 57)" 64M
+check "MySQL 57 nano innodb_buffer_pool_size" "$(get_mysql_var innodb_buffer_pool_size nano $((2 * GiB)) 2 57)" 16M
+check "MySQL 57 micro innodb_buffer_pool_size" "$(get_mysql_var innodb_buffer_pool_size micro $((6 * GiB)) 2 57)" 32M
+check "MySQL 57 small innodb_buffer_pool_size" "$(get_mysql_var innodb_buffer_pool_size small $((12 * GiB)) 4 57)" 64M
+
+check "MySQL 50 不输出 chunk_size" "$(get_mysql_var innodb_buffer_pool_chunk_size nano $((2 * GiB)) 2 50)" ""
+check "MySQL 57 nano chunk_size = pool" "$(get_mysql_var innodb_buffer_pool_chunk_size nano $((2 * GiB)) 2 57)" 16M
+check "MySQL 57 micro chunk_size = pool" "$(get_mysql_var innodb_buffer_pool_chunk_size micro $((6 * GiB)) 2 57)" 32M
+check "MySQL 57 small chunk_size = pool" "$(get_mysql_var innodb_buffer_pool_chunk_size small $((12 * GiB)) 4 57)" 64M
+check "MySQL 57 medium 不输出 chunk_size" "$(get_mysql_var innodb_buffer_pool_chunk_size medium $((24 * GiB)) 8 57)" ""
+
+# 5.7 关闭 query cache，5.0 不变
+check "MySQL 50 query_cache_type=1" "$(get_mysql_var query_cache_type nano $((2 * GiB)) 2 50)" 1
+check "MySQL 50 query_cache_size" "$(get_mysql_var query_cache_size nano $((2 * GiB)) 2 50)" 8M
+check "MySQL 57 query_cache_type=0" "$(get_mysql_var query_cache_type nano $((2 * GiB)) 2 57)" 0
+check "MySQL 57 query_cache_size=0" "$(get_mysql_var query_cache_size nano $((2 * GiB)) 2 57)" 0
+
+# innodb_log_buffer_size
+check "MySQL 50 不输出 innodb_log_buffer_size" "$(get_mysql_var innodb_log_buffer_size nano $((2 * GiB)) 2 50)" ""
+check "MySQL 57 nano innodb_log_buffer_size" "$(get_mysql_var innodb_log_buffer_size nano $((2 * GiB)) 2 57)" 4M
+check "MySQL 57 micro innodb_log_buffer_size" "$(get_mysql_var innodb_log_buffer_size micro $((6 * GiB)) 2 57)" 8M
+check "MySQL 57 small innodb_log_buffer_size" "$(get_mysql_var innodb_log_buffer_size small $((12 * GiB)) 4 57)" 8M
+check "MySQL 57 medium innodb_log_buffer_size" "$(get_mysql_var innodb_log_buffer_size medium $((24 * GiB)) 8 57)" 32M
+check "MySQL 57 large innodb_log_buffer_size" "$(get_mysql_var innodb_log_buffer_size large $((64 * GiB)) 16 57)" 48M
+check "MySQL 57 xlarge innodb_log_buffer_size" "$(get_mysql_var innodb_log_buffer_size xlarge $((256 * GiB)) 64 57)" 64M
+
+check "sort_buffer large 最大 2M" "$(get_mysql_var sort_buffer_size large $((64 * GiB)) 16 57)" 2M
+check "sort_buffer xlarge 最大 2M" "$(get_mysql_var sort_buffer_size xlarge $((256 * GiB)) 64 57)" 2M
+check "read_rnd_buffer xlarge 最大 4M" "$(get_mysql_var read_rnd_buffer_size xlarge $((256 * GiB)) 64 57)" 4M
+
+# innodb_buffer_pool medium 8% / large 10% / xlarge 12%
+check "innodb_pool medium 8% of 16G" "$(get_mysql_var innodb_buffer_pool_size medium $((16 * GiB)) 8 57)" 1310M
+check "innodb_pool large 10% of 64G" "$(get_mysql_var innodb_buffer_pool_size large $((64 * GiB)) 16 57)" 6553M
+check "innodb_pool xlarge 12% of 128G" "$(get_mysql_var innodb_buffer_pool_size xlarge $((128 * GiB)) 64 57)" 15728M
+
+check "MySQL 50 不输出 performance_schema" "$(get_mysql_var performance_schema nano $((2 * GiB)) 2 50)" ""
+check "MySQL 57 nano 关闭 performance_schema" "$(get_mysql_var performance_schema nano $((2 * GiB)) 2 57)" OFF
+check "MySQL 57 low 关闭 performance_schema" "$(get_mysql_var performance_schema "$(tune_normalize_profile low)" $((2 * GiB)) 2 57)" OFF
+check "MySQL 57 micro 关闭 performance_schema" "$(get_mysql_var performance_schema micro $((6 * GiB)) 2 57)" OFF
+check "MySQL 57 small 关闭 performance_schema" "$(get_mysql_var performance_schema small $((12 * GiB)) 4 57)" OFF
+check "MySQL 57 medium 打开 performance_schema" "$(get_mysql_var performance_schema medium $((24 * GiB)) 8 57)" ON
+check "MySQL 57 balanced 打开 performance_schema" "$(get_mysql_var performance_schema "$(tune_normalize_profile balanced)" $((24 * GiB)) 8 57)" ON
+check "MySQL 57 large 打开 performance_schema" "$(get_mysql_var performance_schema large $((64 * GiB)) 16 57)" ON
+check "MySQL 57 xlarge 打开 performance_schema" "$(get_mysql_var performance_schema xlarge $((256 * GiB)) 64 57)" ON
 
 echo "== tune_is_valid_override_value =="
 check "128M ok" "$(tune_is_valid_override_value 128M && echo y || echo n)" y

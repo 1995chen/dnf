@@ -271,7 +271,7 @@ tune_compute_mysql_vars() {
     nano | micro | small | medium | large | xlarge) ;;
     *) profile=nano ;;
     esac
-    local key_buf tos sb rb rrb msb tcs tcs_cap mac map qcs ibps_spec
+    local key_buf tos sb rb rrb msb tcs tcs_cap mac map qcs ibps_spec ilbs
     case "$profile" in
     nano)
         key_buf=64M
@@ -285,7 +285,8 @@ tune_compute_mysql_vars() {
         mac=512
         map=1M
         qcs=8M
-        ibps_spec=64M
+        ibps_spec=16M
+        ilbs=4M
         ;;
     micro)
         key_buf=96M
@@ -299,7 +300,8 @@ tune_compute_mysql_vars() {
         mac=1024
         map=4M
         qcs=16M
-        ibps_spec=128M
+        ibps_spec=32M
+        ilbs=8M
         ;;
     small)
         key_buf=128M
@@ -313,7 +315,8 @@ tune_compute_mysql_vars() {
         mac=2048
         map=16M
         qcs=32M
-        ibps_spec=256M
+        ibps_spec=64M
+        ilbs=8M
         ;;
     medium)
         key_buf=192M
@@ -328,11 +331,12 @@ tune_compute_mysql_vars() {
         map=32M
         qcs=64M
         ibps_spec=8%
+        ilbs=32M
         ;;
     large)
         key_buf=256M
         tos=1536
-        sb=4M
+        sb=2M
         rb=2M
         rrb=4M
         msb=64M
@@ -342,13 +346,14 @@ tune_compute_mysql_vars() {
         map=64M
         qcs=128M
         ibps_spec=10%
+        ilbs=48M
         ;;
     xlarge)
         key_buf=384M
         tos=2048
-        sb=4M
+        sb=2M
         rb=2M
-        rrb=8M
+        rrb=4M
         msb=128M
         tcs=256
         tcs_cap=512
@@ -356,6 +361,7 @@ tune_compute_mysql_vars() {
         map=64M
         qcs=128M
         ibps_spec=12%
+        ilbs=64M
         ;;
     esac
 
@@ -384,6 +390,18 @@ tune_compute_mysql_vars() {
         return 0
     fi
 
+    # 关闭 query cache
+    echo "query_cache_type=0"
+    echo "query_cache_size=0"
+
+    # 关闭 medium 以下的 performance_schema
+    case "$profile" in
+    nano | micro | small) echo "performance_schema=OFF" ;;
+    medium | large | xlarge) echo "performance_schema=ON" ;;
+    esac
+
+    echo "innodb_log_buffer_size=$ilbs"
+
     # MySQL 5.7+ 的 innodb_buffer_pool_size 取百分比或固定值
     local ibps_value
     case "$ibps_spec" in
@@ -399,6 +417,10 @@ tune_compute_mysql_vars() {
         ;;
     esac
     echo "innodb_buffer_pool_size=$ibps_value"
+
+    case "$profile" in
+    nano | micro | small) echo "innodb_buffer_pool_chunk_size=$ibps_value" ;;
+    esac
 
     # pool > 1G 时按性能配置和 CPU 数设置 innodb_buffer_pool_instances
     local pool_bytes
