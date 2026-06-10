@@ -37,6 +37,8 @@ dd if=/dev/zero bs=1024 count=1200 2>/dev/null | tr '\0' x >>"$tpl_path/game/cfg
 
 printf 'x' >"$tpl_path/game/small.dib"
 
+dd if=/dev/zero of="$tpl_path/game/libtss_sdk.so.1.0.394" bs=1024 count=8 2>/dev/null
+
 mkdir -p "$tpl_path/point" "$tpl_path/auction"
 : >"$tpl_path/point/iteminfo.dat"
 printf 'itemdata' >"$tpl_path/auction/iteminfo.dat"
@@ -128,6 +130,11 @@ chk "Script.pvf 软链接存在" yes "$(exists "$dest_path/game/Script.pvf")"
 chk "Script.pvf 软链接指向 /data/Script.pvf" "$data_path/Script.pvf" "$(readlink "$dest_path/game/Script.pvf")"
 chk "df_game_r 软链接存在" yes "$(exists "$dest_path/game/df_game_r")"
 chk "df_game_r 软链接指向 /data/df_game_r" "$data_path/df_game_r" "$(readlink "$dest_path/game/df_game_r")"
+chk "libtss_sdk.so.1.0.394 使用软链接" yes "$([ -L "$dest_path/game/libtss_sdk.so.1.0.394" ] && echo yes || echo no)"
+chk "libtss_sdk.so.1.0.394 软链接指向 template 中的源文件" "$tpl_path/game/libtss_sdk.so.1.0.394" "$(readlink "$dest_path/game/libtss_sdk.so.1.0.394")"
+chk "libantisvrimport.so 软链存在" yes "$(exists "$dest_path/game/libantisvrimport.so")"
+chk "libantisvrimport.so 指向 libtss_sdk.so.1.0.394" "libtss_sdk.so.1.0.394" "$(readlink "$dest_path/game/libantisvrimport.so")"
+chk "libantisvrimport.so 可按文件解析" yes "$([ -f "$dest_path/game/libantisvrimport.so" ] && echo yes || echo no)"
 chk "复制 publickey.pem" yes "$(exists "$dest_path/game/publickey.pem")"
 chk "创建 game/history 目录" yes "$([ -d "$dest_path/game/history" ] && echo yes || echo no)"
 chk "大文件使用 /home/template 软链接" "$tpl_path/game/bigbin.so" "$(readlink "$dest_path/game/bigbin.so")"

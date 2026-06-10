@@ -137,6 +137,9 @@ else
     echo "ERROR: $data_path/df_game_r missing after restore" >&2
 fi
 
+# 初始化 libantisvrimport.so
+ensure_link "libtss_sdk.so.1.0.394" "$neople_path/game/libantisvrimport.so"
+
 cp "$data_path/publickey.pem" "$neople_path/game/"
 
 # 初始化 df_dbmw_r
