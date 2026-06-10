@@ -15,7 +15,7 @@ fi
 
 echo "init main db $CUR_MAIN_DB_HOST:$CUR_MAIN_DB_PORT"
 # 循环初始化主数据库
-MAIN_DB_LIST=("d_taiwan" "d_taiwan_secu" "d_technical_report" "tw")
+MAIN_DB_LIST=("d_taiwan" "d_taiwan_secu" "d_technical_report")
 
 for db_name in "${MAIN_DB_LIST[@]}"; do
     echo "prepare init $db_name....."
@@ -41,7 +41,7 @@ EOF
     fi
 done
 # 主数据库需要初始化d_taiwan.db_connect中的数据库连接配置
-# 配置game账户权限
+# 配置game用户权限
 echo "main db: flush privileges....."
 MYSQL_PWD="$CUR_MAIN_DB_ROOT_PASSWORD" mysql -h "$CUR_MAIN_DB_HOST" -P "$CUR_MAIN_DB_PORT" -u root <<EOF
 delete from mysql.user where user='game' and host not in ('127.0.0.1', 'localhost');
@@ -52,10 +52,11 @@ grant all privileges on *.* to 'game'@'$CUR_MAIN_DB_GAME_ALLOW_IP' identified by
 flush privileges;
 EOF
 
-# 清风服务端需要配置新增账户, 密码与game账户保持一致
+# 扩展数据库用户, 密码与game用户保持一致
 EXTENDED_USERS=()
-IFS=$',' read -ra EXTENDED_USERS <<<"$DNF_DB_USER_EXTENDED_QF"
+IFS=$',' read -ra EXTENDED_USERS <<<"$DNF_DB_USER_EXTENDED"
 for db_user_extended in "${EXTENDED_USERS[@]}"; do
+    [ -z "$db_user_extended" ] && continue
     echo "main db: extended user ${db_user_extended}, flush privileges....."
     MYSQL_PWD="$CUR_MAIN_DB_ROOT_PASSWORD" mysql -h "$CUR_MAIN_DB_HOST" -P "$CUR_MAIN_DB_PORT" -u root <<EOF
 delete from mysql.user where user='$db_user_extended' and host not in ('127.0.0.1', 'localhost');

@@ -163,12 +163,12 @@ chk "strip_quotes: 带引号 SERVER_GROUP 退出码为0" 0 "$rc"
 chk "strip_quotes: 去除引号后 name=siroco" "siroco" "$(getenv SERVER_GROUP_NAME)"
 chk "strip_quotes: SERVER_GROUP 写入为3" "3" "$(getenv SERVER_GROUP)"
 
-# DNF_DB_USER_EXTENDED_QF 默认值与引号处理
+# DNF_DB_USER_EXTENDED 默认值与引号处理
 run_resolve "$mysqld_present" SERVER_GROUP=3 DNF_DB_ROOT_PASSWORD=secret
-chk "清风版本特有的数据库用户" "supergod,chhappy,cash" "$(getenv DNF_DB_USER_EXTENDED_QF)"
+chk "扩展数据库用户默认为空" "" "$(getenv DNF_DB_USER_EXTENDED)"
 run_resolve "$mysqld_present" SERVER_GROUP=3 DNF_DB_ROOT_PASSWORD=secret \
-    DNF_DB_USER_EXTENDED_QF="'a,b'"
-chk "自定义清风数据库用户引号处理" "a,b" "$(getenv DNF_DB_USER_EXTENDED_QF)"
+    DNF_DB_USER_EXTENDED="'a,b'"
+chk "扩展数据库用户引号处理" "a,b" "$(getenv DNF_DB_USER_EXTENDED)"
 
 # write_env 语义: 手动设置的空字符串写空文件, 未设置则不写
 run_resolve "$mysqld_present" SERVER_GROUP=3 DNF_DB_ROOT_PASSWORD=secret TS_AUTH_KEY=

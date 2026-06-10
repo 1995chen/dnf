@@ -78,7 +78,7 @@
 | OPEN_CHANNEL | 开启的频道 | 支持配置范围,配置之间用逗号分隔,例如:1-11,12,22-25,51-55 | '11,52' |
 | DNF_DB_ROOT_PASSWORD | DNF数据库root密码[当使用独立数据库时,root密码用于初始化数据以及game账号自动化创建、授权] |  | 88888888 |
 | DNF_DB_GAME_PASSWORD | DNF数据库game密码，超过 8 位时启动脚本会截断为前 8 位 |  | uu5!^%jg |
-| DNF_DB_USER_EXTENDED_QF | 清风版本DNF数据库额外的账号,密码不可设置, 与game保持一致 | 逗号分隔 | supergod,chhappy,cash |
+| DNF_DB_USER_EXTENDED | DNF数据库扩展账号，多个账号用逗号分隔，密码与 game 一致 | | 空 |
 | CLIENT_POOL_SIZE | 服务端启动时分配的客户端缓冲池大小，此配置项影响df_bridge_r和df_channel_r的内存占用 | 3-1000 | 10 |
 
 

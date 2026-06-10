@@ -88,7 +88,7 @@ EOF
     fi
 done
 
-# game账户连接大区数据库需要配置game账户权限[主数据库和大区数据库可能是独立的需要单独配置]
+# game用户连接大区数据库需要配置game用户权限[主数据库和大区数据库可能是独立的需要单独配置]
 echo "server group db: flush privileges....."
 MYSQL_PWD="$CUR_SG_DB_ROOT_PASSWORD" mysql -h "$CUR_SG_DB_HOST" -P "$CUR_SG_DB_PORT" -u root <<EOF
 delete from mysql.user where user='game' and host not in ('127.0.0.1', 'localhost');
@@ -104,11 +104,12 @@ MYSQL_PWD="$DNF_DB_GAME_PASSWORD" mysql -h "$CUR_SG_DB_HOST" -P "$CUR_SG_DB_PORT
 select gc_type, gc_ip, gc_channel from taiwan_$SERVER_GROUP_DB.game_channel where gc_type=$SERVER_GROUP;
 EOF
 
-# 清风服务端需要配置新增的账户权限[主数据库和大区数据库可能是独立的需要单独配置]
-# 密码与game账户保持一致
+# 扩展的数据库用户权限[主数据库和大区数据库可能是独立的需要单独配置]
+# 密码与game用户保持一致
 EXTENDED_USERS=()
-IFS=$',' read -ra EXTENDED_USERS <<<"$DNF_DB_USER_EXTENDED_QF"
+IFS=$',' read -ra EXTENDED_USERS <<<"$DNF_DB_USER_EXTENDED"
 for db_user_extended in "${EXTENDED_USERS[@]}"; do
+    [ -z "$db_user_extended" ] && continue
     echo "server group db: extended user: ${db_user_extended}, flush privileges....."
     MYSQL_PWD="$CUR_SG_DB_ROOT_PASSWORD" mysql -h "$CUR_SG_DB_HOST" -P "$CUR_SG_DB_PORT" -u root <<EOF
 delete from mysql.user where user='$db_user_extended' and host not in ('127.0.0.1', 'localhost');
