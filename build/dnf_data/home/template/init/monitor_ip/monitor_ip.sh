@@ -4,46 +4,116 @@ source "${DNF_LIB_PATH:-/home/template/init/lib}/common.sh"
 
 state_file="${MONITOR_IP_STATE_FILE:-/data/monitor_ip/MONITOR_PUBLIC_IP}"
 
-# IP变更后重启服务
+# 当前正在使用的IP，当此IP与解析结果不一致才需要重启
+# 用来避免IP频繁变化导致反复重启或由于重启阻塞，使用旧IP重启的情况
+applied_ip=""
+
+# 非阻塞式调用 s6-rc
+# 返回 0=成功 2=获取锁失败 1=其他错误
+s6rc_try() {
+    local op="$1" target="$2" err
+    if err=$(s6-rc -"$op" change "$target" 2>&1); then
+        return 0
+    fi
+    case "$err" in
+    *"unable to take locks"* | *"Resource busy"*) return 2 ;;
+    *)
+        echo "ERROR: s6-rc -$op change $target failed: $err" >&2
+        return 1
+        ;;
+    esac
+}
+
+# 阻塞式调用 s6-rc
+# 获取锁失败会一直重试, 若出现其它错误则立即返回
+# 用法: s6rc_change d|u TARGET
+s6rc_change() {
+    local op="$1" target="$2" i=0 max="${S6RC_LOCK_RETRY:-600}" err
+    while :; do
+        if err=$(s6-rc -"$op" change "$target" 2>&1); then
+            return 0
+        fi
+        case "$err" in
+        *"unable to take locks"* | *"Resource busy"*)
+            i=$((i + 1))
+            if [ "$i" -ge "$max" ]; then
+                echo "WARN: s6-rc -$op change $target still lock-busy after ${max} retries, giving up" >&2
+                return 1
+            fi
+            sleep 1
+            ;;
+        *)
+            echo "ERROR: s6-rc -$op change $target failed: $err" >&2
+            return 1
+            ;;
+        esac
+    done
+}
+
+# 返回 0=已重启 2=获取锁失败 1=其他错误
+restart_ip_services() {
+    local rc
+    s6rc_try d dnf-channel
+    rc=$?
+    [ "$rc" -ne 0 ] && return "$rc"
+    if [ -n "$MAIN_BRIDGE_IP" ]; then
+        s6rc_change d dnf-bridge || return 1
+        s6rc_change u dnf-bridge || return 1
+    fi
+    s6rc_change u dnf-channel || return 1
+    s6rc_change d llnut_gate || return 1
+    s6rc_change u llnut_gate || return 1
+    return 0
+}
+
+# 处理IP解析结果, 更新 applied_ip
 # 参数: NEW_IP SOURCE_DESC INTERVAL
 # 返回: 0=IP有效, 1=IP为空
 handle_ip_change() {
-    local new_ip="$1" source_desc="$2" interval="$3"
-    local old_ip
-    old_ip=$(cat "$state_file" 2>/dev/null || true)
-    # 判断IP是否为空
+    local new_ip="$1" source_desc="$2" interval="$3" rc
     if [ -z "$new_ip" ]; then
         echo "${source_desc} ip is empty, wait ${interval} second"
         return 1
     fi
-    # 判断IP是否发生变化
-    if [ "$new_ip" != "$old_ip" ]; then
-        echo "${source_desc} ip changed, old ip is ${old_ip}, new ip is ${new_ip}"
-        # 通知其他进程[写入文件]
+    if [ "$new_ip" != "$(cat "$state_file" 2>/dev/null)" ]; then
         echo "$new_ip" >"$state_file"
-        s6-rc -d change dnf-channel
-        if [ -n "$MAIN_BRIDGE_IP" ]; then
-            s6-rc -d change dnf-bridge
-        fi
-        kill_graceful 3 df_bridge_r df_channel_r
-        killall -q -9 df_game_r || true
-        sleep 1
-        if [ -n "$MAIN_BRIDGE_IP" ]; then
-            s6-rc -u change dnf-bridge
-            wait_for_port "$MAIN_BRIDGE_IP" 7000 30 || true
-        fi
-        s6-rc -u change dnf-channel
-        s6-svc -r /run/service/llnut_gate
-    else
+    fi
+    if [ -z "$applied_ip" ]; then
+        echo "${source_desc} ip resolved, ip is ${new_ip}"
+        applied_ip="$new_ip"
+        return 0
+    fi
+    if [ "$new_ip" = "$applied_ip" ]; then
         echo "${source_desc} ip not change, ip is ${new_ip}, wait ${interval} second"
+        return 0
+    fi
+    echo "${source_desc} ip changed, applied ip is ${applied_ip}, new ip is ${new_ip}"
+    restart_ip_services
+    rc=$?
+    if [ "$rc" -eq 0 ]; then
+        applied_ip="$new_ip"
+    elif [ "$rc" -eq 2 ]; then
+        echo "${source_desc} s6-rc lock busy, defer restart, retry with latest ip next round" >&2
+    else
+        echo "WARN: restart for ip ${new_ip} failed" >&2
     fi
     return 0
+}
+
+proc_running() {
+    pgrep -x "$1" >/dev/null 2>&1
+}
+
+recover_applied_ip() {
+    if proc_running df_channel_r || proc_running df_game_r || proc_running dnf-gate-server; then
+        applied_ip=$(cat "$state_file" 2>/dev/null || true)
+    fi
 }
 
 # 被 source 时只加载函数
 [ "${BASH_SOURCE[0]}" = "$0" ] || return 0
 
-# 清除MONITOR_PUBLIC_IP文件
+recover_applied_ip
 rm -rf "$state_file"
 MONITOR_PUBLIC_IP=$PUBLIC_IP
 # 云服务器自动获取公网IP
