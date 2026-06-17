@@ -1,4 +1,5 @@
 #!/command/execlineb -P
+foreground { /etc/s6-overlay/scripts/on-start netbird }
 with-contenv
 cd /home/template/init/netbird
 fdmove -c 2 1

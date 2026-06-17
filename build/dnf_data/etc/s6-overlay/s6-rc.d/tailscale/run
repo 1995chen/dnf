@@ -1,4 +1,5 @@
 #!/command/execlineb -P
+foreground { /etc/s6-overlay/scripts/on-start tailscale }
 with-contenv
 cd /home/template/init/tailscale
 fdmove -c 2 1

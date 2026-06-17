@@ -23,7 +23,8 @@ for f in \
     build/dnf_data/etc/s6-overlay/scripts/mysql-init.sh \
     build/dnf_data/etc/s6-overlay/scripts/mysql-run.sh \
     build/dnf_data/etc/s6-overlay/s6-rc.d/mysql/run \
-    build/dnf_data/etc/s6-overlay/scripts/finish-default-once \
+    build/dnf_data/etc/s6-overlay/scripts/on-finish \
+    build/dnf_data/etc/s6-overlay/scripts/on-start \
     build/dnf_data/TeaEncrypt \
     build/dnf_data/home/template/init/scheduler/db-tool.sh \
     build/dnf_data/etc/s6-overlay/scripts/init.d/*.sh; do
@@ -64,8 +65,10 @@ if command -v shellcheck >/dev/null 2>&1; then
         build/dnf_data/etc/s6-overlay/scripts/mysql-init.sh
         build/dnf_data/etc/s6-overlay/scripts/mysql-run.sh
         build/dnf_data/etc/s6-overlay/scripts/stage2-hook.test.sh
-        build/dnf_data/etc/s6-overlay/scripts/finish-default-once
-        build/dnf_data/etc/s6-overlay/scripts/finish-default-once.test.sh
+        build/dnf_data/etc/s6-overlay/scripts/on-finish
+        build/dnf_data/etc/s6-overlay/scripts/on-finish.test.sh
+        build/dnf_data/etc/s6-overlay/scripts/on-start
+        build/dnf_data/etc/s6-overlay/scripts/on-start.test.sh
         build/dnf_data/etc/s6-overlay/scripts/init.d/env-resolve.sh
         build/dnf_data/etc/s6-overlay/scripts/init.d/env-resolve.test.sh
         build/dnf_data/etc/s6-overlay/scripts/init.d/cleanup.sh

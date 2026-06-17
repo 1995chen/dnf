@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# 服务启动时打印启动日志
+# 用于某重启其他服务时先停止服务，之后s6恢复服务时不打印启动日志的问题
+
+notify_target="${DNF_SVC_NOTIFY_TARGET:-/proc/1/fd/1}"
+
+svc="${1:-unknown}"
+
+(echo "[svc] ${svc} starting" >"$notify_target") 2>/dev/null || true

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 SCRIPT_PATH=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
-TARGET="${SCRIPT_PATH}/finish-default-once"
+TARGET="${SCRIPT_PATH}/on-finish"
 
 WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
@@ -9,13 +9,14 @@ trap 'rm -rf "$WORK"' EXIT
 pass=0
 failed=0
 
-run() {
-    local code="$1" sig="$2" pgid="${3:-1}"
+run_svc() {
+    local code="$1" sig="$2" svc="$3" pgid="${4:-1}"
     (
-        DNF_SVC_NOTIFY_TARGET="$WORK/out" bash "$TARGET" "$code" "$sig" game_siroco52 "$pgid"
+        DNF_SVC_NOTIFY_TARGET="$WORK/out" bash "$TARGET" "$code" "$sig" "$svc" "$pgid"
     )
     echo "$?" >"$WORK/rc"
 }
+run() { run_svc "$1" "$2" game_siroco52 "${3:-1}"; }
 
 reset_state() { rm -f "$WORK/out"; }
 
@@ -39,37 +40,37 @@ echo "== 正常退出 exit 0: 不重启, 返回 125 =="
 reset_state
 run 0 0
 exit_is "exit0 returns 125" 125
-out_has "exit0 message" "stopped (exit 0), no restart"
+out_has "exit0 message" "stopped (exit 0)"
 
-echo "== 非零退出码: 异常退出, 重启 =="
+echo "== 非零退出码: 异常退出, 触发重启 =="
 reset_state
 run 1 0
 exit_is "code1 returns 0" 0
-out_has "code1 message" "exited abnormally (code=1), restarting"
+out_has "code1 message" "exited abnormally (code=1)"
 
 echo "== SIGSEGV(11): 崩溃 =="
 reset_state
 run 256 11
 exit_is "segv returns 0" 0
-out_has "segv message" "crashed (SIGSEGV), restarting"
+out_has "segv message" "crashed (SIGSEGV)"
 
 echo "== SIGABRT(6): 崩溃, 名字统一为 ABRT 而非 IOT =="
 reset_state
 run 256 6
 exit_is "abrt returns 0" 0
-out_has "abrt message" "crashed (SIGABRT), restarting"
+out_has "abrt message" "crashed (SIGABRT)"
 
 echo "== SIGTERM(15) =="
 reset_state
 run 256 15
 exit_is "term returns 0" 0
-out_has "term message" "killed by SIGTERM, restarting"
+out_has "term message" "killed by SIGTERM"
 
 echo "== SIGKILL(9) =="
 reset_state
 run 256 9
 exit_is "kill returns 0" 0
-out_has "kill message" "killed by SIGKILL, restarting"
+out_has "kill message" "killed by SIGKILL"
 
 echo "== kill 时清理进程组下其他进程 (kill -9 -- -\$4) =="
 reset_state
@@ -89,7 +90,7 @@ pgid=$(ps -o pgid= -p "$leader" 2>/dev/null | tr -d ' ')
 if [ "$ready" = 1 ] && [ "$pgid" != 1 ]; then
     run 256 9 "$pgid"
     exit_is "cleanup returns 0" 0
-    out_has "cleanup message" "killed by SIGKILL, restarting"
+    out_has "cleanup message" "killed by SIGKILL"
     dead=0
     for _ in $(seq 1 20); do
         kill -0 "$leader" 2>/dev/null || {

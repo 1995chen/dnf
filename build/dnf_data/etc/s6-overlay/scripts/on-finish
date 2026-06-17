@@ -11,9 +11,8 @@ notify() { (echo "$@" >"$notify_target") 2>/dev/null || true; }
 svc="${3:-$PWD}"
 svc="${svc##*/}"
 
-# 正常退出: 不重启
 if [ "$1" = 0 ]; then
-    notify "[svc] ${svc} stopped (exit 0), no restart"
+    notify "[svc] ${svc} stopped (exit 0)"
     exit 125
 fi
 
@@ -32,13 +31,13 @@ if [ "$1" = 256 ]; then
     case "$sig" in
     4 | 6 | 7 | 8 | 11)
         # SIGILL/ABRT/BUS/FPE/SEGV: 进程崩溃
-        notify "[svc] ${svc} crashed (SIG${signame}), restarting"
+        notify "[svc] ${svc} crashed (SIG${signame})"
         ;;
     *)
-        notify "[svc] ${svc} killed by SIG${signame}, restarting"
+        notify "[svc] ${svc} killed by SIG${signame}"
         ;;
     esac
 else
     # 进程异常退出
-    notify "[svc] ${svc} exited abnormally (code=${1}), restarting"
+    notify "[svc] ${svc} exited abnormally (code=${1})"
 fi

@@ -1,4 +1,5 @@
 #!/command/execlineb -P
+foreground { /etc/s6-overlay/scripts/on-start coserver }
 with-contenv
 s6-notifyoncheck -T 600000 -n 0 -w 500 -t 10000 -c "/home/template/init/lib/s6-runprobe coserver"
 fdclose 3

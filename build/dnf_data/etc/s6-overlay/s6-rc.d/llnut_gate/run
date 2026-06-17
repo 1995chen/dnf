@@ -1,4 +1,5 @@
 #!/command/execlineb -P
+foreground { /etc/s6-overlay/scripts/on-start llnut_gate }
 with-contenv
 cd /data
 fdmove -c 2 1
