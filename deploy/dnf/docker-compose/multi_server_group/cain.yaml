@@ -41,6 +41,8 @@ services:
       # - GATE_TLS_KEY_PATH=/data/server.key
       # - GATE_TLS_BIND_ADDRESS=0.0.0.0:5504
       # - GATE_TLS_ONLY=false
+      # 注册开关（可选，设为 false 时网关拒绝新用户注册）
+      # - GATE_REGISTRATION_OPEN=true
     # shm_size: 1g【不可删除】，docker默认为64M较小，需要增加才能保证运行
     shm_size: 1g
     memswap_limit: -1

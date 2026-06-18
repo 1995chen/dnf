@@ -43,7 +43,7 @@ RUN curl -fsSL -o /usr/lib/libjemalloc32.so.2 "${JEMALLOC_I686_URL}" && \
     rm -f /tmp/libjemalloc32.so.2.sha256
 
 # 下载并校验dnf-gate-server
-ARG GATE_VERSION="0.4.0"
+ARG GATE_VERSION="0.5.0"
 RUN GATE_REPO="llnut/dnf-login" && GATE_TARGET="x86_64-unknown-linux-musl" && \
     if [ -z "${GATE_VERSION}" ]; then \
         GATE_VERSION=$(curl -fsSL "https://api.github.com/repos/${GATE_REPO}/releases/latest" | grep '"tag_name"' | head -1 | sed 's/.*"tag_name": *"\(.*\)".*/\1/'); \
@@ -96,6 +96,7 @@ ENV S6_STAGE2_HOOK=/etc/s6-overlay/scripts/stage2-hook.sh \
     GATE_TLS_KEY_PATH='' \
     GATE_TLS_BIND_ADDRESS='0.0.0.0:5504' \
     GATE_TLS_ONLY=false \
+    GATE_REGISTRATION_OPEN=true \
     GAME_SERVER_IP='' \
     AUTO_TUNE=true \
     TUNE_PROFILE='' \

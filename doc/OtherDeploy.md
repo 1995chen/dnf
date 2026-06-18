@@ -95,6 +95,7 @@
 | GATE_TLS_KEY_PATH | TLS 私钥路径 |  | '' |
 | GATE_TLS_BIND_ADDRESS | dnf-gate-server HTTPS 监听地址 |  | 0.0.0.0:5504 |
 | GATE_TLS_ONLY | 启用后仅允许 HTTPS 连接，拒绝 HTTP 请求 | true/false | false |
+| GATE_REGISTRATION_OPEN | 是否开放新用户注册，设为 false 时网关拒绝注册请求 | true/false | true |
 | RSA_PRIVATE_KEY_PATH | RSA 私钥路径 |  | /data/privatekey.pem |
 | GAME_SERVER_IP | 游戏服务器 IP，当网关与游戏服务端不在同一台机器时需单独配置 |  | PUBLIC_IP 的值 |
 | INITIAL_CERA | 新账号初始点券 |  | 1000 |

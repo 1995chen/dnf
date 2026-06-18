@@ -18,6 +18,8 @@ services:
       # - GATE_TLS_KEY_PATH=/data/server.key
       # - GATE_TLS_BIND_ADDRESS=0.0.0.0:5504
       # - GATE_TLS_ONLY=false
+      # 注册开关（可选，设为 false 时网关拒绝新用户注册）
+      # - GATE_REGISTRATION_OPEN=true
       # 手动指定对外IP
       - PUBLIC_IP=127.0.0.1
       # 仅开启11和52频道

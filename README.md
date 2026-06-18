@@ -355,6 +355,7 @@ security_opt:
 | `GATE_TLS_KEY_PATH` | 无 | TLS 私钥路径 |
 | `GATE_TLS_BIND_ADDRESS` | `0.0.0.0:5504` | dnf-gate-server HTTPS 监听地址 |
 | `GATE_TLS_ONLY` | `false` | 启用后仅允许 HTTPS 连接，拒绝 HTTP 请求 |
+| `GATE_REGISTRATION_OPEN` | `true` | 是否开放新用户注册，设为 false 时网关拒绝注册请求 |
 | `GAME_SERVER_IP` | `PUBLIC_IP` | 游戏服务器 IP，当网关与游戏服务端不在同一台机器时需单独配置 |
 
 ### 移除环境变量（1995chen/dnf 特有）
