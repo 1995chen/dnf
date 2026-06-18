@@ -75,65 +75,17 @@ docker run -d \
 
 ### 第三步：确认服务端启动成功
 
-**1. 查看日志**
-
-查看 `/data/log` 目录下的 `.init` 日志文件：
+服务端启动约 1 分钟，首次初始化或低配硬件可能更久。启动完成后，容器日志中会出现每个已开启的频道的就绪日志：
 
 ~~~shell
-├── siroco11
-│ ├── Log20211203-09.history
-│ ├── Log20211203.cri
-│ ├── Log20211203.debug
-│ ├── Log20211203.error
-│ ├── Log20211203.init
-│ ├── Log20211203.log
-│ ├── Log20211203.money
-│ └── Log20211203.snap
-└── siroco52
-  ├── ...
+docker logs dnf
+
+# 出现所有已开启频道的就绪日志，即代表启动成功：
+s6-rc: info: service game_siroco11 successfully started
+s6-rc: info: service game_siroco52 successfully started
 ~~~
 
-初始化约 1 分钟，首次初始化或低配硬件可能更久。成功后 `.init` 日志中会出现以下内容：
-
-~~~shell
-[root@centos-02 siroco11] tail -f Log$(date +%Y%m%d).init
-[09:40:23]    - RestrictBegin : 1
-[09:40:23]    - DropRate : 0
-[09:40:23]    Security Restrict End
-[09:40:23] GeoIP Allow Country Code : CN
-[09:40:23] GeoIP Allow Country Code : HK
-[09:40:23] GeoIP Allow Country Code : KR
-[09:40:23] GeoIP Allow Country Code : MO
-[09:40:23] GeoIP Allow Country Code : TW(CN)
-[09:40:32] [!] Connect To Guild Server ...
-[09:40:32] [!] Connect To Monitor Server ...
-~~~
-
-**2. 查看进程**
-
-~~~shell
-[root@centos-02 siroco11] ps -ef | grep df_game
-root 16500 16039 9 20:39 ? 00:01:20 ./df_game_r siroco11 start
-root 16502 16039 9 20:39 ? 00:01:22 ./df_game_r siroco52 start
-~~~
-
-对应频道的 `df_game_r` 进程存在即代表成功。
-
-**3. 查看服务状态与日志**
-
-```shell
-# 查看正在运行的服务
-docker exec dnf s6-rc -a list
-
-# 查看 11 频道的状态
-docker exec dnf s6-svstat /run/service/game_siroco11
-
-# 查看 11 频道的日志
-docker exec dnf tail -f /data/log/game_siroco11/current
-
-# 查看 52 频道的日志
-docker exec dnf tail -f /data/log/game_siroco52/current
-```
+若长时间未出现上述日志，可参考[常见问题 22](#qa-game-startup-check) 排查问题。
 
 ### 第四步：配置客户端
 
@@ -341,6 +293,36 @@ security_opt:
   - seccomp=/etc/docker/seccomp-profile-v0.2.1.json
 ```
 如果使用 docker run，启动参数中加入 `--security-opt seccomp=/etc/docker/seccomp-profile-v0.2.1.json` 后启动容器即可。
+
+<a id="qa-game-startup-check"></a>
+22.服务端长时间未出现 `game_sirocoXX successfully started`
+* A: 查看进程，对应频道的 `df_game_r` 进程存在即代表频道已启动：
+```shell
+docker exec dnf ps -ef | grep df_game
+root ... ./df_game_r siroco11 nofork
+root ... ./df_game_r siroco52 nofork
+```
+之后查看频道 `.init` 日志。启动成功后会出现五国日志：
+```shell
+docker exec dnf sh -c 'tail -n 20 /home/neople/game/log/siroco11/Log$(date +%Y%m%d).init'
+...
+[09:40:23] GeoIP Allow Country Code : CN
+[09:40:23] GeoIP Allow Country Code : HK
+[09:40:23] GeoIP Allow Country Code : KR
+[09:40:23] GeoIP Allow Country Code : MO
+[09:40:23] GeoIP Allow Country Code : TW(CN)
+[09:40:32] [!] Connect To Guild Server ...
+[09:40:32] [!] Connect To Monitor Server ...
+```
+* A: 查看服务状态与日志：
+```shell
+# 查看正在运行的服务
+docker exec dnf s6-rc -a list
+# 查看 11 频道状态
+docker exec dnf s6-svstat /run/service/game_siroco11
+# 查看 11 频道日志
+docker exec dnf tail -f /data/log/game_siroco11/current
+```
 
 ---
 
