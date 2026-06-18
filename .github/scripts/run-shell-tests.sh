@@ -60,6 +60,8 @@ if command -v shellcheck >/dev/null 2>&1; then
         build/dnf_data/home/template/init/lib/s6-runprobe
         build/dnf_data/home/template/init/lib/probe-tcp-port.sh
         build/dnf_data/home/template/init/lib/probe-tcp-port.test.sh
+        build/dnf_data/home/template/init/lib/probe-game-log.sh
+        build/dnf_data/home/template/init/lib/probe-game-log.test.sh
         build/dnf_data/home/template/init/lib/zerg-resolve.test.sh
         build/dnf_data/etc/s6-overlay/scripts/stage2-hook.sh
         build/dnf_data/etc/s6-overlay/scripts/mysql-init.sh

@@ -43,9 +43,14 @@ chk "设置 game_siroco11 默认启动" yes "$([ -f "$WORK/s6-rc.d/user/contents
 # 频道端口环境变量 = SERVER_GROUP00<频道号>
 chk "game_siroco11 端口环境变量" "30011" "$(cat "$CENV/GAME_SIROCO11_TCP_PORT" 2>/dev/null)"
 chk "game_siroco52 端口环境变量" "30052" "$(cat "$CENV/GAME_SIROCO52_TCP_PORT" 2>/dev/null)"
-chk "probes.d/game_siroco11 使用 env 探针" \
-    "cmd:/home/template/init/lib/probe-tcp-port.sh GAME_SIROCO11_TCP_PORT" \
+
+# 频道就绪探针
+chk "probes.d/game_siroco11 端口+日志探针" \
+    "cmd:/home/template/init/lib/probe-tcp-port.sh GAME_SIROCO11_TCP_PORT;cmd:/home/template/init/lib/probe-game-log.sh siroco11" \
     "$(cat "$WORK/probes.d/game_siroco11" 2>/dev/null)"
+chk "probes.d/game_siroco52 端口+日志探针" \
+    "cmd:/home/template/init/lib/probe-tcp-port.sh GAME_SIROCO52_TCP_PORT;cmd:/home/template/init/lib/probe-game-log.sh siroco52" \
+    "$(cat "$WORK/probes.d/game_siroco52" 2>/dev/null)"
 
 # 每个常驻服务都应生成 <svc>-log
 missing=""

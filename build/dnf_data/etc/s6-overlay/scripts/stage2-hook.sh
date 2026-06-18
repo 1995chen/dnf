@@ -79,8 +79,10 @@ while IFS= read -r num; do
     game_port_var="${svc^^}_TCP_PORT"
     mkdir -p "${container_env_path}"
     printf '%s' "$game_port" >"${container_env_path}/${game_port_var}"
-    printf 'cmd:/home/template/init/lib/probe-tcp-port.sh %s\n' \
-        "$game_port_var" >"${probes_path}/$svc"
+
+    channel_name="${SERVER_GROUP_NAME}${num}"
+    printf 'cmd:/home/template/init/lib/probe-tcp-port.sh %s;cmd:/home/template/init/lib/probe-game-log.sh %s\n' \
+        "$game_port_var" "$channel_name" >"${probes_path}/$svc"
 done < <(enumerate_open_channels "$OPEN_CHANNEL")
 
 # 合并 /data/s6-rc.d/ 下的用户自定义配置
@@ -157,4 +159,3 @@ for entry in "${s6rc_path}"/*/; do
 done
 
 echo "[stage2-hook] dynamic services prepared"
-exit 0
