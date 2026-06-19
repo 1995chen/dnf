@@ -331,6 +331,7 @@ chk "ndw: WARN 发送到 stderr" "yes" "$(printf '%s' "$nd_err" | grep -q WARN &
 # 同一份文件一秒内多次备份, 备份名添加序号，避免只产生一份备份数据
 ndc="$WORK/ndc"
 mkdir -p "$ndc"
+# shellcheck disable=SC2329
 date() { echo 'FIXEDTS'; }
 ln -s /a "$ndc/c"
 normalize_data_path "$ndc/c" file 2>/dev/null
