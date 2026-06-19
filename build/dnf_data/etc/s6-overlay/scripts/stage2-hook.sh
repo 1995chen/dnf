@@ -86,6 +86,9 @@ while IFS= read -r num; do
 done < <(enumerate_open_channels "$OPEN_CHANNEL")
 
 # 合并 /data/s6-rc.d/ 下的用户自定义配置
+if [ -L /data/s6-rc.d ]; then
+    echo "[stage2-hook] WARN: /data/s6-rc.d is a symlink -> $(readlink /data/s6-rc.d); plugin config lives outside the volume" >&2
+fi
 if [ -d /data/s6-rc.d ]; then
     for plugin_path in /data/s6-rc.d/*/; do
         [ -d "$plugin_path" ] || continue

@@ -248,5 +248,132 @@ chk "coc: 含非法频道数量" "2" "$(count_open_channels '1,8,40,11')"
 chk "coc: 逗号后接空格数量" "2" "$(count_open_channels '11, 52')"
 chk "coc: 为空则数量为 0" "0" "$(count_open_channels '')"
 
+# normalize_data_path: /data 软链接有效性检测
+# 普通文件保持原样
+nd="$WORK/nd"
+mkdir -p "$nd"
+printf 'real\n' >"$nd/regfile"
+normalize_data_path "$nd/regfile" file
+chk "nd: 普通文件保持不变" "real" "$(cat "$nd/regfile" 2>/dev/null)"
+chk "nd: 普通文件不备份" 0 "$(bak_count "$nd/regfile")"
+
+# 真实目录原样保留
+mkdir -p "$nd/regdir"
+normalize_data_path "$nd/regdir" directory
+chk "nd: 真实目录保持不变" "yes" "$([ -d "$nd/regdir" ] && [ ! -L "$nd/regdir" ] && echo yes || echo no)"
+
+# 空路径不处理
+normalize_data_path "$nd/missing" file
+chk "nd: 路径不存在则不处理" "no" "$([ -e "$nd/missing" ] && echo yes || echo no)"
+
+# 软链接指向有效文件时发日志提醒但原样保留, 不产生备份
+ndf="$WORK/ndf"
+mkdir -p "$ndf"
+printf 'TGT\n' >"$ndf/target"
+ln -s "$ndf/target" "$ndf/link"
+ndf_err=$(normalize_data_path "$ndf/link" file 2>&1 >/dev/null)
+chk "ndf: 指向有效文件的软链接保持不变" "yes" "$([ -L "$ndf/link" ] && echo yes || echo no)"
+chk "ndf: 指向有效文件的软链接不产生备份文件" 0 "$(bak_count "$ndf/link")"
+chk "ndf: 目标文件不变" "TGT" "$(cat "$ndf/target")"
+chk "ndf: 打印 WARN 日志" "yes" "$(printf '%s' "$ndf_err" | grep -q WARN && echo yes || echo no)"
+
+# 文件类型软链接却指向目录, 备份重建
+ndfm="$WORK/ndfm"
+mkdir -p "$ndfm/adir"
+ln -s "$ndfm/adir" "$ndfm/link"
+normalize_data_path "$ndfm/link" file 2>/dev/null
+chk "ndfm: 指向目录的文件软链接备份并重建" "no" "$([ -L "$ndfm/link" ] && echo yes || echo no)"
+chk "ndfm: 类型不符则备份" 1 "$(bak_count "$ndfm/link")"
+
+# 空文件软链接，备份重建
+ndd="$WORK/ndd"
+mkdir -p "$ndd"
+ln -s /mnt/nope/x "$ndd/dead"
+normalize_data_path "$ndd/dead" file 2>/dev/null
+chk "ndd: 空软链接备份重建" "no" "$([ -L "$ndd/dead" ] && echo yes || echo no)"
+ndd_bak=$(find "$ndd" -name 'dead.*.bak' | head -n1)
+chk "ndd: 备份空软链接" "/mnt/nope/x" "$(readlink "$ndd_bak")"
+
+# 软链接指向有效目录时发日志提醒但保留
+ndr="$WORK/ndr"
+mkdir -p "$ndr/realdir"
+printf 'keep\n' >"$ndr/realdir/state"
+ln -s "$ndr/realdir" "$ndr/dlink"
+ndr_err=$(normalize_data_path "$ndr/dlink" directory 2>&1 >/dev/null)
+chk "ndr: 软链接指向真实目录时保持不变" "yes" "$([ -L "$ndr/dlink" ] && echo yes || echo no)"
+chk "ndr: 软链接指向真实目录时不产生备份" 0 "$(bak_count "$ndr/dlink")"
+chk "ndr: 目标数据不被清空" "keep" "$(cat "$ndr/dlink/state" 2>/dev/null)"
+chk "ndr: 打印 WARN 日志" "yes" "$(printf '%s' "$ndr_err" | grep -q WARN && echo yes || echo no)"
+
+# 目录软链接却指向文件，备份重建
+ndrf="$WORK/ndrf"
+mkdir -p "$ndrf"
+printf 'x' >"$ndrf/afile"
+ln -s "$ndrf/afile" "$ndrf/dl"
+normalize_data_path "$ndrf/dl" directory 2>/dev/null
+chk "ndrf: 指向文件的目录软链接备份并重建" "no" "$([ -L "$ndrf/dl" ] && echo yes || echo no)"
+chk "ndrf: 备份后成功创建新目录" "yes" "$(mkdir -p "$ndrf/dl" && [ -d "$ndrf/dl" ] && [ ! -L "$ndrf/dl" ] && echo yes || echo no)"
+
+# 空目录软链接，备份重建
+ndrd="$WORK/ndrd"
+mkdir -p "$ndrd"
+ln -s /mnt/nope/d "$ndrd/dl"
+normalize_data_path "$ndrd/dl" directory 2>/dev/null
+chk "ndrd: 空目录软链接备份重建" "no" "$([ -L "$ndrd/dl" ] && echo yes || echo no)"
+
+# 软链接 WARN 日志发送到 stderr
+ndw="$WORK/ndw"
+mkdir -p "$ndw"
+ln -s /nope "$ndw/l"
+nd_err=$(normalize_data_path "$ndw/l" file 2>&1 >/dev/null)
+chk "ndw: WARN 发送到 stderr" "yes" "$(printf '%s' "$nd_err" | grep -q WARN && echo yes || echo no)"
+
+# 同一份文件一秒内多次备份, 备份名添加序号，避免只产生一份备份数据
+ndc="$WORK/ndc"
+mkdir -p "$ndc"
+date() { echo 'FIXEDTS'; }
+ln -s /a "$ndc/c"
+normalize_data_path "$ndc/c" file 2>/dev/null
+ln -s /b "$ndc/c"
+normalize_data_path "$ndc/c" file 2>/dev/null
+unset -f date
+chk "ndc: 首个备份" "yes" "$([ -L "$ndc/c.FIXEDTS.bak" ] && echo yes || echo no)"
+chk "ndc: 二次备份，结尾添加序号" "yes" "$([ -L "$ndc/c.FIXEDTS.1.bak" ] && echo yes || echo no)"
+chk "ndc: 产生两份备份文件" 2 "$(bak_count "$ndc/c")"
+
+# sync_template_file: target 是有效软链接时当作用户自定义数据, 保持原样
+nds="$WORK/nds"
+mkdir -p "$nds"
+printf 'srcv\n' >"$nds/src"
+printf 'usercustom\n' >"$nds/orig"
+ln -s "$nds/orig" "$nds/t"
+msg=$(sync_template_file "$nds/src" "$nds/t" "$nds/ref" 2>/dev/null)
+chk "nds: 有效软链接 target 保持不变" "yes" "$([ -L "$nds/t" ] && echo yes || echo no)"
+chk "nds: 不覆盖自定义数据" "yes" "$(printf '%s' "$msg" | grep -q 'keep customized' && echo yes || echo no)"
+chk "nds: 软链接目标保持不变" "usercustom" "$(cat "$nds/orig")"
+chk "nds: 不产生备份文件" 0 "$(bak_count "$nds/t")"
+
+# sync_template_file: target 是无效软链接时备份重建
+ndsb="$WORK/ndsb"
+mkdir -p "$ndsb"
+printf 'srcv\n' >"$ndsb/src"
+ln -s /nonexistent/x "$ndsb/t"
+sync_template_file "$ndsb/src" "$ndsb/t" "$ndsb/ref" >/dev/null 2>&1
+chk "ndsb: 空 target 软链接，备份重建" "yes" "$([ -f "$ndsb/t" ] && [ ! -L "$ndsb/t" ] && echo yes || echo no)"
+chk "ndsb: 重建的文件与模板相同" "srcv" "$(cat "$ndsb/t")"
+chk "ndsb: 备份空软链接" 1 "$(bak_count "$ndsb/t")"
+
+# sync_template_file: ref 是有效软链接时保持不变
+ndsr="$WORK/ndsr"
+mkdir -p "$ndsr"
+printf 'new\n' >"$ndsr/src"
+printf 'old\n' >"$ndsr/t"
+printf 'REFDATA\n' >"$ndsr/refext"
+ln -s "$ndsr/refext" "$ndsr/ref"
+sync_template_file "$ndsr/src" "$ndsr/t" "$ndsr/ref" >/dev/null 2>&1
+chk "ndsr: target 从模板更新" "new" "$(cat "$ndsr/t")"
+chk "ndsr: ref 仍是软链接" "yes" "$([ -L "$ndsr/ref" ] && echo yes || echo no)"
+chk "ndsr: ref 目标保持不变" "REFDATA" "$(cat "$ndsr/refext")"
+
 echo "pass=$pass failed=$failed"
 [ "$failed" -eq 0 ]

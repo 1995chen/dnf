@@ -10,23 +10,32 @@ dbmw_bin_file="${DBMW_BIN_FILE:-/home/template/init/df_dbmw_r}"
 source "${DNF_LIB_PATH:-/home/template/init/lib}/common.sh"
 
 # 初始化密钥对
+normalize_data_path "$data_path/privatekey.pem" file
 if [ ! -f "$data_path/privatekey.pem" ]; then
     openssl genrsa -out "$data_path/privatekey.pem" 2048
-    openssl rsa -in "$data_path/privatekey.pem" -pubout -out "$data_path/publickey.pem"
-    echo "init privatekey.pem and publickey.pem success (newly generated)"
+    echo "init privatekey.pem success (newly generated)"
 else
     echo "privatekey.pem have already inited, do nothing!"
-    # 若私钥已存在但公钥缺失，从私钥派生公钥
-    if [ ! -f "$data_path/publickey.pem" ]; then
-        openssl rsa -in "$data_path/privatekey.pem" -pubout -out "$data_path/publickey.pem"
-        echo "init publickey.pem success (derived from existing privatekey.pem)"
-    else
-        echo "publickey.pem have already inited, do nothing!"
+fi
+
+priv_mod=$(openssl rsa -in "$data_path/privatekey.pem" -noout -modulus 2>/dev/null)
+pub_mod=$(openssl rsa -pubin -in "$data_path/publickey.pem" -noout -modulus 2>/dev/null)
+if [ -n "$priv_mod" ] && [ "$priv_mod" = "$pub_mod" ]; then
+    echo "publickey.pem matches privatekey.pem, do nothing!"
+else
+    if [ -L "$data_path/publickey.pem" ]; then
+        mv -f "$data_path/publickey.pem" "$data_path/publickey.pem.$(date +'%Y%m%d-%H%M%S').bak" 2>/dev/null ||
+            rm -f "$data_path/publickey.pem"
+        echo "publickey.pem symlink moved aside" >&2
     fi
+    openssl rsa -in "$data_path/privatekey.pem" -pubout -out "$data_path/publickey.pem"
+    echo "publickey.pem regenerated to match privatekey.pem"
 fi
 
 # 初始化 DP
+normalize_data_path "$data_path/dp" directory
 mkdir -p "$data_path/dp"
+normalize_data_path "$data_path/dp/libhook.so" file
 if [ ! -f "$data_path/dp/libhook.so" ]; then
     cp "$template_init_path/libhook.so" "$data_path/dp/"
     echo "init libhook.so success"
@@ -36,11 +45,14 @@ fi
 
 # 更新时自动备份升级 frida.js
 frida_ref_path="$data_path/.frida-template"
+normalize_data_path "$frida_ref_path" directory
 mkdir -p "$frida_ref_path"
 sync_template_file "$template_init_path/frida.js" "$data_path/frida.js" "$frida_ref_path/frida.js"
 
 # 初始化 monitor_ip 的 get_public_ip.sh 脚本
+normalize_data_path "$data_path/monitor_ip" directory
 mkdir -p "$data_path/monitor_ip"
+normalize_data_path "$data_path/monitor_ip/get_public_ip.sh" file
 if [ ! -f "$data_path/monitor_ip/get_public_ip.sh" ]; then
     cp "$template_init_path/monitor_ip/get_public_ip.sh" "$data_path/monitor_ip/"
     echo "init get_public_ip.sh success"
@@ -50,6 +62,7 @@ fi
 
 # 初始化所有 run 脚本
 run_ref_path="$data_path/.run-template"
+normalize_data_path "$run_ref_path" directory
 mkdir -p "$data_path/run" "$run_ref_path"
 for fp in "$template_init_path/run"/*.sh; do
     [ -f "$fp" ] || continue
@@ -59,6 +72,7 @@ done
 
 # 初始化定时任务
 scheduler_ref_path="$data_path/.scheduler-template"
+normalize_data_path "$scheduler_ref_path" directory
 mkdir -p "$data_path/scheduler" "$scheduler_ref_path"
 # 兼容旧路径
 if [ -f "$data_path/daily_job/user_daily_script.sh" ] && [ ! -e "$data_path/scheduler/user-script.sh" ]; then
@@ -113,6 +127,7 @@ ensure_link() {
 }
 
 # 初始化 pvf
+normalize_data_path "$data_path/Script.pvf" file
 if [ ! -f "$data_path/Script.pvf" ]; then
     tar -zxf "$template_init_path/Script.tgz" -C "$template_init_path"
     cp "$template_init_path/Script.pvf" "$data_path/Script.pvf"
@@ -126,6 +141,7 @@ else
 fi
 
 # 初始化 df_game_r
+normalize_data_path "$data_path/df_game_r" file
 if [ ! -f "$data_path/df_game_r" ]; then
     cp "$template_init_path/df_game_r" "$data_path/df_game_r"
     echo "init df_game_r success"
@@ -153,4 +169,4 @@ else
 fi
 
 # 为DP目录赋予权限
-chmod 777 -R "$data_path/dp"
+[ -L "$data_path/dp" ] || chmod 777 -R "$data_path/dp"

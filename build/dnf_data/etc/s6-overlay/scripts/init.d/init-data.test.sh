@@ -178,5 +178,57 @@ chk "二次运行 game 文件列表不变" "$fp1_list" "$(find "$dest_path/game"
 chk "二次运行 cfg 内容正确" "$expected_cfg" "$(cat "$dest_path/game/cfg/test.cfg")"
 chk "二次初始化 Script.pvf 时，软链接仍指向 /data/Script.pvf" "$data_path/Script.pvf" "$(readlink "$dest_path/game/Script.pvf")"
 
+# 重新生成私钥且公钥是软链接时需要先备份再创建新公钥
+data_path="$WORK/data-pubsym"
+mkdir -p "$data_path/dp"
+echo pvf >"$data_path/Script.pvf"
+echo gamebin >"$data_path/df_game_r"
+printf 'EXTPUBKEY\n' >"$data_path/ext_pub.pem"
+ln -s "$data_path/ext_pub.pem" "$data_path/publickey.pem"
+dest_path="$WORK/neople-pubsym"
+run_hook >/dev/null 2>&1
+chk "pubsym: 退出码 0" 0 "$?"
+chk "pubsym: 生成私钥" "yes" "$([ -f "$data_path/privatekey.pem" ] && [ ! -L "$data_path/privatekey.pem" ] && echo yes || echo no)"
+chk "pubsym: 生成公钥" "yes" "$([ -f "$data_path/publickey.pem" ] && [ ! -L "$data_path/publickey.pem" ] && echo yes || echo no)"
+chk "pubsym: 旧公钥软链接已备份" 1 "$(find "$data_path" -name 'publickey.pem.*.bak' | wc -l)"
+chk "pubsym: 旧公钥软链接源文件不变" "EXTPUBKEY" "$(cat "$data_path/ext_pub.pem")"
+pubsym_pm=$(openssl rsa -in "$data_path/privatekey.pem" -noout -modulus 2>/dev/null)
+pubsym_um=$(openssl rsa -pubin -in "$data_path/publickey.pem" -noout -modulus 2>/dev/null)
+chk "pubsym: 公钥与私钥配对" "yes" "$([ -n "$pubsym_pm" ] && [ "$pubsym_pm" = "$pubsym_um" ] && echo yes || echo no)"
+
+# 私钥为真实文件, 公钥为有效软链接，但公私钥不匹配: 备份软链接并重新生成公钥
+data_path="$WORK/data-pubmm"
+mkdir -p "$data_path/dp"
+echo pvf >"$data_path/Script.pvf"
+echo gamebin >"$data_path/df_game_r"
+openssl genrsa -out "$data_path/privatekey.pem" 2048 2>/dev/null
+openssl genrsa -out "$data_path/other_priv.pem" 2048 2>/dev/null
+openssl rsa -in "$data_path/other_priv.pem" -pubout -out "$data_path/other_pub.pem" 2>/dev/null
+ln -s "$data_path/other_pub.pem" "$data_path/publickey.pem"
+dest_path="$WORK/neople-pubmm"
+run_hook >/dev/null 2>&1
+chk "pubmm: 退出码 0" 0 "$?"
+chk "pubmm: 重新创建公钥" "yes" "$([ -f "$data_path/publickey.pem" ] && [ ! -L "$data_path/publickey.pem" ] && echo yes || echo no)"
+chk "pubmm: 旧公钥软链接已备份" 1 "$(find "$data_path" -name 'publickey.pem.*.bak' | wc -l)"
+pubmm_bp=$(openssl rsa -in "$data_path/other_priv.pem" -noout -modulus 2>/dev/null)
+pubmm_bm=$(openssl rsa -pubin -in "$data_path/other_pub.pem" -noout -modulus 2>/dev/null)
+chk "pubmm: 软链接指向的源文件不变" "yes" "$([ "$pubmm_bp" = "$pubmm_bm" ] && echo yes || echo no)"
+pubmm_pm=$(openssl rsa -in "$data_path/privatekey.pem" -noout -modulus 2>/dev/null)
+pubmm_um=$(openssl rsa -pubin -in "$data_path/publickey.pem" -noout -modulus 2>/dev/null)
+chk "pubmm: 新建的公钥与私钥配对" "yes" "$([ "$pubmm_pm" = "$pubmm_um" ] && echo yes || echo no)"
+
+# 私钥与公钥都是真实文件且匹配: 保持不变
+data_path="$WORK/data-pubmatch"
+mkdir -p "$data_path/dp"
+echo pvf >"$data_path/Script.pvf"
+echo gamebin >"$data_path/df_game_r"
+openssl genrsa -out "$data_path/privatekey.pem" 2048 2>/dev/null
+openssl rsa -in "$data_path/privatekey.pem" -pubout -out "$data_path/publickey.pem" 2>/dev/null
+pubmatch_before=$(md5sum "$data_path/publickey.pem" | cut -d' ' -f1)
+dest_path="$WORK/neople-pubmatch"
+run_hook >/dev/null 2>&1
+chk "pubmatch: 密钥对匹配则保持不变" "$pubmatch_before" "$(md5sum "$data_path/publickey.pem" | cut -d' ' -f1)"
+chk "pubmatch: 密钥对匹配则不产生备份文件" 0 "$(find "$data_path" -name 'publickey.pem.*.bak' | wc -l)"
+
 echo "pass=$pass failed=$failed"
 [ "$failed" -eq 0 ]

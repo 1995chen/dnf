@@ -13,6 +13,7 @@ source /home/template/init/lib/common.sh
 source /home/template/init/lib/tune.sh
 
 # my.cnf 使用 !includedir /data/my.cnf.d，MySQL 5.0 需要确保此目录存在
+normalize_data_path /data/my.cnf.d directory
 mkdir -p /data/my.cnf.d || true
 
 tune_resolve_and_export "yes"

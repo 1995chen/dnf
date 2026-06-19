@@ -108,6 +108,35 @@ chk "恢复-mysql 失败返回非0" yes \
 out=$(run bash "$TOOL" restore dnf-20260101-000000.sql.gz 2>&1)
 chk "恢复: 按文件名选择指定备份文件" yes "$(echo "$out" | grep -q "dnf-20260101-000000" && echo yes || echo no)"
 
+# 当 latest 备份文件为空软链接时应告警并使用旧备份数据
+rm -rf "$bk"
+mkdir -p "$bk"
+echo "CREATE DATABASE IF NOT EXISTS d_taiwan;" | gzip >"$bk/dnf-20260101-000000.sql.gz"
+ln -s /mnt/nope/dnf-20260601-000000.sql.gz "$bk/dnf-20260601-000000.sql.gz"
+out=$(run bash "$TOOL" restore latest 2>&1)
+chk "latest 备份文件为空软链接时应告警" yes "$(echo "$out" | grep -q "dangling backup symlink" && echo yes || echo no)"
+chk "latest 为空软链接时使用旧备份文件" yes "$(echo "$out" | grep -q "dnf-20260101-000000" && echo yes || echo no)"
+
+# latest 及之前的多个备份文件都是空软链接时, 依次跳过并告警, 直到找到有效的旧备份文件
+rm -rf "$bk"
+mkdir -p "$bk"
+echo "CREATE DATABASE IF NOT EXISTS d_taiwan;" | gzip >"$bk/dnf-20260101-000000.sql.gz"
+ln -s /mnt/nope/a "$bk/dnf-20260601-000000.sql.gz"
+ln -s /mnt/nope/b "$bk/dnf-20260602-000000.sql.gz"
+ln -s /mnt/nope/c "$bk/dnf-20260603-000000.sql.gz"
+out=$(run bash "$TOOL" restore latest 2>&1)
+chk "每个空软链接都告警" 3 "$(echo "$out" | grep -c "dangling backup symlink")"
+chk "跳过所有空软链接，使用有效的旧备份文件" yes "$(echo "$out" | grep -q "dnf-20260101-000000" && echo yes || echo no)"
+
+# 所有备份文件都为空软链接时, 返回失败，不执行恢复动作
+rm -rf "$bk"
+mkdir -p "$bk"
+ln -s /mnt/nope/a "$bk/dnf-20260601-000000.sql.gz"
+ln -s /mnt/nope/b "$bk/dnf-20260602-000000.sql.gz"
+chk "所有备份文件都为空软链接时返回非0" yes "$(exits_nonzero run bash "$TOOL" restore latest)"
+out=$(run bash "$TOOL" restore latest 2>&1)
+chk "所有备份文件都为空软链接时提示找不到备份" yes "$(echo "$out" | grep -q "backup not found" && echo yes || echo no)"
+
 chk "恢复: 文件不存在返回非0" yes "$(exits_nonzero run bash "$TOOL" restore nope.sql.gz)"
 
 empty="$WORK/empty"

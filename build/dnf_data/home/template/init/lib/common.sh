@@ -84,20 +84,60 @@ files_identical() {
     cmp -s "$1" "$2"
 }
 
+# 检测并修复持久化目录中的软链接有效性
+# 当持久目录中的软链接指向的源文件/目录不存在或类型不对时，
+# 备份持久文件/目录并从镜像重建
+#
+# 用法: normalize_data_path PATH [file|directory]
+normalize_data_path() {
+    local target="$1" kind="${2:-file}" ts bak n link_target keep
+    [ -L "$target" ] || return 0
+    link_target=$(readlink "$target" 2>/dev/null)
+    keep=no
+    if [ "$kind" = directory ]; then
+        [ -d "$target" ] && keep=yes
+    else
+        [ -f "$target" ] && keep=yes
+    fi
+    if [ "$keep" = yes ]; then
+        echo "WARN: $target is a symlink -> ${link_target:-?}; it resolves to a valid $kind, kept as-is; /data ideally holds a real $kind here" >&2
+        return 0
+    fi
+    ts=$(date +'%Y%m%d-%H%M%S')
+    bak="${target}.${ts}.bak"
+    n=1
+    while [ -e "$bak" ] || [ -L "$bak" ]; do
+        bak="${target}.${ts}.${n}.bak"
+        n=$((n + 1))
+    done
+    if mv "$target" "$bak"; then
+        echo "WARN: $target is a broken symlink -> ${link_target:-?}; /data should hold a regular $kind here, moved it aside to $bak" >&2
+        return 0
+    fi
+    echo "ERROR: failed to move aside symlink $target" >&2
+    return 1
+}
+
 # 同步模板文件
 # 用法: sync_template_file SRC TARGET REF
 sync_template_file() {
     local src="$1" target="$2" ref="$3"
     local name backup ts
     name=$(basename "$target")
+    normalize_data_path "$target" file
+    normalize_data_path "$ref" file
+    if [ -L "$target" ]; then
+        echo "keep customized $name (symlink), not overwritten"
+        return 0
+    fi
     if [ ! -f "$target" ]; then
         cp -f "$src" "$target"
-        cp -f "$src" "$ref"
+        [ -L "$ref" ] || cp -f "$src" "$ref"
         echo "init $name success"
         return 0
     fi
     if files_identical "$src" "$target"; then
-        cp -f "$src" "$ref"
+        [ -L "$ref" ] || cp -f "$src" "$ref"
         echo "$name have already inited, do nothing!"
         return 0
     fi
@@ -112,7 +152,7 @@ sync_template_file() {
         echo "backup customized $name -> $(basename "$backup")"
     fi
     cp -f "$src" "$target"
-    cp -f "$src" "$ref"
+    [ -L "$ref" ] || cp -f "$src" "$ref"
     echo "regenerate $name: template updated"
 }
 

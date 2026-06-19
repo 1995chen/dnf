@@ -81,6 +81,11 @@ cmd_restore() {
     sel="${1:-latest}"
     # latest 使用最新文件, 若包含 / 则视为绝对路径, 否则当作备份目录下的文件名
     if [ "$sel" = latest ]; then
+        # 空软链接备份文件会被 [ -e ] 跳过, 可能误选到旧备份, 需要打日志提醒一下
+        for p in "$dir"/dnf-*.sql.gz; do
+            [ -L "$p" ] && [ ! -e "$p" ] &&
+                echo "[db-restore] WARN: skip dangling backup symlink $(basename "$p") -> $(readlink "$p")" >&2
+        done
         file=$(for p in "$dir"/dnf-*.sql.gz; do [ -e "$p" ] && echo "$p"; done | sort -r | head -n 1)
     else
         case "$sel" in

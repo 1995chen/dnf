@@ -23,7 +23,7 @@ probe_one() {
         files=($arg)
         IFS="$saved_ifs"
         for f in "${files[@]}"; do
-            [ -s "$f" ] && return 0
+            [ -f "$f" ] && [ -s "$f" ] && return 0
         done
         return 1
         ;;

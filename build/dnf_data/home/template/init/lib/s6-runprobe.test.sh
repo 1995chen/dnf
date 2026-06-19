@@ -42,6 +42,23 @@ echo "file:$WORK/emptyfile" >"$PROBES/f_empty"
 run f_empty
 chk "file empty -> not ready" 1 $?
 
+# 探针文件指向目录或目录软链接时不应当作就绪
+mkdir -p "$WORK/adir"
+echo "file:$WORK/adir" >"$PROBES/f_dir"
+run f_dir
+chk "file is a directory -> not ready" 1 $?
+
+ln -s "$WORK/adir" "$WORK/dirlink"
+echo "file:$WORK/dirlink" >"$PROBES/f_dirlink"
+run f_dirlink
+chk "file is a symlink-to-dir -> not ready" 1 $?
+
+# 探针文件指向非空文件的软链接，就绪
+ln -s "$WORK/marker" "$WORK/filelink"
+echo "file:$WORK/filelink" >"$PROBES/f_filelink"
+run f_filelink
+chk "file is a symlink-to-nonempty-file -> ready" 0 $?
+
 echo "cmd:true" >"$PROBES/c_ok"
 run c_ok
 chk "cmd true -> ready" 0 $?
