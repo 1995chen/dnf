@@ -7,6 +7,7 @@ container_env_path="${CONTAINER_ENV_PATH:-/run/s6/container_environment}"
 lib_path="${DNF_LIB_PATH:-/home/template/init/lib}"
 
 source "$lib_path/common.sh"
+source "$lib_path/tune.sh"
 
 # SERVER_GROUP_NAME
 # shellcheck disable=SC2034
@@ -46,6 +47,22 @@ find "${probes_path}" -maxdepth 1 -type f \
     -name "game_${SERVER_GROUP_NAME}*" -delete
 find "${container_env_path}" -maxdepth 1 -type f \
     -name "GAME_${SERVER_GROUP_NAME^^}*_TCP_PORT" -delete 2>/dev/null
+
+# 按性能配置或 PROBE_TIMEOUT 更新就绪探针超时时间
+probe_profile=$(tune_resolve_profile)
+probe_timeout_ms=$(tune_resolve_probe_timeout_ms "$probe_profile")
+if [ -n "${PROBE_TIMEOUT:-}" ] && tune_is_valid_probe_timeout "$PROBE_TIMEOUT"; then
+    echo "[stage2-hook] probe timeout = $((probe_timeout_ms / 1000))s (PROBE_TIMEOUT override)"
+else
+    echo "[stage2-hook] probe timeout = $((probe_timeout_ms / 1000))s (profile=$probe_profile)"
+fi
+for probe_svc_dir in "${s6rc_path}"/*/; do
+    [ -f "${probe_svc_dir}timeout-up" ] || continue
+    printf '%s\n' "$probe_timeout_ms" >"${probe_svc_dir}timeout-up"
+    if [ -f "${probe_svc_dir}run" ] && grep -q notifyoncheck "${probe_svc_dir}run"; then
+        sed -i "s/-T [0-9]\+/-T ${probe_timeout_ms}/" "${probe_svc_dir}run"
+    fi
+done
 
 # 根据 OPEN_CHANNEL 生成 game_xxx 频道目录
 while IFS= read -r num; do

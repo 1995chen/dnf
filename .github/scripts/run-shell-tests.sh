@@ -80,6 +80,7 @@ if command -v shellcheck >/dev/null 2>&1; then
         build/dnf_data/home/template/init/run/start_gate.sh
         build/dnf_data/home/template/init/lib/probe-secbus.sh
         build/dnf_data/home/template/init/lib/tune.sh
+        build/dnf_data/home/template/init/lib/tune.test.sh
         build/dnf_data/home/template/init/lib/common.sh
         build/dnf_data/home/template/init/lib/common.test.sh
         build/dnf_data/home/template/init/lib/mysql.sh

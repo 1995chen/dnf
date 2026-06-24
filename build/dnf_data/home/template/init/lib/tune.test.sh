@@ -68,6 +68,40 @@ check "nano" "$(tune_compute_client_pool_size nano)" 10
 check "xlarge" "$(tune_compute_client_pool_size xlarge)" 1000
 check "bogus -> nano default" "$(tune_compute_client_pool_size bogus)" 10
 
+echo "== tune_resolve_profile =="
+check "TUNE_PROFILE 优先级高于内存" "$(TUNE_PROFILE=large tune_resolve_profile $((2 * GiB)))" large
+check "TUNE_PROFILE low 与 nano 一致" "$(TUNE_PROFILE=low tune_resolve_profile $((64 * GiB)))" nano
+check "非法 TUNE_PROFILE 则自动计算性能配置" "$(TUNE_PROFILE=bogus tune_resolve_profile $((24 * GiB)) 2>/dev/null)" medium
+check "按内存大小计算性能配置" "$(tune_resolve_profile $((24 * GiB)))" medium
+check "若 AUTO_TUNE=false 则使用 nano 配置" "$(AUTO_TUNE=false tune_resolve_profile $((64 * GiB)))" nano
+check "若 mem=0 则使用 nano 配置" "$(tune_resolve_profile 0)" nano
+
+echo "== tune_compute_probe_timeout =="
+check "nano = 1800" "$(tune_compute_probe_timeout nano)" 1800
+check "micro = 900" "$(tune_compute_probe_timeout micro)" 900
+check "small = 600" "$(tune_compute_probe_timeout small)" 600
+check "medium = 600" "$(tune_compute_probe_timeout medium)" 600
+check "large = 600" "$(tune_compute_probe_timeout large)" 600
+check "xlarge = 600" "$(tune_compute_probe_timeout xlarge)" 600
+check "bogus = 600" "$(tune_compute_probe_timeout bogus)" 600
+
+echo "== tune_is_valid_probe_timeout =="
+check "600 ok" "$(tune_is_valid_probe_timeout 600 && echo y || echo n)" y
+check "1 ok" "$(tune_is_valid_probe_timeout 1 && echo y || echo n)" y
+check "0 rejected" "$(tune_is_valid_probe_timeout 0 && echo y || echo n)" n
+check "empty rejected" "$(tune_is_valid_probe_timeout '' && echo y || echo n)" n
+check "decimal rejected" "$(tune_is_valid_probe_timeout 1.5 && echo y || echo n)" n
+check "garbage rejected" "$(tune_is_valid_probe_timeout abc && echo y || echo n)" n
+check "leading zero rejected" "$(tune_is_valid_probe_timeout 0600 && echo y || echo n)" n
+
+echo "== tune_resolve_probe_timeout_ms 单位转换与配置更新 =="
+check "nano profile -> 1800000" "$(tune_resolve_probe_timeout_ms nano)" 1800000
+check "micro profile -> 900000" "$(tune_resolve_probe_timeout_ms micro)" 900000
+check "small profile -> 600000" "$(tune_resolve_probe_timeout_ms small)" 600000
+check "PROBE_TIMEOUT 覆盖默认配置" "$(PROBE_TIMEOUT=1200 tune_resolve_probe_timeout_ms nano)" 1200000
+check "若 PROBE_TIMEOUT 非法则使用对应性能配置的时间" "$(PROBE_TIMEOUT=abc tune_resolve_probe_timeout_ms nano 2>/dev/null)" 1800000
+check "若 PROBE_TIMEOUT=0 则使用对应性能配置的时间" "$(PROBE_TIMEOUT=0 tune_resolve_probe_timeout_ms micro 2>/dev/null)" 900000
+
 echo "== tune_compute_malloc_conf narenas 受 profile cap 限制 =="
 # nano cap=2, 128 CPU 应为 2
 contains "nano @ 128 cpu narenas=2" "$(tune_compute_malloc_conf nano 128)" "narenas:2,"

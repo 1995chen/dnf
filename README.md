@@ -77,13 +77,16 @@ docker run -d \
 
 服务端启动约 1 分钟，首次初始化或低配硬件可能更久。启动完成后，容器日志中会出现每个已开启的频道的就绪日志：
 
-~~~shell
+```shell
 docker logs dnf
+```
 
-# 出现所有已开启频道的就绪日志，即代表启动成功：
+若出现所有已开启频道的就绪日志，即代表启动成功：
+
+```shell
 s6-rc: info: service game_siroco11 successfully started
 s6-rc: info: service game_siroco52 successfully started
-~~~
+```
 
 若长时间未出现上述日志，可参考[常见问题 22](#qa-game-startup-check) 排查问题。
 

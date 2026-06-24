@@ -100,6 +100,31 @@ tune_classify_profile() {
     fi
 }
 
+# 按内存大小解析性能配置
+# 优先使用 TUNE_PROFILE, 若值非法则自动判断
+tune_resolve_profile() {
+    local mem="${1:-}" # 内存大小，单位: bytes
+    if [ -n "${TUNE_PROFILE:-}" ]; then
+        local norm
+        norm=$(tune_normalize_profile "$TUNE_PROFILE")
+        if [ -n "$norm" ]; then
+            echo "$norm"
+            return 0
+        fi
+        echo "tune: invalid TUNE_PROFILE='$TUNE_PROFILE', falling back to auto-detect" >&2
+    fi
+    if [ -z "$mem" ]; then
+        mem=$(tune_detect_mem_bytes)
+    fi
+    [ -z "$mem" ] || ! [ "$mem" -ge 0 ] 2>/dev/null && mem=0
+    if [ "${AUTO_TUNE:-true}" = "true" ] && [ "$mem" -gt 0 ]; then
+        tune_classify_profile "$mem"
+        return 0
+    fi
+    echo nano
+    return 0
+}
+
 tune_size_to_bytes() {
     local s="${1:-0}"
     local n="${s%[KkMmGgTt]}"
@@ -225,6 +250,38 @@ tune_compute_client_pool_size() {
     xlarge) echo 1000 ;;
     *) echo 10 ;;
     esac
+}
+
+# 根据性能配置计算探针超时时间，单位秒
+tune_compute_probe_timeout() {
+    case "$1" in
+    nano) echo 1800 ;;
+    micro) echo 900 ;;
+    small | medium | large | xlarge) echo 600 ;;
+    *) echo 600 ;;
+    esac
+}
+
+# 检查 PROBE_TIMEOUT 是否为正整数
+tune_is_valid_probe_timeout() {
+    [[ "$1" =~ ^[1-9][0-9]*$ ]]
+}
+
+# 根据配置获取毫秒级探针超时时间
+# 优先使用 PROBE_TIMEOUT, 单位秒, 若值非法则使用对应性能配置默认值
+tune_resolve_probe_timeout_ms() {
+    local profile="${1:-}" sec
+    if [ -n "${PROBE_TIMEOUT:-}" ]; then
+        if tune_is_valid_probe_timeout "$PROBE_TIMEOUT"; then
+            echo $((PROBE_TIMEOUT * 1000))
+            return 0
+        fi
+        echo "tune: invalid PROBE_TIMEOUT='$PROBE_TIMEOUT', expect positive integer seconds; using profile default" >&2
+    fi
+    [ -z "$profile" ] && profile=$(tune_resolve_profile)
+    sec=$(tune_compute_probe_timeout "$profile")
+    echo $((sec * 1000))
+    return 0
 }
 
 tune_apply_malloc_conf_64() {
@@ -563,17 +620,6 @@ tune_apply_mysql_cnf() {
 tune_resolve_and_export() {
     local apply_mysql="${1:-no}"
 
-    if [ -n "${TUNE_PROFILE:-}" ]; then
-        local norm
-        norm=$(tune_normalize_profile "$TUNE_PROFILE")
-        if [ -z "$norm" ]; then
-            echo "tune: invalid TUNE_PROFILE='$TUNE_PROFILE', falling back to auto-detect" >&2
-            TUNE_PROFILE=""
-        else
-            TUNE_PROFILE="$norm"
-        fi
-    fi
-
     local cg cpus mem
     cg=$(tune_detect_cgroup_version)
     cpus=$(tune_detect_cpu_count)
@@ -581,15 +627,14 @@ tune_resolve_and_export() {
     mem=$(tune_detect_mem_bytes)
     [ -z "$mem" ] || ! [ "$mem" -ge 0 ] 2>/dev/null && mem=0
 
-    local profile profile_src
-    if [ -n "${TUNE_PROFILE:-}" ]; then
-        profile="$TUNE_PROFILE"
-        profile_src="TUNE_PROFILE=$TUNE_PROFILE"
+    local profile profile_src norm_tp=""
+    profile=$(tune_resolve_profile "$mem")
+    [ -n "${TUNE_PROFILE:-}" ] && norm_tp=$(tune_normalize_profile "$TUNE_PROFILE")
+    if [ -n "$norm_tp" ]; then
+        profile_src="TUNE_PROFILE=$norm_tp"
     elif [ "${AUTO_TUNE:-true}" = "true" ] && [ "$mem" -gt 0 ]; then
-        profile=$(tune_classify_profile "$mem")
         profile_src="auto (cgroup=$cg)"
     else
-        profile=nano
         profile_src="fallback to nano"
     fi
 

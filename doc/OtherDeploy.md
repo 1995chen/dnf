@@ -161,7 +161,7 @@
 
 ### 性能配置
 
-容器启动时读取 cgroup 的 RAM 与 CPU 限制，自动选择一个性能配置并调整 jemalloc `MALLOC_CONF`、`CLIENT_POOL_SIZE` 和 MySQL `/etc/my.cnf`。需要时可通过环境变量覆盖。
+容器启动时读取 cgroup 的 RAM 与 CPU 限制，自动选择一个性能配置并调整 jemalloc [`MALLOC_CONF`](#各性能配置下的-jemalloc-参数)、[`CLIENT_POOL_SIZE`](#各性能配置下的-client_pool_size)、MySQL [`/etc/my.cnf`](#各性能配置下的-mysql-参数) 和[服务就绪探针超时时间](#各性能配置下的就绪探针超时时间)。需要时可通过环境变量覆盖。
 
 #### RAM
 
@@ -188,6 +188,7 @@ CPU 数量影响以下参数：
 | AUTO_TUNE | 自动选择性能配置开关，关闭后跳过自动选择，但自定义性能参数仍然有效 | true/false | true |
 | TUNE_PROFILE | 指定性能配置 | nano/micro/small/medium/large/xlarge 或<br>low/balanced/high | |
 | TUNE_VERBOSE | 输出性能配置详细日志 | true/false | false |
+| PROBE_TIMEOUT | 服务就绪探针超时时间，单位秒 | 正整数 | [根据性能配置自动计算](#各性能配置下的就绪探针超时时间) |
 | MALLOC_CONF | jemalloc 全局默认配置，作为 `MALLOC_CONF_32` 与 `MALLOC_CONF_64` 未显式设置时的默认值。设置为空则表示使用 jemalloc 内置默认值 |  | |
 | MALLOC_CONF_32 | 32 位进程的 jemalloc 配置，优先级高于 `MALLOC_CONF` |  | |
 | MALLOC_CONF_64 | 64 位进程的 jemalloc 配置，优先级高于 `MALLOC_CONF` |  | |
@@ -246,6 +247,14 @@ CPU 数量影响以下参数：
 | 性能配置 | nano | micro | small | medium | large | xlarge |
 | ------- | ------- | ------- | ------- | ------- | ------- | ------- |
 | CLIENT_POOL_SIZE | 10 | 30 | 100 | 300 | 600 | 1000 |
+
+#### 各性能配置下的就绪探针超时时间
+
+服务就绪探针的超时时间，单位秒。针对低配机器提升超时时间防止正在启动过程中被杀死，高配机器则适当缩短超时时间避免太晚发现真实 Bug。可设置 `PROBE_TIMEOUT` 环境变量覆盖下表的时间。
+
+| 性能配置 | nano | micro | small | medium | large | xlarge |
+| ------- | ------- | ------- | ------- | ------- | ------- | ------- |
+| 探针超时(秒) | 1800 | 900 | 600 | 600 | 600 | 600 |
 
 ## docker-compose部署[群晖推荐]
 

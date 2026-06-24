@@ -27,6 +27,32 @@ chk() {
     fi
 }
 
+chk_has() {
+    case "$3" in
+    *"$2"*) pass=$((pass + 1)) ;;
+    *)
+        printf "FAIL %-44s missing [%s]\n" "$1" "$2"
+        failed=1
+        ;;
+    esac
+}
+
+# 生成测试的 s6-rc.d 目录并返回路径
+setup_work() {
+    local w
+    w=$(mktemp -d)
+    cp -a "${SRC_PATH}/s6-rc.d" "${w}/s6-rc.d"
+    cp -a "${SRC_PATH}/probes.d" "${w}/probes.d"
+    mkdir -p "${w}/s6-rc.d/base/contents.d"
+    echo bundle >"${w}/s6-rc.d/base/type"
+    printf '%s' "$w"
+}
+
+# 获取 run 文件里 -T 的值
+run_probe_timeout() {
+    grep -oE -- '-T [0-9]+' "$1" 2>/dev/null | awk '{print $2}'
+}
+
 # 运行 stage2-hook, 用 S6_OVERLAY_PATH 绕过 with-contenv shebang
 CENV="$WORK/container_env"
 S6_OVERLAY_PATH="$WORK" CONTAINER_ENV_PATH="$CENV" DNF_LIB_PATH="$LIB_PATH" \
@@ -79,6 +105,48 @@ if command -v s6-rc-compile >/dev/null 2>&1; then
 else
     echo "skip: 未安装 s6-rc-compile, 跳过编译校验"
 fi
+
+# PROBE_TIMEOUT: 更新所有服务探针的 timeout-up 与 run -T 时间
+W=$(setup_work)
+hook_out=$(S6_OVERLAY_PATH="$W" CONTAINER_ENV_PATH="$W/cenv" DNF_LIB_PATH="$LIB_PATH" \
+    SERVER_GROUP=3 OPEN_CHANNEL='11' PROBE_TIMEOUT=1234 bash "$HOOK" 2>/dev/null)
+chk_has "PROBE_TIMEOUT: 显示超时时间更新日志" "probe timeout = 1234s (PROBE_TIMEOUT override)" "$hook_out"
+bad=""
+for d in "$W"/s6-rc.d/*/; do
+    [ -f "${d}timeout-up" ] || continue
+    [ "$(cat "${d}timeout-up")" = "1234000" ] || bad="${bad} $(basename "$d"):tu=$(cat "${d}timeout-up")"
+    if grep -q notifyoncheck "${d}run" 2>/dev/null; then
+        [ "$(run_probe_timeout "${d}run")" = "1234000" ] || bad="${bad} $(basename "$d"):T=$(run_probe_timeout "${d}run")"
+    fi
+done
+chk "PROBE_TIMEOUT 更新所有探针 timeout-up 与 -T" "" "$bad"
+chk "动态生成的频道 timeout-up 会继承模板超时时间" "1234000" "$(cat "$W/s6-rc.d/game_siroco11/timeout-up" 2>/dev/null)"
+chk "动态生成的频道 run -T 会继承模板超时时间" "1234000" "$(run_probe_timeout "$W/s6-rc.d/game_siroco11/run")"
+rm -rf "$W"
+
+# nano 超时时间: 1800s
+W=$(setup_work)
+hook_out=$(S6_OVERLAY_PATH="$W" CONTAINER_ENV_PATH="$W/cenv" DNF_LIB_PATH="$LIB_PATH" \
+    SERVER_GROUP=3 OPEN_CHANNEL='11' TUNE_PROFILE=nano bash "$HOOK" 2>/dev/null)
+chk_has "nano: 显示超时时间日志与性能配置" "probe timeout = 1800s (profile=nano)" "$hook_out"
+chk "nano channel timeout-up=1800000" "1800000" "$(cat "$W/s6-rc.d/channel/timeout-up" 2>/dev/null)"
+chk "nano channel run -T=1800000" "1800000" "$(run_probe_timeout "$W/s6-rc.d/channel/run")"
+chk "nano 频道 timeout-up=1800000" "1800000" "$(cat "$W/s6-rc.d/game_siroco11/timeout-up" 2>/dev/null)"
+rm -rf "$W"
+
+# micro 超时时间: 900s
+W=$(setup_work)
+S6_OVERLAY_PATH="$W" CONTAINER_ENV_PATH="$W/cenv" DNF_LIB_PATH="$LIB_PATH" \
+    SERVER_GROUP=3 OPEN_CHANNEL='11' TUNE_PROFILE=micro bash "$HOOK" >/dev/null 2>&1
+chk "micro channel timeout-up=900000" "900000" "$(cat "$W/s6-rc.d/channel/timeout-up" 2>/dev/null)"
+rm -rf "$W"
+
+# large 超时时间: 600s
+W=$(setup_work)
+S6_OVERLAY_PATH="$W" CONTAINER_ENV_PATH="$W/cenv" DNF_LIB_PATH="$LIB_PATH" \
+    SERVER_GROUP=3 OPEN_CHANNEL='11' TUNE_PROFILE=large bash "$HOOK" >/dev/null 2>&1
+chk "large channel timeout-up=600000" "600000" "$(cat "$W/s6-rc.d/channel/timeout-up" 2>/dev/null)"
+rm -rf "$W"
 
 echo "pass=$pass failed=$failed"
 [ "$failed" -eq 0 ]
