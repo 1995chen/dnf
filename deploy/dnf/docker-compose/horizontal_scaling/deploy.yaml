@@ -1,0 +1,355 @@
+version: "2.3"
+
+services:
+
+  dnf-mysql:
+    image: 1995chen/mysql:5.0.95
+    mem_limit: 2g
+    environment:
+      - DNF_DB_ROOT_PASSWORD=88888888
+      - TZ=Asia/Shanghai
+    ports:
+      - "3001:3306"
+    volumes:
+      - ./mysql:/var/lib/mysql
+    restart: always
+
+# CORE服务: 每个大区只能部署一个CORE服务
+  dnf-cain-core:
+    hostname: dnf-cain-core
+    image: 1995chen/dnf:centos5-b804bbb
+    privileged: true
+    cap_add:
+      - NET_ADMIN
+    environment:
+      - TZ=Asia/Shanghai
+      - SERVER_TYPE=CORE
+      - SERVER_GROUP=1
+      - SERVER_GROUP_DB=cain
+      - PUBLIC_IP=192.168.31.206
+      - MAIN_MYSQL_HOST=192.168.31.206
+      - MAIN_MYSQL_PORT=3001
+      - MAIN_MYSQL_ROOT_PASSWORD=88888888
+      # 大区数据库
+      - MYSQL_HOST=192.168.31.206
+      - MYSQL_PORT=3001
+      - DNF_DB_ROOT_PASSWORD=88888888
+      - GM_ACCOUNT=gmadmin
+      - GM_PASSWORD=20240531
+      - GM_CONNECT_KEY=PDMKXNQIWM9IR128EMXM
+      - GM_LANDER_VERSION=20180307
+    shm_size: 8g
+    memswap_limit: -1
+    mem_limit: 1g
+    cpu_count: 1
+    restart: always
+    ports:
+      - 2001:180/tcp              # supervisor web[管理员使用]
+      - 7600:7600/tcp             # 统一登陆器[统一登陆器使用]
+      - 881:881/tcp               # 统一网关[统一网关使用]
+      - 7000:7000/tcp             # bridge[游戏客户端使用/GAME服务使用]
+      - 7000:7000/udp             # bridge[游戏客户端使用/GAME服务使用]
+      - 7001:7001/tcp             # channel[游戏客户端使用]
+      - 7001:7001/udp             # channel[游戏客户端使用]
+      - 31303:31303/tcp           # monitor[GAME服务使用]
+      - 31303:31303/udp           # monitor[GAME服务使用]
+      - 31403:31403/tcp           # guild[GAME服务使用]
+      - 31403:31403/udp           # guild[GAME服务使用]
+      - 31503:31503/udp           # statistic[GAME服务使用]
+      - 31603:31603               # point[GAME服务使用]
+      - 31703:31703/udp           # coserver[GAME服务使用]
+      - 31803:31803               # auction[GAME服务使用]
+      - 31100:31100               # community[GAME服务使用]
+      - 5001:5001/tcp             # relay_config_server[P2P服务使用]
+    volumes:
+      - ./data_cain_core:/data
+      - ./log_cain_core:/home/neople/game/log
+    depends_on:
+      - dnf-mysql
+
+  dnf-diregie-core:
+    hostname: dnf-diregie-core
+    image: 1995chen/dnf:centos5-b804bbb
+    privileged: true
+    cap_add:
+      - NET_ADMIN
+    environment:
+      - TZ=Asia/Shanghai
+      - SERVER_TYPE=CORE
+      - MAIN_BRIDGE_IP=192.168.31.206
+      - SERVER_GROUP=2
+      - SERVER_GROUP_DB=diregie
+      - PUBLIC_IP=192.168.31.206
+      - MAIN_MYSQL_HOST=192.168.31.206
+      - MAIN_MYSQL_PORT=3001
+      - MAIN_MYSQL_ROOT_PASSWORD=88888888
+      # 大区数据库
+      - MYSQL_HOST=192.168.31.206
+      - MYSQL_PORT=3001
+      - DNF_DB_ROOT_PASSWORD=88888888
+      - GM_ACCOUNT=gmadmin
+      - GM_PASSWORD=20240531
+      - GM_CONNECT_KEY=PDMKXNQIWM9IR128EMXM
+      - GM_LANDER_VERSION=20180307
+    shm_size: 8g
+    memswap_limit: -1
+    mem_limit: 1g
+    cpu_count: 1
+    restart: always
+    ports:
+      - 2002:180/tcp              # supervisor web[管理员使用]
+      - 7002:7002/tcp             # channel[游戏客户端使用]
+      - 7002:7002/udp             # channel[游戏客户端使用]
+      - 32303:32303/tcp           # monitor[GAME服务使用]
+      - 32303:32303/udp           # monitor[GAME服务使用]
+      - 32403:32403/tcp           # guild[GAME服务使用]
+      - 32403:32403/udp           # guild[GAME服务使用]
+      - 32503:32503/udp           # statistic[GAME服务使用]
+      - 32603:32603               # point[GAME服务使用]
+      - 32703:32703/udp           # coserver[GAME服务使用]
+      - 32803:32803               # auction[GAME服务使用]
+      - 32100:32100               # community[GAME服务使用]
+      - 5002:5002/tcp             # relay_config_server[P2P服务使用]
+    volumes:
+      - ./data_diregie_core:/data
+      - ./log_diregie_core:/home/neople/game/log
+    depends_on:
+      - dnf-cain-core
+
+  dnf-siroco-core:
+    hostname: dnf-siroco-core
+    image: 1995chen/dnf:centos5-b804bbb
+    privileged: true
+    cap_add:
+      - NET_ADMIN
+    environment:
+      - TZ=Asia/Shanghai
+      - SERVER_TYPE=CORE
+      - MAIN_BRIDGE_IP=192.168.31.206
+      - SERVER_GROUP=3
+      - SERVER_GROUP_DB=siroco
+      - PUBLIC_IP=192.168.31.206
+      - MAIN_MYSQL_HOST=192.168.31.206
+      - MAIN_MYSQL_PORT=3001
+      - MAIN_MYSQL_ROOT_PASSWORD=88888888
+      # 大区数据库
+      - MYSQL_HOST=192.168.31.206
+      - MYSQL_PORT=3001
+      - DNF_DB_ROOT_PASSWORD=88888888
+      - GM_ACCOUNT=gmadmin
+      - GM_PASSWORD=20240531
+      - GM_CONNECT_KEY=PDMKXNQIWM9IR128EMXM
+      - GM_LANDER_VERSION=20180307
+    shm_size: 8g
+    memswap_limit: -1
+    mem_limit: 1g
+    cpu_count: 1
+    restart: always
+    ports:
+      - 2003:180/tcp              # supervisor web[管理员使用]
+      - 7003:7003/tcp             # channel[游戏客户端使用]
+      - 7003:7003/udp             # channel[游戏客户端使用]
+      - 33303:33303/tcp           # monitor[GAME服务使用]
+      - 33303:33303/udp           # monitor[GAME服务使用]
+      - 33403:33403/tcp           # guild[GAME服务使用]
+      - 33403:33403/udp           # guild[GAME服务使用]
+      - 33503:33503/udp           # statistic[GAME服务使用]
+      - 33603:33603               # point[GAME服务使用]
+      - 33703:33703/udp           # coserver[GAME服务使用]
+      - 33803:33803               # auction[GAME服务使用]
+      - 33100:33100               # community[GAME服务使用]
+      - 5003:5003/tcp             # relay_config_server[P2P服务使用]
+    volumes:
+      - ./data_siroco_core:/data
+      - ./log_siroco_core:/home/neople/game/log
+    depends_on:
+      - dnf-cain-core
+
+# P2P服务: 每台机器部署一个,同一个大区可以在不同的机器部署多个P2P服务
+# 但是相同大区P2P服务的P2P_RELAY_INDEX必须不同, 否则会冲突
+  dnf-cain-p2p:
+    hostname: dnf-cain-p2p
+    image: 1995chen/dnf:centos5-b804bbb
+    privileged: true
+    cap_add:
+      - NET_ADMIN
+    environment:
+      - TZ=Asia/Shanghai
+      - SERVER_TYPE=P2P
+      - SERVER_GROUP=1
+      - PUBLIC_IP=192.168.31.206
+      - CORE_PUBLIC_IP=192.168.31.206
+      - P2P_RELAY_INDEX=201
+    shm_size: 8g
+    memswap_limit: -1
+    mem_limit: 1g
+    cpu_count: 1
+    restart: always
+    ports:
+      - 2011:180/tcp              # supervisor web
+      - 7100:7100/tcp             # df_relay_r
+      - 7100:7100/udp             # df_relay_r
+      - 2111-2113:2111-2113/udp   # df_stun_r
+    volumes:
+      - ./data_cain_p2p:/data
+    depends_on:
+      - dnf-cain-core
+
+  dnf-diregie-p2p:
+    hostname: dnf-diregie-p2p
+    image: 1995chen/dnf:centos5-b804bbb
+    privileged: true
+    cap_add:
+      - NET_ADMIN
+    environment:
+      - TZ=Asia/Shanghai
+      - SERVER_TYPE=P2P
+      - SERVER_GROUP=2
+      - PUBLIC_IP=192.168.31.206
+      - CORE_PUBLIC_IP=192.168.31.206
+      - P2P_RELAY_INDEX=201
+    shm_size: 8g
+    memswap_limit: -1
+    mem_limit: 1g
+    cpu_count: 1
+    restart: always
+    ports:
+      - 2012:180/tcp              # supervisor web
+      - 7200:7200/tcp             # df_relay_r
+      - 7200:7200/udp             # df_relay_r
+      - 2211-2213:2211-2213/udp   # df_stun_r
+    volumes:
+      - ./data_diregie_p2p:/data
+    depends_on:
+      - dnf-diregie-core
+
+  dnf-siroco-p2p:
+    hostname: dnf-siroco-p2p
+    image: 1995chen/dnf:centos5-b804bbb
+    privileged: true
+    cap_add:
+      - NET_ADMIN
+    environment:
+      - TZ=Asia/Shanghai
+      - SERVER_TYPE=P2P
+      - SERVER_GROUP=3
+      - PUBLIC_IP=192.168.31.206
+      - CORE_PUBLIC_IP=192.168.31.206
+      - P2P_RELAY_INDEX=201
+    shm_size: 8g
+    memswap_limit: -1
+    mem_limit: 1g
+    cpu_count: 1
+    restart: always
+    ports:
+      - 2013:180/tcp              # supervisor web
+      - 7300:7300/tcp             # df_relay_r
+      - 7300:7300/udp             # df_relay_r
+      - 2311-2313:2311-2313/udp   # df_stun_r
+    volumes:
+      - ./data_siroco_p2p:/data
+    depends_on:
+      - dnf-siroco-core
+# GAME服务
+  dnf-cain-game:
+    hostname: dnf-cain-game
+    image: 1995chen/dnf:centos5-b804bbb
+    privileged: true
+    cap_add:
+      - NET_ADMIN
+    environment:
+      - TZ=Asia/Shanghai
+      - SERVER_TYPE=GAME
+      - SERVER_GROUP=1
+      - SERVER_GROUP_DB=cain
+      - OPEN_CHANNEL='11,52'
+      - PUBLIC_IP=192.168.31.206
+      - MAIN_MYSQL_HOST=192.168.31.206
+      - MAIN_MYSQL_PORT=3001
+      # 大区数据库
+      - MYSQL_HOST=192.168.31.206
+      - MYSQL_PORT=3001
+    shm_size: 8g
+    memswap_limit: -1
+    mem_limit: 1g
+    cpu_count: 1
+    restart: always
+    ports:
+      - 2021:180/tcp              # supervisor web[管理员使用]
+      - 10052:10052/tcp           # 52频道TCP
+      - 11052:11052/udp           # 52频道UDP
+      - 10011:10011/tcp           # 11频道TCP
+      - 11011:11011/udp           # 11频道UDP
+    volumes:
+      - ./data_cain_game:/data
+      - ./log_cain_game:/home/neople/game/log
+    depends_on:
+      - dnf-cain-core
+  dnf-diregie-game:
+    hostname: dnf-diregie-game
+    image: 1995chen/dnf:centos5-b804bbb
+    privileged: true
+    cap_add:
+      - NET_ADMIN
+    environment:
+      - TZ=Asia/Shanghai
+      - SERVER_TYPE=GAME
+      - SERVER_GROUP=2
+      - SERVER_GROUP_DB=diregie
+      - OPEN_CHANNEL='11,52'
+      - PUBLIC_IP=192.168.31.206
+      - MAIN_MYSQL_HOST=192.168.31.206
+      - MAIN_MYSQL_PORT=3001
+      # 大区数据库
+      - MYSQL_HOST=192.168.31.206
+      - MYSQL_PORT=3001
+    shm_size: 8g
+    memswap_limit: -1
+    mem_limit: 1g
+    cpu_count: 1
+    restart: always
+    ports:
+      - 2022:180/tcp              # supervisor web[管理员使用]
+      - 20052:20052/tcp           # 52频道TCP
+      - 21052:21052/udp           # 52频道UDP
+      - 20011:20011/tcp           # 11频道TCP
+      - 21011:21011/udp           # 11频道UDP
+    volumes:
+      - ./data_diregie_game:/data
+      - ./log_diregie_game:/home/neople/game/log
+    depends_on:
+      - dnf-diregie-core
+  dnf-siroco-game:
+    hostname: dnf-siroco-game
+    image: 1995chen/dnf:centos5-b804bbb
+    privileged: true
+    cap_add:
+      - NET_ADMIN
+    environment:
+      - TZ=Asia/Shanghai
+      - SERVER_TYPE=GAME
+      - SERVER_GROUP=3
+      - SERVER_GROUP_DB=siroco
+      - OPEN_CHANNEL='11,52'
+      - PUBLIC_IP=192.168.31.206
+      - MAIN_MYSQL_HOST=192.168.31.206
+      - MAIN_MYSQL_PORT=3001
+      # 大区数据库
+      - MYSQL_HOST=192.168.31.206
+      - MYSQL_PORT=3001
+    shm_size: 8g
+    memswap_limit: -1
+    mem_limit: 1g
+    cpu_count: 1
+    restart: always
+    ports:
+      - 2023:180/tcp              # supervisor web[管理员使用]
+      - 30052:30052/tcp           # 52频道TCP
+      - 31052:31052/udp           # 52频道UDP
+      - 30011:30011/tcp           # 11频道TCP
+      - 31011:31011/udp           # 11频道UDP
+    volumes:
+      - ./data_siroco_game:/data
+      - ./log_siroco_game:/home/neople/game/log
+    depends_on:
+      - dnf-siroco-core

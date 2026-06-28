@@ -1,0 +1,43 @@
+[program:stun]
+command=/bin/bash -c "/data/run/start_stun.sh"
+directory=/home/neople/stun
+user=root
+autostart=false
+autorestart=true
+stopasgroup=true
+killasgroup=true
+stdout_logfile=/dev/stdout
+stdout_logfile_maxbytes=0
+stderr_logfile=/dev/stderr
+stderr_logfile_maxbytes=0
+
+[program:relay]
+command=/bin/bash -c "/data/run/start_relay.sh"
+directory=/home/neople/relay
+user=root
+autostart=false
+autorestart=true
+stopasgroup=true
+killasgroup=true
+stdout_logfile=/dev/stdout
+stdout_logfile_maxbytes=0
+stderr_logfile=/dev/stderr
+stderr_logfile_maxbytes=0
+
+[program:relay_config_client]
+command=/bin/bash -c "/home/template/init/relay/client.sh"
+directory=/home/template/init/relay
+user=root
+autostart=false
+autorestart=unexpected
+exitcodes=0
+stopasgroup=true
+killasgroup=true
+stdout_logfile=/dev/stdout
+stdout_logfile_maxbytes=0
+stderr_logfile=/dev/stderr
+stderr_logfile_maxbytes=0
+
+[group:p2p]
+programs=stun,relay,relay_config_client
+priority=999

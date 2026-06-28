@@ -12,6 +12,10 @@ export SERVER_GROUP_NAME_4="prey"
 export SERVER_GROUP_NAME_5="casillas"
 export SERVER_GROUP_NAME_6="hilder"
 # 去除环境变量前后的单双引号
+export SERVER_TYPE=$(echo $SERVER_TYPE | sed "s/[\'\"]//g")
+export CORE_PUBLIC_IP=$(echo $CORE_PUBLIC_IP | sed "s/[\'\"]//g")
+export P2P_PUBLIC_IP=$(echo $P2P_PUBLIC_IP | sed "s/[\'\"]//g")
+export P2P_RELAY_INDEX=$(echo $P2P_RELAY_INDEX | sed "s/[\'\"]//g")
 export MAIN_BRIDGE_IP=$(echo $MAIN_BRIDGE_IP | sed "s/[\'\"]//g")
 export SERVER_GROUP_DB=$(echo $SERVER_GROUP_DB | sed "s/[\'\"]//g")
 export SERVER_GROUP=$(echo $SERVER_GROUP | sed "s/[\'\"]//g")
@@ -93,7 +97,6 @@ export CUR_SG_DB_ROOT_PASSWORD
 export CUR_SG_DB_GAME_ALLOW_IP
 echo "server group db: $CUR_SG_DB_HOST:$CUR_SG_DB_PORT allow ip $CUR_SG_DB_GAME_ALLOW_IP"
 echo "will use server group: $SERVER_GROUP_NAME"
-# TODO进行一些强校验,提前退出
 
 # 加密GAME密码
 chmod 777 -R /tmp
@@ -109,6 +112,8 @@ rm -rf /var/lib/mysql/*.pid
 rm -rf /var/lib/mysql/*.err
 # 清除MONITOR_PUBLIC_IP文件
 rm -rf /data/monitor_ip/MONITOR_PUBLIC_IP
+# 清除MONITOR_RELAY_CONFIG文件
+rm -rf /data/relay/MONITOR_RELAY_CONFIG
 # 清理日志
 for i in {1..52}; do
     rm -rf /home/neople/game/log/diregie$(printf "%02d" $i)/*
@@ -131,13 +136,16 @@ mkdir -p /data/log/netbird
 mkdir -p /data/log/tailscale
 # 创建ip监控目录
 mkdir -p /data/monitor_ip
-# 创建daily_job目录
-mkdir -p /data/daily_job
 # 创建netbird, tailscale目录
 mkdir -p /data/netbird
 mkdir -p /data/tailscale
 # 创建run脚本目录
 mkdir -p /data/run
+# 创建daily_job和relay目录
+if [ "$SERVER_TYPE" = "CORE" ] || [ "$SERVER_TYPE" = "ALL" ]; then
+  mkdir -p /data/daily_job
+  mkdir -p /data/relay
+fi
 # 初始化数据
 bash /home/template/init/init.sh
 error_code=$?
@@ -165,6 +173,7 @@ rm -rf /root/privatekey.pem
 # 复制待使用文件
 cp -r /home/template/neople /home/template/neople-tmp
 # 修改配置文件
+find /home/template/neople-tmp -type f -name "*.cfg" -print0 | xargs -0 sed -i "s/CORE_PUBLIC_IP/$CORE_PUBLIC_IP/g"
 find /home/template/neople-tmp -type f -name "*.cfg" -print0 | xargs -0 sed -i "s/GAME_PASSWORD/$DNF_DB_GAME_PASSWORD/g"
 find /home/template/neople-tmp -type f -name "*.cfg" -print0 | xargs -0 sed -i "s/DEC_GAME_PWD/$DEC_GAME_PWD/g"
 find /home/template/neople-tmp -type f -name "*.cfg" -print0 | xargs -0 sed -i "s/SERVER_GROUP_NAME/$SERVER_GROUP_NAME/g"
@@ -181,33 +190,44 @@ find /home/neople/ -name 'core.*' -type f -print -exec rm -f {} \;
 chmod 777 -R /home/neople
 rm -rf /home/template/neople-tmp
 # 复制版本文件
-cp /data/Script.pvf /home/neople/game/Script.pvf
-chmod 777 /home/neople/game/Script.pvf
+if [ ! -f "/data/Script.pvf" ];then
+  cp /data/Script.pvf /home/neople/game/Script.pvf
+  chmod 777 /home/neople/game/Script.pvf
+fi
 # 复制等级文件
-cp /data/df_game_r /home/neople/game/df_game_r
-chmod 777 /home/neople/game/df_game_r
+if [ ! -f "/data/df_game_r" ];then
+  cp /data/df_game_r /home/neople/game/df_game_r
+  chmod 777 /home/neople/game/df_game_r
+fi
 # 复制通讯私钥文件
-cp /data/publickey.pem /home/neople/game/
+if [ ! -f "/data/publickey.pem" ];then
+  cp /data/publickey.pem /home/neople/game/
+fi
 # 为DP目录赋予权限[为了支持更多未知场景, 这里直接给整个目录777权限]
 chmod 777 -R /data/dp
 # 重置root目录
 cp /home/template/root/* /root/
 chmod 777 /root/*
 # 拷贝证书key
-cp /data/privatekey.pem /root/
-# 构建配置文件软链[不能使用硬链接, 硬链接不可跨设备]
-ln -s /data/Config.ini /root/Config.ini
-# 替换Config.ini中的GM用户名、密码、连接KEY、登录器版本[这里操作的对象是一个软链接不需要指定-type]
-sed -i "s/GAME_PASSWORD/$DNF_DB_GAME_PASSWORD/g" `find /data -name "*.ini"`
-sed -i "s/GM_ACCOUNT/$GM_ACCOUNT/g" `find /data -name "*.ini"`
-sed -i "s/GM_PASSWORD/$GM_PASSWORD/g" `find /data -name "*.ini"`
-sed -i "s/GM_CONNECT_KEY/$GM_CONNECT_KEY/g" `find /data -name "*.ini"`
-sed -i "s/GM_LANDER_VERSION/$GM_LANDER_VERSION/g" `find /data -name "*.ini"`
+if [ "$SERVER_TYPE" = "CORE" ] || [ "$SERVER_TYPE" = "ALL" ]; then
+  if [ -z "$MAIN_BRIDGE_IP" ] || [ "$MAIN_BRIDGE_IP" = "127.0.0.1" ]; then 
+    cp /data/privatekey.pem /root/
+    # 构建配置文件软链[不能使用硬链接, 硬链接不可跨设备]
+    ln -s /data/Config.ini /root/Config.ini
+    # 替换Config.ini中的GM用户名、密码、连接KEY、登录器版本[这里操作的对象是一个软链接不需要指定-type]
+    sed -i "s/GAME_PASSWORD/$DNF_DB_GAME_PASSWORD/g" `find /data -name "*.ini"`
+    sed -i "s/GM_ACCOUNT/$GM_ACCOUNT/g" `find /data -name "*.ini"`
+    sed -i "s/GM_PASSWORD/$GM_PASSWORD/g" `find /data -name "*.ini"`
+    sed -i "s/GM_CONNECT_KEY/$GM_CONNECT_KEY/g" `find /data -name "*.ini"`
+    sed -i "s/GM_LANDER_VERSION/$GM_LANDER_VERSION/g" `find /data -name "*.ini"`
+  fi
+fi
+
 # 重设supervisor web网页密码
 sed -i "s/^username=.*/username=$WEB_USER/" /etc/supervisord.conf
 sed -i "s/^password=.*/password=$WEB_PASS/" /etc/supervisord.conf
 # 传递环境变量
-SUPERVISORD_ENV="MAIN_BRIDGE_IP=\"$MAIN_BRIDGE_IP\",SERVER_GROUP_NAME=\"$SERVER_GROUP_NAME\",SERVER_GROUP_DB=\"$SERVER_GROUP_DB\",CUR_MAIN_DB_HOST=\"$CUR_MAIN_DB_HOST\",CUR_MAIN_DB_PORT=\"$CUR_MAIN_DB_PORT\",CUR_SG_DB_HOST=\"$CUR_SG_DB_HOST\",CUR_SG_DB_PORT=\"$CUR_SG_DB_PORT\""
+SUPERVISORD_ENV="SERVER_TYPE=\"$SERVER_TYPE\",CORE_PUBLIC_IP=\"$CORE_PUBLIC_IP\",P2P_PUBLIC_IP=\"$P2P_PUBLIC_IP\",P2P_RELAY_INDEX=\"$P2P_RELAY_INDEX\",MAIN_BRIDGE_IP=\"$MAIN_BRIDGE_IP\",SERVER_GROUP_NAME=\"$SERVER_GROUP_NAME\",SERVER_GROUP_DB=\"$SERVER_GROUP_DB\",CUR_MAIN_DB_HOST=\"$CUR_MAIN_DB_HOST\",CUR_MAIN_DB_PORT=\"$CUR_MAIN_DB_PORT\",CUR_SG_DB_HOST=\"$CUR_SG_DB_HOST\",CUR_SG_DB_PORT=\"$CUR_SG_DB_PORT\""
 sed -i "s/^environment=.*/environment=$SUPERVISORD_ENV/" /etc/supervisord.conf
 # 切换到主目录
 cd /root
