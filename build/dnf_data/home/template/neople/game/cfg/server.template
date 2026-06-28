@@ -6,19 +6,19 @@ ip = PUBLIC_IP
 tcp_port = SERVER_GROUP00CHANNEL_NO
 udp_port = SERVER_GROUP10CHANNEL_NO
 
-udp_ip_of_monitor = 127.0.0.1
-udp_port_of_monitor = 30303
-tcp_port_of_monitor = 30303
+udp_ip_of_monitor = CORE_PUBLIC_IP
+udp_port_of_monitor = 3SERVER_GROUP303
+tcp_port_of_monitor = 3SERVER_GROUP303
 
-udp_ip_of_doublecheck = 127.0.0.1
-udp_port_of_doublecheck = 30703
+udp_ip_of_doublecheck = CORE_PUBLIC_IP
+udp_port_of_doublecheck = 3SERVER_GROUP703
 
-udp_ip_of_statistic = 127.0.0.1
-udp_port_of_statistic = 30503
+udp_ip_of_statistic = CORE_PUBLIC_IP
+udp_port_of_statistic = 3SERVER_GROUP503
 
-udp_ip_of_guild = 127.0.0.1
-udp_port_of_guild = 30403
-tcp_port_of_guild = 30403
+udp_ip_of_guild = CORE_PUBLIC_IP
+udp_port_of_guild = 3SERVER_GROUP403
+tcp_port_of_guild = 3SERVER_GROUP403
 
 udp_ip_of_channel = MAIN_BRIDGE_IP
 udp_port_of_channel = 7000
@@ -31,23 +31,23 @@ udp_ip_of_hades = 127.0.0.1
 udp_port_of_hades = 31003
 tcp_port_of_hades = 31003
 
-auction_server_ip = 127.0.0.1
-auction_server_port = 30803
+auction_server_ip = CORE_PUBLIC_IP
+auction_server_port = 3SERVER_GROUP803
 
-cera_auction_server_ip = 127.0.0.1
-cera_auction_server_port = 30603
+cera_auction_server_ip = CORE_PUBLIC_IP
+cera_auction_server_port = 3SERVER_GROUP603
 
 ipg_ip = 127.0.0.1
 nxj_ipg_ip = 127.0.0.1
 nxj_ipg_port = 9006
 
-relay_ip = PUBLIC_IP
+relay_ip = P2P_PUBLIC_IP
 relay_tcp_port = 7SERVER_GROUP00
 relay_udp_port = 7SERVER_GROUP00
 
-stun_ip= PUBLIC_IP
-stun_ip= PUBLIC_IP
-stun_ip= PUBLIC_IP
+stun_ip= P2P_PUBLIC_IP
+stun_ip= P2P_PUBLIC_IP
+stun_ip= P2P_PUBLIC_IP
 
 stun_port=2SERVER_GROUP11
 stun_port=2SERVER_GROUP12
@@ -61,8 +61,8 @@ lls_keys = 3240332317335214766634233322344377569687
 //social_event_server_tcp_port = 40405
 //mobile_server_ip = 127.0.0.1
 //mobile_server_port = 30809
-community_server_ip = 127.0.0.1
-community_server_port = 31100
+community_server_ip = CORE_PUBLIC_IP
+community_server_port = 3SERVER_GROUP100
 //nexon_billing_ip = 211.218.232.97
 //nexon_billing_port = 36500
 

@@ -1,0 +1,149 @@
+version: "2.3"
+
+services:
+
+  dnf-mysql:
+    image: 1995chen/mysql:5.0.95
+    mem_limit: 2g
+    environment:
+      - DNF_DB_ROOT_PASSWORD=88888888
+      - TZ=Asia/Shanghai
+    ports:
+      - "3001:3306"
+    volumes:
+      - ./mysql:/var/lib/mysql
+    restart: always
+
+# CORE服务: 每个大区只能部署一个CORE服务
+# ip.addr == 192.168.31.203 && ip.addr == 192.168.31.206
+# nc -zv 127.0.0.1 7000
+# nmap -sU -p 31100 192.168.0.3
+  dnf-diregie-core:
+    hostname: dnf-diregie-core
+    image: 1995chen/dnf:centos5-d1bef68
+    privileged: true
+    cap_add:
+      - NET_ADMIN
+    environment:
+      - TZ=Asia/Shanghai
+      - SERVER_TYPE=CORE
+      - SERVER_GROUP=2
+      - SERVER_GROUP_DB=diregie
+      - PUBLIC_IP=dnf-diregie-core
+      - MAIN_MYSQL_HOST=dnf-mysql
+      - MAIN_MYSQL_PORT=3001
+      - MAIN_MYSQL_ROOT_PASSWORD=88888888
+      # 大区数据库
+      - MYSQL_HOST=dnf-mysql
+      - MYSQL_PORT=3001
+      - DNF_DB_ROOT_PASSWORD=88888888
+      - GM_ACCOUNT=gmadmin
+      - GM_PASSWORD=20240531
+      - GM_CONNECT_KEY=PDMKXNQIWM9IR128EMXM
+      - GM_LANDER_VERSION=20180307
+    shm_size: 8g
+    memswap_limit: -1
+    mem_limit: 1g
+    cpu_count: 1
+    restart: always
+    ports:
+      # 以下端口用户需要访问,必须发布到公网
+      - 7001:7001/tcp             # channel[用户需要访问/游戏客户端获取频道用]
+      - 7001:7001/udp             # channel[用户需要访问/游戏客户端获取频道用]
+      - 7600:7600/tcp             # 统一登陆器[统一登陆器使用/用户登陆器需要使用]
+      # 以下端口不需要发布到公网,仅内网访问即可
+      - 2002:180/tcp              # supervisor web[管理员用于查看进程状态/用户不需要访问/临时使用后可关闭]
+      - 881:881/tcp               # 统一网关[统一网关生成登陆器用/用户不需要访问/临时使用后可关闭]
+      - 7000:7000/tcp             # bridge[GAME服务使用/用户不需要访问]
+      - 7000:7000/udp             # bridge[GAME服务使用/用户不需要访问]
+      - 32303:32303/tcp           # monitor[GAME服务使用/用户不需要访问]
+      - 32303:32303/udp           # monitor[GAME服务使用/用户不需要访问]
+      - 32403:32403/tcp           # guild[GAME服务使用/用户不需要访问]
+      - 32403:32403/udp           # guild[GAME服务使用/用户不需要访问]
+      - 32503:32503/udp           # statistic[GAME服务使用/用户不需要访问]
+      - 32603:32603/tcp           # point[GAME服务使用/用户不需要访问]
+      - 32603:32603/udp           # point[GAME服务使用/用户不需要访问]
+      - 32703:32703/udp           # coserver[GAME服务使用/用户不需要访问]
+      - 32803:32803/tcp           # auction[GAME服务使用/用户不需要访问]
+      - 32803:32803/udp           # auction[GAME服务使用/用户不需要访问]
+      - 32100:32100/tcp           # community[GAME服务使用/用户不需要访问]
+      - 32100:32100/udp           # community[GAME服务使用/用户不需要访问]
+      - 5002:5002/tcp             # relay_config_server[P2P服务使用/用户不需要访问]
+    volumes:
+      - ./data_diregie_core:/data
+    depends_on:
+      - dnf-mysql
+
+# P2P服务: 每台机器部署一个,同一个大区可以在不同的机器部署多个P2P服务
+# 但是相同大区P2P服务的P2P_RELAY_INDEX必须不同, 否则会冲突
+  dnf-diregie-p2p:
+    hostname: dnf-diregie-p2p
+    image: 1995chen/dnf:centos5-d1bef68
+    privileged: true
+    cap_add:
+      - NET_ADMIN
+    environment:
+      - TZ=Asia/Shanghai
+      - SERVER_TYPE=P2P
+      - SERVER_GROUP=2
+      - PUBLIC_IP=dnf-diregie-p2p
+      - CORE_PUBLIC_IP=dnf-diregie-core
+      - P2P_RELAY_INDEX=201
+    shm_size: 8g
+    memswap_limit: -1
+    mem_limit: 1g
+    cpu_count: 1
+    restart: always
+    ports:
+      # 以下端口用户需要访问,必须发布到公网
+      - 7200:7200/tcp             # df_relay_r[组队需要用]
+      - 7200:7200/udp             # df_relay_r[组队需要用]
+      - 2211-2213:2211-2213/udp   # df_stun_r[组队需要用]
+      # 以下端口不需要发布到公网,仅内网访问即可
+      - 2012:180/tcp              # supervisor web[管理员用于查看进程状态/用户不需要访问/临时使用后可关闭] 
+    volumes:
+      - ./data_diregie_p2p:/data
+    depends_on:
+      - dnf-diregie-core
+# GAME服务
+  dnf-diregie-game:
+    hostname: dnf-diregie-game
+    image: 1995chen/dnf:centos5-d1bef68
+    privileged: true
+    cap_add:
+      - NET_ADMIN
+    environment:
+      - TZ=Asia/Shanghai
+      - SERVER_TYPE=GAME
+      - SERVER_GROUP=2
+      - SERVER_GROUP_DB=diregie
+      - OPEN_CHANNEL='11,52'
+      - MAIN_BRIDGE_IP=dnf-diregie-core
+      # 这里必须是客户端可访问的IP
+      - PUBLIC_IP=192.168.31.206
+      - CORE_PUBLIC_IP=dnf-diregie-core
+      # 这里必须是客户端可访问的IP
+      - P2P_PUBLIC_IP=192.168.31.206
+      - MAIN_MYSQL_HOST=dnf-mysql
+      - MAIN_MYSQL_PORT=3001
+      # 大区数据库
+      - MYSQL_HOST=dnf-mysql
+      - MYSQL_PORT=3001
+    shm_size: 8g
+    memswap_limit: -1
+    mem_limit: 1g
+    cpu_count: 1
+    restart: always
+    ports:
+      # 以下端口用户需要访问,必须发布到公网
+      - 20052:20052/tcp           # 52频道TCP[希洛克大区]
+      - 21052:21052/udp           # 52频道UDP[希洛克大区]
+      - 20011:20011/tcp           # 11频道TCP[希洛克大区]
+      - 21011:21011/udp           # 11频道UDP[希洛克大区]
+      # 以下端口不需要发布到公网,仅内网访问即可
+      - 2023:180/tcp              # supervisor web[管理员用于查看进程状态/用户不需要访问/临时使用后可关闭]
+    volumes:
+      - ./data_diregie_game:/data
+      - ./log_diregie_game:/home/neople/game/log
+    depends_on:
+      - dnf-diregie-core

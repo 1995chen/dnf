@@ -149,6 +149,46 @@
 
 [卡恩/狄瑞吉/希洛克-点击查看部署文件](../deploy/dnf/docker-compose/multi_server_group/combine_server_group.yaml)
 
+### 横向扩展（集群部署）
+
+`feature: better support for cluster deployment` 相关示例文件如下：
+
+[卡恩大区（CORE + P2P + GAME）](../deploy/dnf/docker-compose/horizontal_scaling/cain.yaml)
+
+[狄瑞吉大区（CORE + P2P + GAME）](../deploy/dnf/docker-compose/horizontal_scaling/diregie.yaml)
+
+[希洛克大区（CORE + P2P + GAME）](../deploy/dnf/docker-compose/horizontal_scaling/siroco.yaml)
+
+[三大区完整示例（CORE + P2P + GAME）](../deploy/dnf/docker-compose/horizontal_scaling/full.yaml)
+
+该模式用于把一个大区拆分为多个服务角色并可分散到多台机器，主要角色如下：
+
+- `SERVER_TYPE=CORE`：核心服务，每个大区只能有一个。
+- `SERVER_TYPE=P2P`：组队相关服务，同一大区可多实例，但 `P2P_RELAY_INDEX` 必须唯一。
+- `SERVER_TYPE=GAME`：频道服务，可按频道与负载拆分部署。
+
+使用前请先统一替换以下环境变量（示例文件里的 `192.168.31.206` 仅为演示地址）：
+
+- `PUBLIC_IP`：当前容器所在机器对外可达 IP。
+- `CORE_PUBLIC_IP`：当前大区 CORE 所在机器的公网或内网可达 IP。
+- `P2P_PUBLIC_IP`：当前 GAME 依赖的 P2P 服务地址。
+- `MAIN_BRIDGE_IP`：主桥接服务地址（通常指向 CORE）。
+- `MAIN_MYSQL_HOST` / `MYSQL_HOST`：主库与大区库地址。
+- `DNF_DB_ROOT_PASSWORD` / `MAIN_MYSQL_ROOT_PASSWORD`：数据库密码。
+
+推荐部署顺序：
+
+1. 先启动 `dnf-mysql` 与对应大区 `CORE`，确认基础初始化完成。
+2. 启动 `P2P`，确认 relay/stun 端口可达。
+3. 最后启动 `GAME`，按 `OPEN_CHANNEL` 分批放量。
+
+注意事项：
+
+- 同一大区只允许一个 CORE，重复启动会导致配置与端口冲突。
+- 同一大区多个 P2P 实例时，`P2P_RELAY_INDEX` 不能重复。
+- 仅将玩家需要访问的端口暴露公网，其余管理和内部通信端口建议仅内网开放。
+- 跨机器部署时，必须保证 CORE、P2P、GAME 之间网络互通。
+
 如果发现连接频道时网络中断的问题，大概率是GEO拦截，需要从频道的log中找到拦截的IP地址，并修改data/daily_job/user_daily_script.sh脚本，
 添加白名单并重启服务。当发生拦截时，会产生类似以下的日志：
 

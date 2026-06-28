@@ -23,17 +23,18 @@ done
 MONITOR_PUBLIC_IP=$(cat /data/monitor_ip/MONITOR_PUBLIC_IP 2>/dev/null || true)
 # 生成配置文件
 rm -rf /tmp/channel.cfg
+rm -rf /home/neople/channel/cfg/server.cfg
 cp /home/template/neople/channel/cfg/server.cfg /tmp/channel.cfg
 sed -i "s/MAIN_BRIDGE_IP/$MAIN_BRIDGE_IP/g" /tmp/channel.cfg
 # 重设PUBLIC_IP和server group
 sed -i "s/PUBLIC_IP/$MONITOR_PUBLIC_IP/g" /tmp/channel.cfg
 sed -i "s/SERVER_GROUP/$SERVER_GROUP/g" /tmp/channel.cfg
-cp /tmp/channel.cfg /home/neople/channel/cfg/channel.cfg
+cp /tmp/channel.cfg /home/neople/channel/cfg/server.cfg
 # 清理cfg文件
 rm -rf /tmp/channel.cfg
 # 启动服务
 echo "starting channel..."
 # 加载DP并启动,该DP可以被自定义[确保DP路径已经被正确映射]
-LD_PRELOAD=/home/template/init/channel_hook.so:/dp2/libhook.so ./df_channel_r channel start
+LD_PRELOAD=/home/template/init/channel_hook.so:/dp2/libhook.so ./df_channel_r server start
 sleep 2
 cat pid/*.pid |xargs -n1 -I{} tail --pid={} -f /dev/null

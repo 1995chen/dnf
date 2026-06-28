@@ -1,0 +1,45 @@
+[program:gunnersvr]
+command=/bin/bash -c "/data/run/start_gunnersvr.sh"
+directory=/home/neople/secsvr/gunnersvr
+user=root
+autostart=false
+autorestart=true
+stopasgroup=true
+killasgroup=true
+stdout_logfile=/dev/fd/1
+redirect_stderr=true
+stdout_logfile_maxbytes=0
+stderr_logfile_maxbytes=0
+
+[program:zergsvr_secagent]
+command=/bin/bash -c "/data/run/start_zergsvr_secagent.sh"
+directory=/home/neople/secsvr/zergsvr
+user=root
+autostart=false
+autorestart=true
+stopasgroup=true
+killasgroup=true
+stdout_logfile=/dev/fd/1
+redirect_stderr=true
+stdout_logfile_maxbytes=0
+stderr_logfile_maxbytes=0
+depend=gunnersvr
+
+[program:zergsvr]
+command=/bin/bash -c "/data/run/start_zergsvr.sh"
+directory=/home/neople/secsvr/zergsvr
+user=root
+autostart=false
+autorestart=unexpected
+exitcodes=0
+stopasgroup=true
+killasgroup=true
+stdout_logfile=/dev/fd/1
+redirect_stderr=true
+stdout_logfile_maxbytes=0
+stderr_logfile_maxbytes=0
+depend=zergsvr_secagent
+
+[group:tss]
+programs=gunnersvr,zergsvr_secagent,zergsvr
+priority=999
