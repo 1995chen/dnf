@@ -88,6 +88,7 @@ update db_connect set db_ip="127.0.0.1", db_port="$SG_DB_PROXY_PORT", db_name="t
 update db_connect set db_ip="127.0.0.1", db_port="$SG_DB_PROXY_PORT", db_name="taiwan_${SERVER_GROUP_DB}_auction_gold", db_passwd="$DEC_GAME_PWD" where db_server_group=$SERVER_GROUP and db_type=12;
 update db_connect set db_ip="127.0.0.1", db_port="$SG_DB_PROXY_PORT", db_name="taiwan_se_event", db_passwd="$DEC_GAME_PWD" where db_server_group=$SERVER_GROUP and db_type=13;
 update db_connect set db_ip="127.0.0.1", db_port="$SG_DB_PROXY_PORT", db_name="taiwan_billing", db_passwd="$DEC_GAME_PWD" where db_server_group=$SERVER_GROUP and db_type=14;
+update db_connect set db_userid="game" where db_server_group=$SERVER_GROUP and db_userid!="game";
 EOF
 # 测试并查询数据库连接设置
 echo "main_db: show db_connect config, server_group is $SERVER_GROUP"
