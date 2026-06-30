@@ -76,4 +76,3 @@ fi
 
 # 退出前sleep 5秒
 sleep 5
-exit 0
