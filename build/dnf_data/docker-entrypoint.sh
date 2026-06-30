@@ -190,17 +190,17 @@ find /home/neople/ -name 'core.*' -type f -print -exec rm -f {} \;
 chmod 777 -R /home/neople
 rm -rf /home/template/neople-tmp
 # 复制版本文件
-if [ ! -f "/data/Script.pvf" ];then
+if [ -f "/data/Script.pvf" ];then
   cp /data/Script.pvf /home/neople/game/Script.pvf
   chmod 777 /home/neople/game/Script.pvf
 fi
 # 复制等级文件
-if [ ! -f "/data/df_game_r" ];then
+if [ -f "/data/df_game_r" ];then
   cp /data/df_game_r /home/neople/game/df_game_r
   chmod 777 /home/neople/game/df_game_r
 fi
 # 复制通讯私钥文件
-if [ ! -f "/data/publickey.pem" ];then
+if [ -f "/data/publickey.pem" ];then
   cp /data/publickey.pem /home/neople/game/
 fi
 # 为DP目录赋予权限[为了支持更多未知场景, 这里直接给整个目录777权限]
