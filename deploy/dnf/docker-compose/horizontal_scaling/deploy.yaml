@@ -63,7 +63,6 @@ services:
       - 5001:5001/tcp             # relay_config_server[P2P服务使用]
     volumes:
       - ./data_cain_core:/data
-      - ./log_cain_core:/home/neople/game/log
     depends_on:
       - dnf-mysql
 
@@ -112,7 +111,6 @@ services:
       - 5002:5002/tcp             # relay_config_server[P2P服务使用]
     volumes:
       - ./data_diregie_core:/data
-      - ./log_diregie_core:/home/neople/game/log
     depends_on:
       - dnf-cain-core
 
@@ -161,7 +159,6 @@ services:
       - 5003:5003/tcp             # relay_config_server[P2P服务使用]
     volumes:
       - ./data_siroco_core:/data
-      - ./log_siroco_core:/home/neople/game/log
     depends_on:
       - dnf-cain-core
 
@@ -353,4 +350,3 @@ services:
       - ./log_siroco_game:/home/neople/game/log
     depends_on:
       - dnf-siroco-core
-# 有些log目录可以不用挂
