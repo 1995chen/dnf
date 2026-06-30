@@ -353,3 +353,4 @@ services:
       - ./log_siroco_game:/home/neople/game/log
     depends_on:
       - dnf-siroco-core
+# 有些log目录可以不用挂

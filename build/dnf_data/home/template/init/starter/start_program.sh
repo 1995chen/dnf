@@ -60,7 +60,7 @@ if [ "$SERVER_TYPE" = "P2P" ] || [ "$SERVER_TYPE" = "ALL" ]; then
   if [ -n "$P2P_RELAY_INDEX" ]; then
     echo "starting p2p[stun & relay] ..."
     supervisorctl restart p2p:*
-  elif
+  else
     echo "WARNING: empty P2P_RELAY_INDEX"
   fi
 fi
