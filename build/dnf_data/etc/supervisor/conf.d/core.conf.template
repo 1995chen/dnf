@@ -7,10 +7,10 @@ autorestart=unexpected
 exitcodes=0
 stopasgroup=true
 killasgroup=true
-stdout_logfile=/dev/stdout
-stdout_logfile_maxbytes=0
-stderr_logfile=/dev/stderr
-stderr_logfile_maxbytes=0
+stdout_logfile=/data/log/relay_config_server.log
+redirect_stderr=true
+stdout_logfile_maxbytes=1MB
+stderr_logfile_maxbytes=1MB
 
 [program:daily_job]
 command=/bin/bash -c "/home/template/init/daily_job/daily_job.sh"
@@ -25,7 +25,6 @@ stdout_logfile=/data/log/daily_job.log
 redirect_stderr=true
 stdout_logfile_maxbytes=1MB
 stderr_logfile_maxbytes=1MB
-depend=sg_mysql_proxy
 
 [program:monitor]
 command=/bin/bash -c "/data/run/start_monitor.sh"
@@ -35,10 +34,10 @@ autostart=false
 autorestart=true
 stopasgroup=true
 killasgroup=true
-stdout_logfile=/dev/stdout
-stdout_logfile_maxbytes=0
-stderr_logfile=/dev/stderr
-stderr_logfile_maxbytes=0
+stdout_logfile=/data/log/monitor.log
+redirect_stderr=true
+stdout_logfile_maxbytes=1MB
+stderr_logfile_maxbytes=1MB
 depend=daily_job
 
 [program:manager]
@@ -49,10 +48,10 @@ autostart=false
 autorestart=true
 stopasgroup=true
 killasgroup=true
-stdout_logfile=/dev/stdout
-stdout_logfile_maxbytes=0
-stderr_logfile=/dev/stderr
-stderr_logfile_maxbytes=0
+stdout_logfile=/data/log/manager.log
+redirect_stderr=true
+stdout_logfile_maxbytes=1MB
+stderr_logfile_maxbytes=1MB
 depend=monitor
 
 [program:bridge]
@@ -63,10 +62,10 @@ autostart=false
 autorestart=unexpected
 stopasgroup=true
 killasgroup=true
-stdout_logfile=/dev/stdout
-stdout_logfile_maxbytes=0
-stderr_logfile=/dev/stderr
-stderr_logfile_maxbytes=0
+stdout_logfile=/data/log/bridge.log
+redirect_stderr=true
+stdout_logfile_maxbytes=1MB
+stderr_logfile_maxbytes=1MB
 depend=manager
 
 [program:channel]
@@ -77,10 +76,10 @@ autostart=false
 autorestart=true
 stopasgroup=true
 killasgroup=true
-stdout_logfile=/dev/stdout
-stdout_logfile_maxbytes=0
-stderr_logfile=/dev/stderr
-stderr_logfile_maxbytes=0
+stdout_logfile=/data/log/channel.log
+redirect_stderr=true
+stdout_logfile_maxbytes=1MB
+stderr_logfile_maxbytes=1MB
 depend=bridge
 
 [program:dbmw_guild]
@@ -91,10 +90,10 @@ autostart=false
 autorestart=true
 stopasgroup=true
 killasgroup=true
-stdout_logfile=/dev/stdout
-stdout_logfile_maxbytes=0
-stderr_logfile=/dev/stderr
-stderr_logfile_maxbytes=0
+stdout_logfile=/data/log/dbmw_guild.log
+redirect_stderr=true
+stdout_logfile_maxbytes=1MB
+stderr_logfile_maxbytes=1MB
 depend=bridge
 
 [program:dbmw_mnt]
@@ -105,10 +104,10 @@ autostart=false
 autorestart=true
 stopasgroup=true
 killasgroup=true
-stdout_logfile=/dev/stdout
-stdout_logfile_maxbytes=0
-stderr_logfile=/dev/stderr
-stderr_logfile_maxbytes=0
+stdout_logfile=/data/log/dbmw_mnt.log
+redirect_stderr=true
+stdout_logfile_maxbytes=1MB
+stderr_logfile_maxbytes=1MB
 depend=dbmw_guild
 
 [program:dbmw_stat]
@@ -119,10 +118,10 @@ autostart=false
 autorestart=true
 stopasgroup=true
 killasgroup=true
-stdout_logfile=/dev/stdout
-stdout_logfile_maxbytes=0
-stderr_logfile=/dev/stderr
-stderr_logfile_maxbytes=0
+stdout_logfile=/data/log/dbmw_stat.log
+redirect_stderr=true
+stdout_logfile_maxbytes=1MB
+stderr_logfile_maxbytes=1MB
 depend=dbmw_mnt
 
 [program:auction]
@@ -134,10 +133,10 @@ autorestart=unexpected
 exitcodes=0
 stopasgroup=true
 killasgroup=true
-stdout_logfile=/dev/stdout
-stdout_logfile_maxbytes=0
-stderr_logfile=/dev/stderr
-stderr_logfile_maxbytes=0
+stdout_logfile=/data/log/auction.log
+redirect_stderr=true
+stdout_logfile_maxbytes=1MB
+stderr_logfile_maxbytes=1MB
 depend=dbmw_stat
 
 [program:point]
@@ -149,10 +148,10 @@ autorestart=unexpected
 exitcodes=0
 stopasgroup=true
 killasgroup=true
-stdout_logfile=/dev/stdout
-stdout_logfile_maxbytes=0
-stderr_logfile=/dev/stderr
-stderr_logfile_maxbytes=0
+stdout_logfile=/data/log/point.log
+redirect_stderr=true
+stdout_logfile_maxbytes=1MB
+stderr_logfile_maxbytes=1MB
 depend=auction
 
 [program:guild]
@@ -163,10 +162,10 @@ autostart=false
 autorestart=true
 stopasgroup=true
 killasgroup=true
-stdout_logfile=/dev/stdout
-stdout_logfile_maxbytes=0
-stderr_logfile=/dev/stderr
-stderr_logfile_maxbytes=0
+stdout_logfile=/data/log/guild.log
+redirect_stderr=true
+stdout_logfile_maxbytes=1MB
+stderr_logfile_maxbytes=1MB
 depend=point
 
 [program:statics]
@@ -177,10 +176,10 @@ autostart=false
 autorestart=true
 stopasgroup=true
 killasgroup=true
-stdout_logfile=/dev/stdout
-stdout_logfile_maxbytes=0
-stderr_logfile=/dev/stderr
-stderr_logfile_maxbytes=0
+stdout_logfile=/data/log/statics.log
+redirect_stderr=true
+stdout_logfile_maxbytes=1MB
+stderr_logfile_maxbytes=1MB
 depend=guild
 
 [program:coserver]
@@ -191,10 +190,10 @@ autostart=false
 autorestart=true
 stopasgroup=true
 killasgroup=true
-stdout_logfile=/dev/stdout
-stdout_logfile_maxbytes=0
-stderr_logfile=/dev/stderr
-stderr_logfile_maxbytes=0
+stdout_logfile=/data/log/coserver.log
+redirect_stderr=true
+stdout_logfile_maxbytes=1MB
+stderr_logfile_maxbytes=1MB
 depend=statics
 
 [program:community]
@@ -205,10 +204,10 @@ autostart=false
 autorestart=true
 stopasgroup=true
 killasgroup=true
-stdout_logfile=/dev/stdout
-stdout_logfile_maxbytes=0
-stderr_logfile=/dev/stderr
-stderr_logfile_maxbytes=0
+stdout_logfile=/data/log/community.log
+redirect_stderr=true
+stdout_logfile_maxbytes=1MB
+stderr_logfile_maxbytes=1MB
 depend=coserver
 
 [program:gunnersvr]
@@ -219,10 +218,10 @@ autostart=false
 autorestart=true
 stopasgroup=true
 killasgroup=true
-stdout_logfile=/dev/stdout
-stdout_logfile_maxbytes=0
-stderr_logfile=/dev/stderr
-stderr_logfile_maxbytes=0
+stdout_logfile=/data/log/gunnersvr.log
+redirect_stderr=true
+stdout_logfile_maxbytes=1MB
+stderr_logfile_maxbytes=1MB
 depend=community
 
 [program:zergsvr_secagent]
@@ -233,10 +232,10 @@ autostart=false
 autorestart=true
 stopasgroup=true
 killasgroup=true
-stdout_logfile=/dev/stdout
-stdout_logfile_maxbytes=0
-stderr_logfile=/dev/stderr
-stderr_logfile_maxbytes=0
+stdout_logfile=/data/log/zergsvr_secagent.log
+redirect_stderr=true
+stdout_logfile_maxbytes=1MB
+stderr_logfile_maxbytes=1MB
 depend=gunnersvr
 
 [program:zergsvr]
@@ -248,10 +247,10 @@ autorestart=unexpected
 exitcodes=0
 stopasgroup=true
 killasgroup=true
-stdout_logfile=/dev/stdout
-stdout_logfile_maxbytes=0
-stderr_logfile=/dev/stderr
-stderr_logfile_maxbytes=0
+stdout_logfile=/data/log/zergsvr.log
+redirect_stderr=true
+stdout_logfile_maxbytes=1MB
+stderr_logfile_maxbytes=1MB
 depend=zergsvr_secagent
 
 [group:core]

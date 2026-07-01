@@ -6,10 +6,10 @@ autostart=false
 autorestart=true
 stopasgroup=true
 killasgroup=true
-stdout_logfile=/dev/stdout
-stdout_logfile_maxbytes=0
-stderr_logfile=/dev/stderr
-stderr_logfile_maxbytes=0
+stdout_logfile=/data/log/stun.log
+redirect_stderr=true
+stdout_logfile_maxbytes=1MB
+stderr_logfile_maxbytes=1MB
 
 [program:relay]
 command=/bin/bash -c "/data/run/start_relay.sh"
@@ -19,10 +19,10 @@ autostart=false
 autorestart=true
 stopasgroup=true
 killasgroup=true
-stdout_logfile=/dev/stdout
-stdout_logfile_maxbytes=0
-stderr_logfile=/dev/stderr
-stderr_logfile_maxbytes=0
+stdout_logfile=/data/log/relay.log
+redirect_stderr=true
+stdout_logfile_maxbytes=1MB
+stderr_logfile_maxbytes=1MB
 
 [program:relay_config_client]
 command=/bin/bash -c "/home/template/init/relay/client.sh"
@@ -33,10 +33,10 @@ autorestart=unexpected
 exitcodes=0
 stopasgroup=true
 killasgroup=true
-stdout_logfile=/dev/stdout
-stdout_logfile_maxbytes=0
-stderr_logfile=/dev/stderr
-stderr_logfile_maxbytes=0
+stdout_logfile=/data/log/relay_config_client.log
+redirect_stderr=true
+stdout_logfile_maxbytes=1MB
+stderr_logfile_maxbytes=1MB
 
 [group:p2p]
 programs=stun,relay,relay_config_client

@@ -7,10 +7,10 @@ autorestart=unexpected
 exitcodes=0
 stopasgroup=true
 killasgroup=true
-stdout_logfile=/dev/stdout
-stdout_logfile_maxbytes=0
-stderr_logfile=/dev/stderr
-stderr_logfile_maxbytes=0
+stdout_logfile=/data/log/main_mysql_proxy.log
+redirect_stderr=true
+stdout_logfile_maxbytes=1MB
+stderr_logfile_maxbytes=1MB
 
 [program:sg_mysql_proxy]
 command=/bin/bash -c "/home/template/init/mysql_proxy/start_mysql_proxy.sh"
@@ -21,10 +21,10 @@ autorestart=unexpected
 exitcodes=0
 stopasgroup=true
 killasgroup=true
-stdout_logfile=/dev/stdout
-stdout_logfile_maxbytes=0
-stderr_logfile=/dev/stderr
-stderr_logfile_maxbytes=0
+stdout_logfile=/data/log/sg_mysql_proxy.log
+redirect_stderr=true
+stdout_logfile_maxbytes=1MB
+stderr_logfile_maxbytes=1MB
 depend=main_mysql_proxy
 
 [group:mysql_proxy]
