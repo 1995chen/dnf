@@ -260,7 +260,9 @@ services:
       - SERVER_GROUP=1
       - SERVER_GROUP_DB=cain
       - OPEN_CHANNEL='11,52'
+      - MAIN_BRIDGE_IP=192.168.31.206
       - PUBLIC_IP=192.168.31.206
+      - CORE_PUBLIC_IP=192.168.31.206
       - MAIN_MYSQL_HOST=192.168.31.206
       - MAIN_MYSQL_PORT=3001
       # 大区数据库
@@ -294,7 +296,9 @@ services:
       - SERVER_GROUP=2
       - SERVER_GROUP_DB=diregie
       - OPEN_CHANNEL='11,52'
+      - MAIN_BRIDGE_IP=192.168.31.206
       - PUBLIC_IP=192.168.31.206
+      - CORE_PUBLIC_IP=192.168.31.206
       - MAIN_MYSQL_HOST=192.168.31.206
       - MAIN_MYSQL_PORT=3001
       # 大区数据库
@@ -328,7 +332,9 @@ services:
       - SERVER_GROUP=3
       - SERVER_GROUP_DB=siroco
       - OPEN_CHANNEL='11,52'
+      - MAIN_BRIDGE_IP=192.168.31.206
       - PUBLIC_IP=192.168.31.206
+      - CORE_PUBLIC_IP=192.168.31.206
       - MAIN_MYSQL_HOST=192.168.31.206
       - MAIN_MYSQL_PORT=3001
       # 大区数据库

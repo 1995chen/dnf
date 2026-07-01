@@ -35,6 +35,7 @@ cp /home/template/neople/game/cfg/server.template /tmp/$channel_name.cfg
 sed -i "s/MAIN_BRIDGE_IP/$MAIN_BRIDGE_IP/g" /tmp/$channel_name.cfg
 sed -i "s/CHANNEL_NO/$channel_no/g" /tmp/$channel_name.cfg
 sed -i "s/PROCESS_SEQUENCE/$process_sequence/g" /tmp/$channel_name.cfg
+sed -i "s/CORE_PUBLIC_IP/$CORE_PUBLIC_IP/g" /tmp/$channel_name.cfg
 sed -i "s/PUBLIC_IP/$MONITOR_PUBLIC_IP/g" /tmp/$channel_name.cfg
 sed -i "s/DEC_GAME_PWD/$DEC_GAME_PWD/g" /tmp/$channel_name.cfg
 sed -i "s/SERVER_GROUP/$SERVER_GROUP/g" /tmp/$channel_name.cfg
