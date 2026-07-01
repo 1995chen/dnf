@@ -55,4 +55,6 @@ rm -rf pid/$channel_name.pid
 # 加载DP并启动[确保DP路径已经被正确映射]
 LD_PRELOAD=/dp2/libhook.so ./df_game_r $channel_name start
 sleep 2
+pid=$(cat pid/$channel_name.pid 2>/dev/null || true)
 cat pid/$channel_name.pid |xargs -n1 -I{} tail --pid={} -f /dev/null
+echo "----------##############----------process exit, ch.$channel_no pid is $pid----------##############----------"
