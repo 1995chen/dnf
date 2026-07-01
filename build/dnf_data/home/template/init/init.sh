@@ -104,7 +104,7 @@ if [ "$SERVER_TYPE" = "CORE" ] || [ "$SERVER_TYPE" = "ALL" ]; then
 
   # 入口在其他大区CORE服务,没有bridge服务无需启动gate,无需拷贝文件
   if [ -z "$MAIN_BRIDGE_IP" ] || [ "$MAIN_BRIDGE_IP" = "127.0.0.1" ]; then 
-    # 判断privatekey.pem文件是否初始化过
+    # 判断privatekey.pem文件是否初始化过,core服务不需要publickey.pem
     if [ ! -f "/data/privatekey.pem" ];then
       # 拷贝版本文件到持久化目录
       cp /home/template/init/privatekey.pem /data/
@@ -113,15 +113,6 @@ if [ "$SERVER_TYPE" = "CORE" ] || [ "$SERVER_TYPE" = "ALL" ]; then
       echo "privatekey.pem have already inited, do nothing!"
     fi
     
-    # 判断publickey.pem文件是否初始化过
-    if [ ! -f "/data/publickey.pem" ];then
-      # 拷贝版本文件到持久化目录
-      cp /home/template/init/publickey.pem /data/
-      echo "init publickey.pem success"
-    else
-      echo "publickey.pem have already inited, do nothing!"
-    fi
-
     # 拷贝gate服务supervisor配置文件
     cp /etc/supervisor/conf.d/gate.conf.template /etc/supervisor/conf.d/gate.conf
   fi
@@ -142,6 +133,15 @@ if [ "$SERVER_TYPE" = "GAME" ] || [ "$SERVER_TYPE" = "ALL" ]; then
     echo "init Script.pvf success"
   else
     echo "Script.pvf have already inited, do nothing!"
+  fi
+
+  # 判断publickey.pem文件是否初始化过
+  if [ ! -f "/data/publickey.pem" ];then
+    # 拷贝版本文件到持久化目录
+    cp /home/template/init/publickey.pem /data/
+    echo "init publickey.pem success"
+  else
+    echo "publickey.pem have already inited, do nothing!"
   fi
 
   # 判断df_game_r文件是否初始化过
@@ -184,7 +184,7 @@ if [ "$SERVER_TYPE" = "GAME" ] || [ "$SERVER_TYPE" = "ALL" ]; then
         echo "command=/bin/bash -c \"/data/run/start_game.sh $num $process_sequence\"" >> /etc/supervisor/conf.d/game.conf
         echo "directory=/home/neople/game" >> /etc/supervisor/conf.d/game.conf
         echo "user=root" >> /etc/supervisor/conf.d/game.conf
-        echo "autostart=true" >> /etc/supervisor/conf.d/game.conf
+        echo "autostart=false" >> /etc/supervisor/conf.d/game.conf
         echo "autorestart=true" >> /etc/supervisor/conf.d/game.conf
         echo "stopasgroup=true" >> /etc/supervisor/conf.d/game.conf
         echo "killasgroup=true" >> /etc/supervisor/conf.d/game.conf

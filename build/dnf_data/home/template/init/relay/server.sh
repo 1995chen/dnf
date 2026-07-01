@@ -67,6 +67,7 @@ update_config_file() {
     if [ $found -eq 0 ]; then
         # 重启monitor服务
         cp /home/template/neople/monitor/cfg/server.cfg /home/neople/monitor/cfg/server.cfg
+        echo "" >> /home/neople/monitor/cfg/server.cfg
         # 将内容追加
         cat "$CONFIG_FILE" >> /home/neople/monitor/cfg/server.cfg
         log_info "Monitor config updated, restarting monitor service"
