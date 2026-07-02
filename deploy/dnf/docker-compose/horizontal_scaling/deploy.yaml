@@ -16,6 +16,7 @@ services:
 
 # CORE服务: 每个大区只能部署一个CORE服务
 # ip.addr == 192.168.31.203 && ip.addr == 192.168.31.206
+# nc -zv 127.0.0.1 7000
   dnf-cain-core:
     hostname: dnf-cain-core
     image: 1995chen/dnf:centos5-b804bbb
