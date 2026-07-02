@@ -52,7 +52,8 @@ if [ -n "$old_pid" ]; then
   kill -9 $old_pid
 fi
 rm -rf pid/$channel_name.pid
-
+# 删除CORE DUMP文件
+rm -rf /home/neople/game/*.core
 # 加载DP并启动[确保DP路径已经被正确映射]
 LD_PRELOAD=/dp2/libhook.so ./df_game_r $channel_name start
 sleep 2

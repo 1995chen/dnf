@@ -8,3 +8,4 @@ echo "starting bridge..."
 LD_PRELOAD=/home/template/init/bridge_hook.so:/home/template/init/libhook.so ./df_bridge_r server start
 sleep 2
 cat pid/*.pid |xargs -n1 -I{} tail --pid={} -f /dev/null
+exit -1
