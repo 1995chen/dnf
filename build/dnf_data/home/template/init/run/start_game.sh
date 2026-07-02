@@ -35,6 +35,8 @@ cp /home/template/neople/game/cfg/server.template /tmp/$channel_name.cfg
 sed -i "s/MAIN_BRIDGE_IP/$MAIN_BRIDGE_IP/g" /tmp/$channel_name.cfg
 sed -i "s/CHANNEL_NO/$channel_no/g" /tmp/$channel_name.cfg
 sed -i "s/PROCESS_SEQUENCE/$process_sequence/g" /tmp/$channel_name.cfg
+sed -i "s/CORE_PUBLIC_IP/$CORE_PUBLIC_IP/g" /tmp/$channel_name.cfg
+sed -i "s/P2P_PUBLIC_IP/$P2P_PUBLIC_IP/g" /tmp/$channel_name.cfg
 sed -i "s/PUBLIC_IP/$MONITOR_PUBLIC_IP/g" /tmp/$channel_name.cfg
 sed -i "s/DEC_GAME_PWD/$DEC_GAME_PWD/g" /tmp/$channel_name.cfg
 sed -i "s/SERVER_GROUP/$SERVER_GROUP/g" /tmp/$channel_name.cfg
@@ -42,6 +44,13 @@ cp /tmp/$channel_name.cfg /home/neople/game/cfg/$channel_name.cfg
 echo "generate $channel_name.cfg success"
 # 清理cfg文件
 rm -rf /tmp/$channel_name.cfg
+# 配置DB配置文件
+rm -rf /home/neople/game/cfg/db_info_tw.cfg
+cp /home/template/neople/game/cfg/db_info_tw.cfg /home/neople/game/cfg/db_info_tw.cfg
+sed -i "s/SERVER_GROUP_NAME/$SERVER_GROUP_NAME/g" /home/neople/game/cfg/db_info_tw.cfg
+sed -i "s/SERVER_GROUP/$SERVER_GROUP/g" /home/neople/game/cfg/db_info_tw.cfg
+sed -i "s/CORE_PUBLIC_IP/$CORE_PUBLIC_IP/g" /home/neople/game/cfg/db_info_tw.cfg
+
 # 启动服务
 old_pid=$(pgrep -f "df_game_r $channel_name start")
 echo "ch.$channel_no old pid is $old_pid"
@@ -50,8 +59,11 @@ if [ -n "$old_pid" ]; then
   kill -9 $old_pid
 fi
 rm -rf pid/$channel_name.pid
-
+# 删除CORE DUMP文件
+rm -rf /home/neople/game/*.core
 # 加载DP并启动[确保DP路径已经被正确映射]
 LD_PRELOAD=/dp2/libhook.so ./df_game_r $channel_name start
 sleep 2
+pid=$(cat pid/$channel_name.pid 2>/dev/null || true)
 cat pid/$channel_name.pid |xargs -n1 -I{} tail --pid={} -f /dev/null
+echo "----------##############----------process exit, ch.$channel_no pid is $pid----------##############----------"

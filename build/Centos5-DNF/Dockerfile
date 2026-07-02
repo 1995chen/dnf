@@ -52,6 +52,20 @@ RUN cd /tmp && \
 
 # 定义默认环境变量
 
+# 拆开这些服务主要是为了将来单台机器成为性能瓶颈时,可以将不同的频道部署到不同的机器上
+# 可配置:CORE、CORE、P2P、GAME、ALL, 其中ALL=[CORE + P2P + GAME]
+# CORE: 主服务
+# P2P: STUN和Relay服务
+# GAME: 频道服务
+
+# 所有服务均需要配置
+ENV SERVER_TYPE='ALL'
+# P2P以及GAME服务需要配置
+ENV CORE_PUBLIC_IP='127.0.0.1'
+# GAME服务需要配置
+ENV P2P_PUBLIC_IP='127.0.0.1'
+# RELAY服务需要配置
+ENV P2P_RELAY_INDEX=''
 # 是否连接远程bridge
 ENV MAIN_BRIDGE_IP='127.0.0.1'
 ENV SERVER_GROUP_DB='cain'

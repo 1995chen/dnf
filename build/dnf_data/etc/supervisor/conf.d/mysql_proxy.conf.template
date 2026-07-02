@@ -1,0 +1,32 @@
+[program:main_mysql_proxy]
+command=/bin/bash -c "/home/template/init/mysql_proxy/start_main_mysql_proxy.sh"
+directory=/home/template/init/mysql_proxy
+user=root
+autostart=false
+autorestart=unexpected
+exitcodes=0
+stopasgroup=true
+killasgroup=true
+stdout_logfile=/data/log/main_mysql_proxy.log
+redirect_stderr=true
+stdout_logfile_maxbytes=1MB
+stderr_logfile_maxbytes=1MB
+
+[program:sg_mysql_proxy]
+command=/bin/bash -c "/home/template/init/mysql_proxy/start_mysql_proxy.sh"
+directory=/home/template/init/mysql_proxy
+user=root
+autostart=false
+autorestart=unexpected
+exitcodes=0
+stopasgroup=true
+killasgroup=true
+stdout_logfile=/data/log/sg_mysql_proxy.log
+redirect_stderr=true
+stdout_logfile_maxbytes=1MB
+stderr_logfile_maxbytes=1MB
+depend=main_mysql_proxy
+
+[group:mysql_proxy]
+programs=main_mysql_proxy,sg_mysql_proxy
+priority=999
