@@ -44,6 +44,13 @@ cp /tmp/$channel_name.cfg /home/neople/game/cfg/$channel_name.cfg
 echo "generate $channel_name.cfg success"
 # 清理cfg文件
 rm -rf /tmp/$channel_name.cfg
+# 配置DB配置文件
+rm -rf /home/neople/game/cfg/db_info_tw.cfg
+cp /home/template/neople/game/cfg/db_info_tw.cfg /home/neople/game/cfg/db_info_tw.cfg
+sed -i "s/SERVER_GROUP_NAME/$SERVER_GROUP_NAME/g" /home/neople/game/cfg/db_info_tw.cfg
+sed -i "s/SERVER_GROUP/$SERVER_GROUP/g" /home/neople/game/cfg/db_info_tw.cfg
+sed -i "s/CORE_PUBLIC_IP/$CORE_PUBLIC_IP/g" /home/neople/game/cfg/db_info_tw.cfg
+
 # 启动服务
 old_pid=$(pgrep -f "df_game_r $channel_name start")
 echo "ch.$channel_no old pid is $old_pid"

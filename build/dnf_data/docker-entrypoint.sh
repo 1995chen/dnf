@@ -173,11 +173,11 @@ rm -rf /root/privatekey.pem
 # 复制待使用文件
 cp -r /home/template/neople /home/template/neople-tmp
 # 修改配置文件
-find /home/template/neople-tmp -type f -name "*.cfg" -print0 | xargs -0 sed -i "s/CORE_PUBLIC_IP/$CORE_PUBLIC_IP/g"
-find /home/template/neople-tmp -type f -name "*.cfg" -print0 | xargs -0 sed -i "s/GAME_PASSWORD/$DNF_DB_GAME_PASSWORD/g"
-find /home/template/neople-tmp -type f -name "*.cfg" -print0 | xargs -0 sed -i "s/DEC_GAME_PWD/$DEC_GAME_PWD/g"
-find /home/template/neople-tmp -type f -name "*.cfg" -print0 | xargs -0 sed -i "s/SERVER_GROUP_NAME/$SERVER_GROUP_NAME/g"
-find /home/template/neople-tmp -type f -name "*.cfg" -print0 | xargs -0 sed -i "s/SERVER_GROUP_DB/$SERVER_GROUP_DB/g"
+# find /home/template/neople-tmp -type f -name "*.cfg" -print0 | xargs -0 sed -i "s/CORE_PUBLIC_IP/$CORE_PUBLIC_IP/g"
+# find /home/template/neople-tmp -type f -name "*.cfg" -print0 | xargs -0 sed -i "s/GAME_PASSWORD/$DNF_DB_GAME_PASSWORD/g"
+# find /home/template/neople-tmp -type f -name "*.cfg" -print0 | xargs -0 sed -i "s/DEC_GAME_PWD/$DEC_GAME_PWD/g"
+# find /home/template/neople-tmp -type f -name "*.cfg" -print0 | xargs -0 sed -i "s/SERVER_GROUP_NAME/$SERVER_GROUP_NAME/g"
+# find /home/template/neople-tmp -type f -name "*.cfg" -print0 | xargs -0 sed -i "s/SERVER_GROUP_DB/$SERVER_GROUP_DB/g"
 find /home/template/neople-tmp -type f -name "*.cfg" -print0 | xargs -0 sed -i "s/SERVER_GROUP/$SERVER_GROUP/g"
 find /home/template/neople-tmp -type f -name "*.tbl" -print0 | xargs -0 sed -i "s/SERVER_GROUP/$SERVER_GROUP/g"
 

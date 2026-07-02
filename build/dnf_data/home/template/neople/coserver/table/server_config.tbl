@@ -1,6 +1,6 @@
 #-------|-------------|-------|---------------|------------------|
 #Type   | Server Group| Index |  Server IP    | Server UDP Port  |
 #-------|-------------|-------|---------------|------------------|
-1              SERVER_GROUP          11      127.0.0.1	      11011
-1              SERVER_GROUP          52      127.0.0.1	      11052
-1              SERVER_GROUP          56      127.0.0.1	      11056
+1              SERVER_GROUP          11      PUBLIC_IP	      SERVER_GROUP1011
+1              SERVER_GROUP          52      PUBLIC_IP	      SERVER_GROUP1052
+1              SERVER_GROUP          56      PUBLIC_IP	      SERVER_GROUP1056
