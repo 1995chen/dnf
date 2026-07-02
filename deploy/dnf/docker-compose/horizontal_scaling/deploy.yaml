@@ -15,6 +15,7 @@ services:
     restart: always
 
 # CORE服务: 每个大区只能部署一个CORE服务
+# ip.addr == 192.168.31.203 && ip.addr == 192.168.31.206
   dnf-cain-core:
     hostname: dnf-cain-core
     image: 1995chen/dnf:centos5-b804bbb
@@ -46,9 +47,9 @@ services:
     ports:
       - 2001:180/tcp              # supervisor web[管理员使用]
       - 7600:7600/tcp             # 统一登陆器[统一登陆器使用]
-      - 881:881/tcp               # 统一网关[统一网关使用]
-      - 7000:7000/tcp             # bridge[游戏客户端使用/GAME服务使用]
-      - 7000:7000/udp             # bridge[游戏客户端使用/GAME服务使用]
+      - 881:881/tcp               # 统一网关[统一网关使用,不需要暴露给用户]
+      - 7000:7000/tcp             # bridge[GAME服务使用]
+      - 7000:7000/udp             # bridge[GAME服务使用]
       - 7001:7001/tcp             # channel[游戏客户端使用]
       - 7001:7001/udp             # channel[游戏客户端使用]
       - 31303:31303/tcp           # monitor[GAME服务使用]
