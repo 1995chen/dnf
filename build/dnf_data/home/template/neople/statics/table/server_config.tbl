@@ -4,4 +4,4 @@
 1               SERVER_GROUP         11       PUBLIC_IP         SERVER_GROUP1011
 1               SERVER_GROUP         52       PUBLIC_IP         SERVER_GROUP1052
 1               SERVER_GROUP         56       PUBLIC_IP         SERVER_GROUP1056
-2               SERVER_GROUP         200      PUBLIC_IP         20303
+2               SERVER_GROUP         200      127.0.0.1         20303

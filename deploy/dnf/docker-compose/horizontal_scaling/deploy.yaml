@@ -58,10 +58,13 @@ services:
       - 31403:31403/tcp           # guild[GAME服务使用]
       - 31403:31403/udp           # guild[GAME服务使用]
       - 31503:31503/udp           # statistic[GAME服务使用]
-      - 31603:31603               # point[GAME服务使用]
+      - 31603:31603/tcp           # point[GAME服务使用]
+      - 31603:31603/udp           # point[GAME服务使用]
       - 31703:31703/udp           # coserver[GAME服务使用]
-      - 31803:31803               # auction[GAME服务使用]
-      - 31100:31100               # community[GAME服务使用]
+      - 31803:31803/tcp           # auction[GAME服务使用]
+      - 31803:31803/udp           # auction[GAME服务使用]
+      - 31100:31100/tcp           # community[GAME服务使用]
+      - 31100:31100/udp           # community[GAME服务使用]
       - 5001:5001/tcp             # relay_config_server[P2P服务使用]
     volumes:
       - ./data_cain_core:/data
