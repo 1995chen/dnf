@@ -22,7 +22,7 @@ cp /tmp/community.cfg /home/neople/community/cfg/server.cfg
 # 清理cfg文件
 rm -rf /tmp/community.cfg
 echo "starting community..."
-
+# 这里配置文件ip必须为127.0.0.1/0.0.0.0
 ./df_community_r server start
 sleep 2
 cat pid/*.pid |xargs -n1 -I{} tail --pid={} -f /dev/null
