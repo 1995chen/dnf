@@ -109,10 +109,13 @@ services:
       - 32403:32403/tcp           # guild[GAME服务使用]
       - 32403:32403/udp           # guild[GAME服务使用]
       - 32503:32503/udp           # statistic[GAME服务使用]
-      - 32603:32603               # point[GAME服务使用]
+      - 32603:32603/tcp           # point[GAME服务使用]
+      - 32603:32603/udp           # point[GAME服务使用]
       - 32703:32703/udp           # coserver[GAME服务使用]
-      - 32803:32803               # auction[GAME服务使用]
-      - 32100:32100               # community[GAME服务使用]
+      - 32803:32803/tcp           # auction[GAME服务使用]
+      - 32803:32803/udp           # auction[GAME服务使用]
+      - 32100:32100/tcp           # community[GAME服务使用]
+      - 32100:32100/udp           # community[GAME服务使用]
       - 5002:5002/tcp             # relay_config_server[P2P服务使用]
     volumes:
       - ./data_diregie_core:/data
@@ -157,10 +160,13 @@ services:
       - 33403:33403/tcp           # guild[GAME服务使用]
       - 33403:33403/udp           # guild[GAME服务使用]
       - 33503:33503/udp           # statistic[GAME服务使用]
-      - 33603:33603               # point[GAME服务使用]
+      - 33603:33603/tcp           # point[GAME服务使用]
+      - 33603:33603/udp           # point[GAME服务使用]
       - 33703:33703/udp           # coserver[GAME服务使用]
-      - 33803:33803               # auction[GAME服务使用]
-      - 33100:33100               # community[GAME服务使用]
+      - 33803:33803/tcp           # auction[GAME服务使用]
+      - 33803:33803/udp           # auction[GAME服务使用]
+      - 33100:33100/tcp           # community[GAME服务使用]
+      - 33100:33100/udp           # community[GAME服务使用]
       - 5003:5003/tcp             # relay_config_server[P2P服务使用]
     volumes:
       - ./data_siroco_core:/data
